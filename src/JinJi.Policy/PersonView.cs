@@ -1,4 +1,5 @@
 using JinJi.Domain.Organization;
+using JinJi.Domain.Workplace;
 
 namespace JinJi.Policy;
 
@@ -54,6 +55,18 @@ public sealed class PersonView
     /// <summary>リモートワークの対象か（有無だけ）。</summary>
     public bool? RemoteWork { get; internal init; }
 
+    /// <summary>階・エリア（席・持ち場・ゾーンの割り当て）。無ければ null（見えるかどうかは <see cref="VisibleFields"/> で区別する）。</summary>
+    public WorkplaceView? Workplace { get; internal init; }
+
+    /// <summary>主の席（その時点の改訂にある席だけ）。無ければ null。</summary>
+    public SeatView? Seat { get; internal init; }
+
+    /// <summary>
+    /// 当日の所在（外部の提供。今日だけ）。所在が無い・見えないときは項目ごと省く（<see cref="VisibleFields"/> にも入れない。「不在」の値を作らない）。
+    /// 席は項目 seat も見えるときだけ。
+    /// </summary>
+    public PresenceView? Presence { get; internal init; }
+
     public string? EmploymentType { get; internal init; }
 
     public string? JobType { get; internal init; }
@@ -100,6 +113,70 @@ public sealed record SiteView(Guid Id, Guid LegalEntityId, string Code, string N
         return new SiteView(s.Id, s.LegalEntityId, s.Code, s.Name, s.Type, s.PrefectureCode, resolved.Inherited);
     }
 }
+
+/// <summary>人の階・エリア（建物・階は全社公開の情報。人の階として見せるかは項目 workplace の判定による）。</summary>
+/// <param name="ZoneKey">エリアのゾーン（改訂をまたぐ ID）。エリアが無ければ null。</param>
+public sealed record WorkplaceView(
+    Guid SiteId,
+    Guid BuildingId,
+    string BuildingCode,
+    string BuildingName,
+    Guid FloorId,
+    string FloorLabel,
+    int LevelOrder,
+    Guid? ZoneKey,
+    string? ZoneName,
+    WorkplaceSource Source)
+{
+    public static WorkplaceView From(ResolvedWorkplace resolved)
+    {
+        ArgumentNullException.ThrowIfNull(resolved);
+        return new WorkplaceView(
+            resolved.Building.SiteId, resolved.Building.Id, resolved.Building.Code, resolved.Building.Name, resolved.Floor.Id, resolved.Floor.Label,
+            resolved.Floor.LevelOrder, resolved.Zone?.ZoneKey, resolved.Zone?.Name, resolved.Source);
+    }
+}
+
+/// <summary>人の席（席番号・座標・階）。</summary>
+public sealed record SeatView(
+    Guid SeatId,
+    string Code,
+    Guid BuildingId,
+    string BuildingName,
+    Guid FloorId,
+    string FloorLabel,
+    Guid? ZoneKey,
+    string? ZoneName,
+    int XMm,
+    int YMm,
+    int RotationDeg,
+    SeatKind Kind)
+{
+    public static SeatView From(ResolvedSeat resolved)
+    {
+        ArgumentNullException.ThrowIfNull(resolved);
+        var seat = resolved.Seat;
+        return new SeatView(
+            seat.SeatId, seat.Code, resolved.Building.Id, resolved.Building.Name, resolved.Floor.Id, resolved.Floor.Label, resolved.Zone?.ZoneKey,
+            resolved.Zone?.Name, seat.XMm, seat.YMm, seat.RotationDeg, seat.Kind);
+    }
+}
+
+/// <summary>当日の所在（外部の提供。今日の建物・階・席またはエリア）。時刻・入退館の記録は持たない。</summary>
+/// <param name="SeatId">席（エリアだけか、閲覧者に項目 seat が見えなければ null）。</param>
+public sealed record PresenceView(
+    DateOnly Date,
+    Guid BuildingId,
+    string BuildingName,
+    Guid FloorId,
+    string FloorLabel,
+    Guid? ZoneKey,
+    string? ZoneName,
+    Guid? SeatId,
+    string? SeatCode);
+
+/// <summary>外部の提供の所在（投影の材料。<see cref="PersonProjector"/> に渡す）。</summary>
+public sealed record PresenceFact(Guid PersonId, DateOnly Date, Guid FloorId, Guid? SeatId, Guid? ZoneKey);
 
 /// <param name="ValidUntil">有効期間の終了日（この日を含まない）。人事管理者以外には、業務日付より後なら null（無期限と同じに見せる）。</param>
 public sealed record AssignmentView(
@@ -159,6 +236,7 @@ public sealed class PersonProjector
     private readonly OrgSnapshot _data;
     private readonly DateOnly _today;
     private readonly int _retiredPublicDays;
+    private readonly IReadOnlyDictionary<Guid, PresenceFact>? _presence;
 
     /// <param name="evaluator">今日時点の関係で評価する判定器。</param>
     /// <param name="data">返す値を取り出すスナップショット（時点指定）。</param>
@@ -166,7 +244,15 @@ public sealed class PersonProjector
     /// <param name="retiredPublicDays">
     /// 退職者を人事管理者以外に公開する日数。退職年月日（最終在籍日）+ この日数の日までは公開し、その翌日から投影しない。0 なら退職の翌日から投影しない。
     /// </param>
-    public PersonProjector(PolicyEvaluator evaluator, OrgSnapshot data, DateOnly today, int retiredPublicDays = DefaultRetiredPublicDays)
+    /// <param name="presence">
+    /// 今日の所在（外部の提供。人 → 所在）。null なら項目 presence は投影しない。所在の日がスナップショットの時点・今日と違うものは使わない（過去・将来の時点に重ねない）。
+    /// </param>
+    public PersonProjector(
+        PolicyEvaluator evaluator,
+        OrgSnapshot data,
+        DateOnly today,
+        int retiredPublicDays = DefaultRetiredPublicDays,
+        IReadOnlyDictionary<Guid, PresenceFact>? presence = null)
     {
         ArgumentNullException.ThrowIfNull(evaluator);
         ArgumentNullException.ThrowIfNull(data);
@@ -175,6 +261,7 @@ public sealed class PersonProjector
         _data = data;
         _today = today;
         _retiredPublicDays = retiredPublicDays;
+        _presence = presence;
     }
 
     /// <summary>
@@ -192,6 +279,13 @@ public sealed class PersonProjector
         if (!viewer.IsHrAdmin)
         {
             visible = visible.Where(f => !PersonFields.HrAdminOnly.Contains(f)).ToHashSet(StringComparer.Ordinal);
+        }
+
+        // 当日の所在: 所在があり、項目が見えるときだけ項目に入れる（所在が無い・見えないを区別させない）
+        var presence = visible.Contains(PersonFields.Presence) ? ProjectPresence(personId, visible.Contains(PersonFields.Seat)) : null;
+        if (presence is null && visible.Contains(PersonFields.Presence))
+        {
+            visible = visible.Where(f => f != PersonFields.Presence).ToHashSet(StringComparer.Ordinal);
         }
 
         if (visible.Count == 0)
@@ -233,6 +327,9 @@ public sealed class PersonProjector
             WorkMobilePhone = See(PersonFields.WorkMobilePhone) ? v.WorkMobilePhone : null,
             Site = See(PersonFields.Site) && _data.SiteOf(personId, v) is { } site ? SiteView.From(site) : null,
             RemoteWork = See(PersonFields.RemoteWork) ? v.RemoteWork : null,
+            Workplace = See(PersonFields.Workplace) && _data.WorkplaceOf(personId) is { } workplace ? WorkplaceView.From(workplace) : null,
+            Seat = See(PersonFields.Seat) && _data.SeatsOf(personId).FirstOrDefault(s => s.Role == WorkplaceRole.Primary) is { } seat ? SeatView.From(seat) : null,
+            Presence = presence,
             EmploymentType = See(PersonFields.EmploymentType) ? v.EmploymentType : null,
             JobType = See(PersonFields.JobType) ? v.JobType : null,
             HireDate = See(PersonFields.HireDate) ? v.HireDate : null,
@@ -247,6 +344,25 @@ public sealed class PersonProjector
             PersonnelActions = See(PersonFields.PersonnelActions) ? ProjectActions(person, viewer.IsHrAdmin) : null,
             NameHistory = See(PersonFields.NameHistory) && viewer.IsHrAdmin ? ProjectNameHistory(person) : null,
         };
+    }
+
+    /// <summary>今日の所在の投影（所在の日が時点・今日と同じで、階がその時点にあるときだけ）。席は項目 seat も見えるときだけ。</summary>
+    private PresenceView? ProjectPresence(Guid personId, bool seeSeat)
+    {
+        if (_presence?.GetValueOrDefault(personId) is not { } fact || fact.Date != _data.AsOf || fact.Date != _today)
+        {
+            return null;
+        }
+
+        var map = _data.Workplace;
+        if (map.FindFloor(fact.FloorId) is not { } floor || map.FindBuilding(floor.BuildingId) is not { } building)
+        {
+            return null;
+        }
+
+        var seat = seeSeat && fact.SeatId is { } seatId ? map.FindSeat(seatId)?.Seat : null;
+        var zone = fact.ZoneKey is { } key ? map.FindZone(floor.Id, key) : null;
+        return new PresenceView(fact.Date, building.Id, building.Name, floor.Id, floor.Label, zone?.ZoneKey, zone?.Name, seat?.SeatId, seat?.Code);
     }
 
     /// <summary>閲覧者に発令の存在を見せてよいか（内示の秘匿。RLS の personnel_action の規則と同じ）。</summary>

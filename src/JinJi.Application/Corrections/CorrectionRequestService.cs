@@ -483,6 +483,8 @@ public sealed class CorrectionRequestService
             PersonFields.WorkMobilePhone => S(v.WorkMobilePhone),
             PersonFields.Site => S(v.Site?.Id.ToString("D")),
             PersonFields.RemoteWork => v.RemoteWork switch { true => "true", false => "false", null => "\0null" },
+            PersonFields.Workplace => v.Workplace is { } w ? string.Join('|', w.FloorId.ToString("D"), w.ZoneKey?.ToString("D") ?? "\0null") : "\0null",
+            PersonFields.Seat => S(v.Seat?.SeatId.ToString("D")),
             PersonFields.EmploymentType => S(v.EmploymentType),
             PersonFields.JobType => S(v.JobType),
             PersonFields.HireDate => D(v.HireDate),

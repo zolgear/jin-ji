@@ -76,6 +76,23 @@ public sealed class FieldLimit
         return new FieldLimit(set);
     }
 
+    /// <summary>
+    /// クライアントの設定・登録の上限。<c>["*"]</c> を含めば、明示が要る項目（<see cref="PersonFields.ExplicitOnly"/>。当日の所在）を除く全項目と、
+    /// 一緒に明示した項目。未知の項目名は拒否する。
+    /// </summary>
+    public static FieldLimit ForClient(IEnumerable<string> fields)
+    {
+        ArgumentNullException.ThrowIfNull(fields);
+        var list = fields.ToList();
+        if (!list.Contains(PersonFields.Wildcard))
+        {
+            return Of(list);
+        }
+
+        var explicitFields = Of(list.Where(f => f != PersonFields.Wildcard))._fields!;
+        return new FieldLimit(PersonFields.All.Where(f => !PersonFields.ExplicitOnly.Contains(f) || explicitFields.Contains(f)).ToHashSet(StringComparer.Ordinal));
+    }
+
     /// <summary>項目を渡してよいか。</summary>
     public bool Allows(string field) => _fields is null || _fields.Contains(field);
 }

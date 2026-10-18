@@ -157,7 +157,7 @@ public sealed class ViewerContextFactory
         FieldLimit limit;
         try
         {
-            limit = token.Fields is [PersonFields.Wildcard] ? FieldLimit.Unrestricted : FieldLimit.Of(token.Fields);
+            limit = FieldLimit.ForClient(token.Fields);
         }
         catch (ArgumentException ex)
         {

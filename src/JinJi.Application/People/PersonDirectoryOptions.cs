@@ -22,6 +22,12 @@ public sealed record PersonDirectoryOptions
     /// </summary>
     public int MassActionThreshold { get; init; } = 10;
 
+    /// <summary>
+    /// 当日の所在（項目 presence。外部の提供 <c>IPresenceProvider</c> を注入したときだけ）の公開範囲（関係スコープの表記。既定は本人と同じ部 <c>same_level(department)</c>）。
+    /// ポリシー（policy_rule）でさらに狭められる。
+    /// </summary>
+    public string PresenceVisibilityScope { get; init; } = PresencePolicy.DefaultScope;
+
     /// <summary>値を検査する。</summary>
     public void Validate()
     {
@@ -33,6 +39,11 @@ public sealed record PersonDirectoryOptions
         if (RetiredPublicDays < 0)
         {
             throw new ArgumentOutOfRangeException(nameof(RetiredPublicDays), RetiredPublicDays, "退職者の公開日数は 0 以上で指定してください。");
+        }
+
+        if (RelationScopes.Parse(PresenceVisibilityScope).Kind == RelationScopeKind.None)
+        {
+            throw new ArgumentException("当日の所在の公開範囲に none は使えません（所在を出さないなら IPresenceProvider を登録しないでください）。", nameof(PresenceVisibilityScope));
         }
     }
 }

@@ -56,7 +56,7 @@ export function createApiAdapter(options: ApiAdapterOptions = {}): DirectoryAdap
     milestones: meta ? toMilestones(meta) : [],
     canViewFuture: meta?.can_view_future ?? false,
     corrections: createApiCorrections(client, options.baseUrl ?? ""),
-    workplace: createApiWorkplace(client, options, asOfParam),
+    workplace: createApiWorkplace(options, asOfParam),
     async getOrgTree(asOf) {
       return client.get("/api/v1/orgs/tree", { query: { as_of: asOfParam(asOf) } });
     },

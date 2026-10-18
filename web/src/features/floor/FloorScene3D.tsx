@@ -326,7 +326,7 @@ function FloorDetail({ b, f, view, palette, theme, onHover, onClickSeat }: {
   useEffect(() => () => Object.values(geoms).forEach((g) => g.dispose()), [geoms]);
   const slotColor = (slot: number | null | undefined) => (slot === undefined || slot === null ? palette.siteOther : palette.site[slot]!);
 
-  // エリアの面（組織の色をごく薄く）と枠（フリーアドレスは破線）、部屋の輪郭
+  // エリアの面（組織の色をごく薄く）と枠、部屋の輪郭
   const zoneShapes = useMemo(() => {
     return view.zones.map((z) => {
       // ShapeGeometry は xy 平面。x 軸まわりに 90° 回すと (x, y) が世界の (x, z) になる
@@ -455,7 +455,7 @@ function FloorDetail({ b, f, view, palette, theme, onHover, onClickSeat }: {
             <mesh geometry={fill} position={[0, f.y + 0.012, 0]} raycast={() => null} renderOrder={1}>
               <meshBasicMaterial color={color} transparent opacity={z.slot === undefined ? (muted ? 0.07 : 0.04) : 0.13} depthWrite={false} side={THREE.DoubleSide} />
             </mesh>
-            <ZoneOutline geometry={line} color={color} dashed={z.zone.kind === "free_address"} />
+            <ZoneOutline geometry={line} color={color} />
           </group>
         );
       })}
@@ -496,14 +496,10 @@ function FloorDetail({ b, f, view, palette, theme, onHover, onClickSeat }: {
   );
 }
 
-function ZoneOutline({ geometry, color, dashed }: { geometry: THREE.BufferGeometry; color: string; dashed: boolean }) {
-  const ref = useRef<THREE.LineSegments>(null);
-  useLayoutEffect(() => {
-    if (dashed) ref.current?.computeLineDistances();
-  });
+function ZoneOutline({ geometry, color }: { geometry: THREE.BufferGeometry; color: string }) {
   return (
-    <lineSegments ref={ref} geometry={geometry} raycast={() => null}>
-      {dashed ? <lineDashedMaterial color={color} dashSize={0.6} gapSize={0.4} transparent opacity={0.8} /> : <lineBasicMaterial color={color} transparent opacity={0.65} />}
+    <lineSegments geometry={geometry} raycast={() => null}>
+      <lineBasicMaterial color={color} transparent opacity={0.65} />
     </lineSegments>
   );
 }
@@ -855,9 +851,8 @@ function buildLabels(props: FloorScene3DProps): LabelSpec[] {
     for (const z of detail.zones) {
       if (z.seats === 0 && z.zone.kind !== "common" && z.zone.kind !== "storage") continue;
       const [x, zz] = worldOf(selected.b, z.anchor[0] + 300, z.anchor[1] - 300);
-      const free = z.zone.kind === "free_address";
-      const detailText = z.seats === 0 ? undefined : free ? `${z.seats}席` : `${z.used}/${z.seats}`;
-      specs.push({ id: `z:${z.zone.zone_key}`, kind: "zone", text: free && z.label !== z.zone.name ? `${z.label}（フリーアドレス）` : z.label, detail: detailText, priority: 5000 + z.seats, anchor: [x, selected.f.y + 0.4, zz] });
+      const detailText = z.seats === 0 ? undefined : `${z.used}/${z.seats}`;
+      specs.push({ id: `z:${z.zone.zone_key}`, kind: "zone", text: z.label, detail: detailText, priority: 5000 + z.seats, anchor: [x, selected.f.y + 0.4, zz] });
     }
     const seat = selectedPersonId ? detail.seats.find((s) => s.people.some((p) => p.personId === selectedPersonId)) : undefined;
     if (seat) {

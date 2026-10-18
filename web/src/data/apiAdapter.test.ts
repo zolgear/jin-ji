@@ -250,11 +250,9 @@ describe("建物・フロアモードの API（設計書 §6.1 のパス）", ()
     expect(calls).toHaveLength(4);
   });
 
-  it("当日の所在が無効な導入先（404）では、設定も階の予約も null", async () => {
+  it("今日の所在の提供元が無い導入先（404）では、階の所在は null", async () => {
     const { fn } = fakeFetch({});
     const adapter = createApiAdapter({ fetch: fn, now });
-    expect(await adapter.workplace.getPresenceSettings()).toBeNull();
     expect(await adapter.workplace.getFloorPresence("f1", "2026-10-12")).toBeNull();
-    expect(await adapter.workplace.listMyPresence()).toEqual([]);
   });
 });

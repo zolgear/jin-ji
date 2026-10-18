@@ -39,7 +39,7 @@ export const DEFAULT_DEMO_POLICY: DemoPolicy = {
   orgRestrictions: [{ orgCode: "A020", fields: ["extension_number", "site", "remote_work", "workplace", "seat"] }],
 };
 
-/** 人の席・階・今日の予約の投影（デモの建物・フロアモード。demo/demoWorkplace.ts が設定する）。 */
+/** 人の席・階・今日の所在の投影（デモの建物・フロアモード。demo/demoWorkplace.ts が設定する）。 */
 export type PersonWorkplaceProjection = (person: DemoPerson, asOf: string, visible: ReadonlySet<PersonField>) => {
   workplace: unknown;
   seat: unknown;
@@ -60,7 +60,7 @@ export class DemoDirectory {
   private readonly siteById = new Map<string, DemoSite>();
   private readonly entityById: Map<string, DemoDataset["legal_entities"][number]>;
   private readonly visibleCache = new Map<string, PersonField[]>();
-  /** 席・階・今日の予約の投影（無ければ null）。 */
+  /** 席・階・今日の所在の投影（無ければ null）。 */
   workplaceProjection: PersonWorkplaceProjection | null = null;
 
   constructor(data: DemoDataset, policy: DemoPolicy = DEFAULT_DEMO_POLICY) {
@@ -290,7 +290,7 @@ export class DemoDirectory {
       const value = values[field];
       out[field] = visible.has(field) && value !== undefined ? value : null;
     }
-    // 今日の予約は、無い・見えないときは項目ごと省く（「不在」の値を作らない。仕様 §6.1）
+    // 今日の所在は、無い・見えないときは項目ごと省く（「不在」の値を作らない。仕様 §6.1）
     if (out.presence === null) delete out.presence;
     return out as Person;
   }

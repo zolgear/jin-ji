@@ -1,13 +1,13 @@
-// デモの建物・階・配置図・席の割り当て・当日の所在（自己申告の座席予約）を、デモの人員（350 人・1 万人）から決定的に作る。
+// デモの建物・階・配置図・席の割り当てを、デモの人員（350 人・1 万人）から決定的に作る。
 // 完全な架空データで、乱数は固定シード。仕様は docs/design/building-floor-mode.md（§2 のデータモデルを簡略に真似る）。
 //
 // - 建物を持つのは 3 拠点（東京本社の本館、横浜工場の工場棟と事務棟、千葉物流センター）。どちらのデモにも同じ名前の拠点がある
 // - 人の席は「部」（組織の段の department、無ければ最上位の組織）ごとのエリアにまとめる。所属の期間（主務）ごとに席を割り当て、
 //   期間が重ならない人どうしで同じ席を順に使う（定員 1 の席は同時に 1 人。タイムマシンで過去の席の配置も見られる）
-// - 働き方: 営業・総務の部はフリーアドレス（ホームエリアだけ。席は当日の予約）、工場の製造の部はラインの持ち場（定員 3）、
-//   物流センターの物流の部は入出荷の持ち場（定員 3）、ほかは固定席
-// - 配置図の改訂は 1 つ（2000-01-01 から）。部が無くなったエリアは、その後は空席のまま残る
-// - 当日の所在は、デモの「今日」（業務日付）から 14 日先までの予約。フリーアドレスの人の一部と、少数の固定席の人が入れる
+// - 働き方: 工場の製造の部はラインの持ち場（定員 3）、物流センターの物流の部は入出荷の持ち場（定員 4）、ほかは（営業・総務も）固定席
+// - 配置図の改訂は 1 つ（2000-01-01 から）。部が無くなったエリアは、その後は割り当ての無い席のまま残る
+// - 扱うのは人の決まった席・持ち場の割り当て（有効期間付き）だけ。席の取り合いに当たるものは扱わない（連携先の範疇）
+// - 今日の所在は、外部のシステムから届く想定のサンプル（固定シード、デモの「今日」だけ）。席にいる人の一部と、空いている席に座る少数
 import { addDays, inPeriod } from "../lib/date";
 import type { DemoDataset, DemoOrgUnit, DemoPerson } from "./model";
 import type { FixtureKind, FloorKind, PointMm, SeatKind, ZoneKind } from "../data/workplace";
@@ -62,15 +62,6 @@ export interface DemoLayout {
   seats: DemoSeat[];
 }
 
-/** 組織 → ホームエリア（有効期間付き。配下は引き継ぐ）。 */
-export interface DemoHomeZone {
-  org_unit_id: string;
-  floor_id: string;
-  zone_key: string;
-  valid_from: string;
-  valid_until: string | null;
-}
-
 /** 人 → 席 またはゾーン（有効期間付き）。 */
 export interface DemoSeatAssignment {
   person_id: string;
@@ -84,13 +75,12 @@ export interface DemoSeatAssignment {
   valid_until: string | null;
 }
 
-/** 当日の所在（自己申告の座席予約。1 人 1 日 1 件、時刻・履歴を持たない）。 */
-export interface DemoReservation {
+/** 外部から届いた今日の所在（1 人 1 件。時刻・履歴を持たない）。 */
+export interface DemoPresence {
   person_id: string;
-  date: string;
   floor_id: string;
   seat_id: string | null;
-  zone_key: string;
+  zone_key: string | null;
 }
 
 export interface DemoWorkplace {
@@ -98,10 +88,9 @@ export interface DemoWorkplace {
   floors: DemoFloor[];
   /** 階の ID → 配置図（改訂は 1 つ）。 */
   layouts: Map<string, DemoLayout>;
-  homeZones: DemoHomeZone[];
   assignments: DemoSeatAssignment[];
-  reservations: DemoReservation[];
-  presence: { purpose: string; days_ahead: number; unit: "seat" | "zone" | "both" };
+  /** 今日の所在のサンプル（業務日付の分だけ）。 */
+  presence: DemoPresence[];
 }
 
 // ---- 乱数・小さな道具 ----
@@ -157,7 +146,7 @@ export const WORKPLACE_SITES: readonly SitePlan[] = [
 ];
 
 /** 部の働き方。 */
-type WorkStyle = "fixed" | "free" | "line" | "dock";
+type WorkStyle = "fixed" | "line" | "dock";
 
 /** 部ごとの席の需要。 */
 interface DeptDemand {
@@ -298,12 +287,11 @@ function officeZone(
 ): PlacedZone {
   const col = geom.columns[piece.column]!;
   const y0 = piece.y1 - ZONE_HEAD - piece.pairs * PAIR_H;
-  const free = piece.req.demand.style === "free";
   const letter = zoneLetter(index);
   const zone: DemoZone = {
     zone_key: `${floorId}-z${letter}`,
     name: `${label} ${letter}エリア`,
-    kind: free ? "free_address" : "office",
+    kind: "office",
     polygon: rect(col.x0, y0, col.x0 + col.w, piece.y1),
   };
   const seats: DemoSeat[] = [];
@@ -325,7 +313,7 @@ function officeZone(
           y_mm: pairTop + dy,
           rotation_deg: rot,
           desk_type: "desk_1200",
-          seat_kind: free ? "free" : "fixed",
+          seat_kind: "fixed",
           capacity: 1,
           features: j % 4 === 0 ? ["dual_monitor"] : ["monitor"],
           out_of_service: false,
@@ -364,10 +352,6 @@ function stationZone(floorId: string, label: string, index: number, name: string
 
 export interface WorkplaceOptions {
   seed?: number;
-  /** 予約できる先の日数（今日を含まない）。 */
-  daysAhead?: number;
-  /** デモの閲覧者（フリーアドレスなら、今日・翌営業日・1 週間後に席の予約を入れておく。予約の画面のデモのため）。 */
-  viewerId?: string;
 }
 
 /** 部（段 department の祖先。無ければ最上位の組織）。 */
@@ -414,7 +398,6 @@ function workStyleOf(dept: DemoOrgUnit, people: DemoPerson[], plans: Set<Buildin
   const major = [...jobs.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? "";
   if (plans.has("factory") && (/製造|生産/.test(dept.name) || major === "製造")) return "line";
   if (plans.has("logistics") && (/物流|倉庫|配送/.test(dept.name) || major === "物流")) return "dock";
-  if (/営業|総務/.test(dept.name) || major === "営業") return "free";
   return "fixed";
 }
 
@@ -435,8 +418,6 @@ function allocateSlots(intervals: DeptDemand["intervals"]): number {
 
 export function generateWorkplace(data: DemoDataset, options: WorkplaceOptions = {}): DemoWorkplace {
   const rng = mulberry32(options.seed ?? 20261018);
-  const daysAhead = options.daysAhead ?? 14;
-  const today = data.meta.business_date;
   const orgById = new Map(data.org_units.map((o) => [o.id, o]));
   const deptOf = deptResolver(orgById);
   const orgSite = orgSiteResolver(orgById);
@@ -445,9 +426,7 @@ export function generateWorkplace(data: DemoDataset, options: WorkplaceOptions =
   const buildings: DemoBuilding[] = [];
   const floors: DemoFloor[] = [];
   const layouts = new Map<string, DemoLayout>();
-  const homeZones: DemoHomeZone[] = [];
   const assignments: DemoSeatAssignment[] = [];
-  const reservations: DemoReservation[] = [];
 
   // 人の所属の期間（主務）を、拠点 × 部ごとにまとめる
   const plansBySite = new Map<string, SitePlan>();
@@ -529,8 +508,7 @@ export function generateWorkplace(data: DemoDataset, options: WorkplaceOptions =
           seats: placed.flatMap((p) => p.seats),
         });
       };
-      const seatDemand = (d: DeptDemand) =>
-        d.style === "free" ? Math.max(4, Math.ceil(d.peak * 0.6)) : d.peak + Math.max(1, Math.ceil(d.peak * 0.12));
+      const seatDemand = (d: DeptDemand) => d.peak + Math.max(1, Math.ceil(d.peak * 0.12));
 
       // 事務の階（本館の 2F〜、事務棟の 1F〜、物流センターの倉庫の上）
       const officeFloorsFor = (
@@ -624,7 +602,7 @@ export function generateWorkplace(data: DemoDataset, options: WorkplaceOptions =
         return { width, depth };
       };
 
-      const officeReqs = (list: DeptDemand[]) => list.filter((d) => d.style === "fixed" || d.style === "free").map((d) => ({ demand: d, seats: seatDemand(d) }));
+      const officeReqs = (list: DeptDemand[]) => list.filter((d) => d.style === "fixed").map((d) => ({ demand: d, seats: seatDemand(d) }));
       if (b.plan === "tower") {
         // 地下 1 階（駐車場・機械室）と 1 階（受付）は席を持たない
         const reqs = officeReqs(inBuilding);
@@ -669,16 +647,11 @@ export function generateWorkplace(data: DemoDataset, options: WorkplaceOptions =
       }
     });
 
-    // 割り当て・ホームエリア
+    // 割り当て
     for (const d of siteDemands) {
       const placed = placedByDept.get(`${siteId}|${d.dept.id}`) ?? [];
       if (placed.length === 0) continue;
-      const first = placed[0]!;
-      // ホームエリアは部の有効期間（1 組織 1 エリア）。ラインは最初の帯。共用のエリアは組織を持たない
-      // 同じ部が複数の拠点にいるときは、最初の拠点（人数の多い部の拠点の順）だけをホームエリアにする
-      if (!d.dept.id.startsWith("shared-") && !homeZones.some((h) => h.org_unit_id === d.dept.id)) homeZones.push({ org_unit_id: d.dept.id, floor_id: first.floorId, zone_key: first.zone.zone_key, valid_from: d.dept.valid_from, valid_until: d.dept.valid_until });
       const seats = placed.flatMap((p) => p.seats.map((s) => ({ seat: s, floorId: p.floorId })));
-      if (d.style === "free") continue;
       if (d.style === "fixed") {
         // 予備の席の一部を「使えない席」（保守中・予備）にする
         seats.forEach((s, i) => {
@@ -703,92 +676,39 @@ export function generateWorkplace(data: DemoDataset, options: WorkplaceOptions =
     }
   }
 
-  // ---- 当日の所在（今日から daysAhead 日先までの平日） ----
-  const seatById = new Map<string, { seat: DemoSeat; floorId: string; zone: DemoZone | undefined }>();
+  // ---- 外部から届いた今日の所在（サンプル。業務日付だけ） ----
+  const today = data.meta.business_date;
+  const assignedToday = new Set<string>();
+  for (const a of assignments) if (a.seat_id && inPeriod(today, a.valid_from, a.valid_until)) assignedToday.add(a.seat_id);
+  const freeByZone = new Map<string, DemoSeat[]>();
   for (const layout of layouts.values()) {
-    const zones = new Map(layout.zones.map((z) => [z.zone_key, z]));
-    for (const seat of layout.seats) seatById.set(seat.seat_id, { seat, floorId: layout.floor_id, zone: seat.zone_key ? zones.get(seat.zone_key) : undefined });
-  }
-  const freeSeatsByZone = new Map<string, DemoSeat[]>();
-  for (const { seat } of seatById.values()) {
-    if (seat.seat_kind !== "free" || !seat.zone_key) continue;
-    const list = freeSeatsByZone.get(seat.zone_key) ?? [];
-    list.push(seat);
-    freeSeatsByZone.set(seat.zone_key, list);
-  }
-  const homeAt = (orgId: string, date: string): DemoHomeZone | undefined => {
-    let cur = orgById.get(orgId);
-    const seen = new Set<string>();
-    while (cur && !seen.has(cur.id)) {
-      seen.add(cur.id);
-      const id = cur.id;
-      const hz = homeZones.find((h) => h.org_unit_id === id && inPeriod(date, h.valid_from, h.valid_until));
-      if (hz) return hz;
-      cur = cur.parent_id ? orgById.get(cur.parent_id) : undefined;
+    for (const seat of layout.seats) {
+      if (seat.seat_kind !== "fixed" || !seat.zone_key || seat.out_of_service || assignedToday.has(seat.seat_id)) continue;
+      const list = freeByZone.get(seat.zone_key) ?? [];
+      list.push(seat);
+      freeByZone.set(seat.zone_key, list);
     }
-    return undefined;
-  };
-  const taken = new Set<string>();
-  const dates: string[] = [];
-  for (let k = 0; k <= daysAhead; k++) {
-    const date = addDays(today, k);
-    const dow = new Date(`${date}T00:00:00Z`).getUTCDay();
-    if (dow !== 0 && dow !== 6) dates.push(date);
   }
-  const activePrimary = (p: DemoPerson, date: string) =>
-    p.assignments.find((a) => a.type === "primary" && inPeriod(date, a.valid_from, a.valid_until) && orgById.has(a.org_unit_id));
-  const fixedToday = new Map<string, DemoSeatAssignment>();
-  for (const a of assignments) if (a.seat_id && inPeriod(today, a.valid_from, a.valid_until)) fixedToday.set(a.person_id, a);
-  const reserveSeat = (person: DemoPerson, date: string, zoneKey: string, floorId: string, preferred: DemoSeat[] | undefined) => {
-    const pool = (preferred ?? []).filter((s) => !s.out_of_service && !taken.has(`${date}|${s.seat_id}`));
-    if (pool.length === 0) {
-      reservations.push({ person_id: person.id, date, floor_id: floorId, seat_id: null, zone_key: zoneKey });
-      return;
-    }
-    const seat = pool[Math.floor(rng() * pool.length)]!;
-    taken.add(`${date}|${seat.seat_id}`);
-    reservations.push({ person_id: person.id, date, floor_id: floorId, seat_id: seat.seat_id, zone_key: zoneKey });
-  };
-  const listed = data.people.filter((p) => p.termination_date === null || p.termination_date >= today);
-  for (const date of dates) {
-    const k = (Date.parse(`${date}T00:00:00Z`) - Date.parse(`${today}T00:00:00Z`)) / 86_400_000;
-    for (const person of listed) {
-      const primary = activePrimary(person, date);
-      if (!primary) continue;
-      const fixed = fixedToday.get(person.id);
-      const roll = rng();
-      if (fixed) {
-        // 固定席の人の申告（今日は自分の席に来る）は今日だけ、ごく一部
-        // 定員 2 以上の持ち場は予約の対象にしない（工場の持ち場は所属上の割り当てで足りる）
-        if (k === 0 && roll < 0.03 && fixed.seat_id && fixed.exclusive) {
-          taken.add(`${date}|${fixed.seat_id}`);
-          const info = seatById.get(fixed.seat_id)!;
-          reservations.push({ person_id: person.id, date, floor_id: fixed.floor_id, seat_id: fixed.seat_id, zone_key: info.seat.zone_key ?? "" });
-        }
-        continue;
-      }
-      const home = homeAt(primary.org_unit_id, date);
-      if (!home) continue;
-      const zone = layouts.get(home.floor_id)?.zones.find((z) => z.zone_key === home.zone_key);
-      if (zone?.kind !== "free_address") continue;
-      const rate = k === 0 ? 0.45 : Math.max(0.1, 0.36 - k * 0.02);
-      const viewerDay = person.id === options.viewerId && (k === 0 || date === dates[1] || date === dates[5]);
-      if (!viewerDay && roll >= rate) continue;
-      reserveSeat(person, date, home.zone_key, home.floor_id, viewerDay || roll < rate * 0.92 ? freeSeatsByZone.get(home.zone_key) : undefined);
-    }
+  const presence: DemoPresence[] = [];
+  const listed = new Set(data.people.filter((p) => p.termination_date === null || p.termination_date >= today).map((p) => p.id));
+  for (const a of assignments) {
+    if (!a.seat_id || !a.exclusive || !listed.has(a.person_id) || !inPeriod(today, a.valid_from, a.valid_until)) continue;
+    const roll = rng();
+    const own = layouts.get(a.floor_id)?.seats.find((s) => s.seat_id === a.seat_id);
+    if (roll < 0.5) presence.push({ person_id: a.person_id, floor_id: a.floor_id, seat_id: a.seat_id, zone_key: own?.zone_key ?? null });
+    else if (roll < 0.58 && own?.zone_key) {
+      // 割り当ての無い席に座る（同じエリアの空き）
+      const pool = freeByZone.get(own.zone_key) ?? [];
+      const seat = pool.splice(Math.floor(rng() * pool.length), 1)[0];
+      if (seat) presence.push({ person_id: a.person_id, floor_id: a.floor_id, seat_id: seat.seat_id, zone_key: own.zone_key });
+    } else if (roll < 0.62 && own?.zone_key) presence.push({ person_id: a.person_id, floor_id: a.floor_id, seat_id: null, zone_key: own.zone_key });
   }
 
   return {
     buildings,
     floors,
     layouts,
-    homeZones,
     assignments,
-    reservations,
-    presence: {
-      purpose: "座席の確保と、同僚との合流のために使います。勤怠・人事評価・懲戒の判断には使いません。",
-      days_ahead: daysAhead,
-      unit: "both",
-    },
+    presence,
   };
 }

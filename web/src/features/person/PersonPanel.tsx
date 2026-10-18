@@ -65,7 +65,6 @@ function SeatValue({ person }: { person: Person }) {
       <span>
         {where}
         {detail && <span className="tabular">・{detail}</span>}
-        {workplace.inherited && <span className="text-xs text-muted">（所属組織のエリア）</span>}
       </span>
       <button
         type="button"
@@ -83,12 +82,12 @@ function SeatValue({ person }: { person: Person }) {
   );
 }
 
-/** 今日の予約（当日の所在）。見られる場合だけ。予約が無いときは行ごと出さない（「不在」と出さない）。 */
+/** 今日の所在（外部から届いたもの）。見られる場合だけ。無いときは行ごと出さない（「不在」と出さない）。 */
 function PresenceRow({ person }: { person: Person }) {
   const { presence } = workplaceOf(person);
   if (!presence) return null;
   return (
-    <Row label="今日の予約">
+    <Row label="今日の所在">
       <span className="inline-flex flex-wrap items-center gap-1.5">
         <Badge tone="neutral">今日</Badge>
         <span>

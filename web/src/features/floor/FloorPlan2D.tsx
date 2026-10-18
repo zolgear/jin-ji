@@ -1,10 +1,10 @@
 // 2D の簡易フロアマップ（SVG を React で直接描く。仕様 §5.4）。xyflow はノードと辺のためのもので、座標が固定の平面図には使わない。
 //
-// 要素: 外形（実線）・コア（斜線）・部屋（細線）・エリア（組織の色の淡い面と細い枠。フリーアドレスは破線）・机（細線の矩形）・
-// 人（組織の色の点）・空席（輪）・使えない席（淡い斜線）・選んだ人（控えめなアクセント色の輪と札）・今日の予約の人（点の右上の小さな菱形）。
+// 要素: 外形（実線）・コア（斜線）・部屋（細線）・エリア（組織の色の淡い面と細い枠）・机（細線の矩形）・
+// 人（組織の色の点）・空席（輪）・使えない席（淡い斜線）・選んだ人（控えめなアクセント色の輪と札）・今日の所在の人（点の右上の小さな菱形）。
 // 1 m の格子をごく薄く。状態は形で区別し、色だけに頼らない。ズーム・パンは viewBox で行う（ホイール・ドラッグ・ピンチ・ボタン）。
 // アクセシビリティ: 同じ内容の表（席番号・状態・人・組織）を下に置き、キーボードで席を順に辿れる。
-import { useEffect, useId, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
+import { useEffect, useId, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { chairPosition, deskSize, slotColorVar, type FloorView, type SeatView } from "./floorModel";
 import { centerOn, fitViewport, panBy, toSvgY, viewBoxOf, zoomAt, type Viewport } from "./planViewport";
 
@@ -16,16 +16,8 @@ export interface FloorPlan2DProps {
   selectedPersonId?: string | null;
   /** 席を押したとき（人の席・空席など。判定は呼び出し側）。 */
   onSeat?: (seat: SeatView) => void;
-  /** 予約の画面: 押せる席（予約できる空席）。 */
-  selectable?: (seat: SeatView) => boolean;
-  /** 予約の画面: 自分の予約の席。 */
-  mySeatId?: string | null;
   /** 表の見出し（読み上げ）。 */
   title: string;
-  /** 予約による人の印の名前（既定は「今日」。予約の画面では選んだ日）。 */
-  reservationLabel?: string;
-  /** 平面図の上に重ねる要素（右上の操作など）。 */
-  overlay?: ReactNode;
   className?: string;
 }
 
@@ -46,7 +38,7 @@ function ZoomIcon({ kind }: { kind: "in" | "out" | "fit" }) {
 
 const btn = "inline-flex size-8 items-center justify-center rounded-md border border-border bg-surface text-fg shadow-sm hover:bg-surface-2";
 
-export function FloorPlan2D({ view, selectedPersonId = null, onSeat, selectable, mySeatId = null, title, reservationLabel = "今日", overlay, className = "" }: FloorPlan2DProps) {
+export function FloorPlan2D({ view, selectedPersonId = null, onSeat, title, className = "" }: FloorPlan2DProps) {
   const uid = useId().replace(/:/g, "");
   const box = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ w: 800, h: 500 });
@@ -142,7 +134,7 @@ export function FloorPlan2D({ view, selectedPersonId = null, onSeat, selectable,
   const showZoneText = pxPerMm > 0.006;
   // 札の文字は、縮小したときも読めるように画面の 8.5px 以上に保つ（配置図の mm で 640〜900）
   const zoneFont = Math.min(900, Math.max(640, 8.5 / Math.max(pxPerMm, 1e-6)));
-  const clickable = (s: SeatView) => (selectable ? selectable(s) : s.state === "person");
+  const clickable = (s: SeatView) => s.state === "person";
   const seatTarget = (s: SeatView) => {
     if (moved.current > 6) return;
     if (clickable(s)) onSeat?.(s);
@@ -180,7 +172,6 @@ export function FloorPlan2D({ view, selectedPersonId = null, onSeat, selectable,
           {/* エリア */}
           {view.zones.map((z) => {
             const color = slotColorVar(z.slot);
-            const free = z.zone.kind === "free_address";
             const muted = z.zone.kind === "common" || z.zone.kind === "storage" || z.zone.kind === "restricted";
             return (
               <g key={z.zone.zone_key}>
@@ -191,7 +182,6 @@ export function FloorPlan2D({ view, selectedPersonId = null, onSeat, selectable,
                   stroke={color ?? "var(--edge)"}
                   strokeOpacity={color ? 0.55 : 0.6}
                   strokeWidth="1"
-                  strokeDasharray={free ? "5 4" : undefined}
                   vectorEffect="non-scaling-stroke"
                 />
                 {showZoneText && (
@@ -199,7 +189,7 @@ export function FloorPlan2D({ view, selectedPersonId = null, onSeat, selectable,
                     {z.label}
                     {z.seats > 0 && (
                       <tspan fill="var(--muted)" fontWeight="normal" dx="300">
-                        {free ? `${z.seats}席` : `${z.used}/${z.seats}席`}
+                        {`${z.used}/${z.seats}席`}
                       </tspan>
                     )}
                   </text>
@@ -239,7 +229,6 @@ export function FloorPlan2D({ view, selectedPersonId = null, onSeat, selectable,
               Y={Y}
               hatch={`url(#${uid}-hatch-seat)`}
               clickable={clickable(s) && Boolean(onSeat)}
-              mine={s.seat.seat_id === mySeatId}
               onClick={() => seatTarget(s)}
               onHover={(e) => {
                 const r = box.current?.getBoundingClientRect();
@@ -263,18 +252,17 @@ export function FloorPlan2D({ view, selectedPersonId = null, onSeat, selectable,
             </button>
           </div>
         </div>
-        {overlay}
         {hover && (
           <div
             className="pointer-events-none absolute z-10 min-w-[9em] rounded-sm border border-t-2 border-border border-t-accent bg-surface px-2 py-1.5 text-xs shadow"
             style={{ left: Math.min(hover.x + 14, size.w - 190), top: Math.min(hover.y + 14, size.h - 80) }}
             aria-hidden="true"
           >
-            <SeatTooltip s={hover.seat} reservationLabel={reservationLabel} />
+            <SeatTooltip s={hover.seat} />
           </div>
         )}
       </div>
-      <SeatTable view={view} title={title} onSeat={onSeat} clickable={clickable} reservationLabel={reservationLabel} />
+      <SeatTable view={view} title={title} onSeat={onSeat} clickable={clickable} />
     </div>
   );
 }
@@ -284,7 +272,7 @@ function polyPath(points: ReadonlyArray<readonly [number, number]>, Y: (y: numbe
 }
 
 /** 席の説明（指したとき）。 */
-export function SeatTooltip({ s, reservationLabel = "今日" }: { s: SeatView; reservationLabel?: string }) {
+export function SeatTooltip({ s }: { s: SeatView }) {
   return (
     <>
       <div className="tabular text-muted">{s.seat.code}</div>
@@ -293,7 +281,7 @@ export function SeatTooltip({ s, reservationLabel = "今日" }: { s: SeatView; r
           s.people.map((p) => (
             <div key={p.personId}>
               <span className="font-bold">{p.name ?? "（氏名非公開）"}</span>
-              {p.today && <span className="ml-1 rounded-sm border border-border px-1 text-[10px]">{reservationLabel}</span>}
+              {p.today && <span className="ml-1 rounded-sm border border-border px-1 text-[10px]">今日</span>}
               {p.orgName && <div className="text-muted">{p.orgName}</div>}
             </div>
           ))
@@ -310,12 +298,11 @@ export function SeatTooltip({ s, reservationLabel = "今日" }: { s: SeatView; r
 
 const PERSON_R = 260;
 
-function SeatGlyph({ s, Y, hatch, clickable, mine, onClick, onHover }: {
+function SeatGlyph({ s, Y, hatch, clickable, onClick, onHover }: {
   s: SeatView;
   Y: (y: number) => number;
   hatch: string;
   clickable: boolean;
-  mine: boolean;
   onClick: () => void;
   onHover: (e: { clientX: number; clientY: number } | null) => void;
 }) {
@@ -361,21 +348,10 @@ function SeatGlyph({ s, Y, hatch, clickable, mine, onClick, onHover }: {
       {s.state === "unavailable" && (
         <rect x={px - 260} y={py - 260} width={520} height={520} rx={60} fill={hatch} stroke="var(--edge)" strokeWidth="0.8" vectorEffect="non-scaling-stroke" opacity="0.9" />
       )}
-      {/* 今日の予約の人: 点の右上の小さな菱形（形で示す） */}
+      {/* 今日の所在の人: 点の右上の小さな菱形（形で示す） */}
       {s.today && (
-        <path
-          d={`M${px + 300} ${py - 520}l170 170l-170 170l-170 -170Z`}
-          fill="var(--fg)"
-          stroke="var(--surface)"
-          strokeWidth="1"
-          vectorEffect="non-scaling-stroke"
-        />
+        <path d={`M${px + 300} ${py - 520}l170 170l-170 170l-170 -170Z`} fill="var(--fg)" stroke="var(--surface)" strokeWidth="1" vectorEffect="non-scaling-stroke" />
       )}
-      {/* 予約の画面: 押せる空席は輪を太く、自分の予約は二重の輪 */}
-      {clickable && s.state === "vacant" && (
-        <circle cx={px} cy={py} r={PERSON_R + 60} fill="none" stroke="var(--accent)" strokeWidth="1.6" vectorEffect="non-scaling-stroke" />
-      )}
-      {mine && <circle cx={px} cy={py} r={PERSON_R + 200} fill="none" stroke="var(--accent)" strokeWidth="2.4" vectorEffect="non-scaling-stroke" />}
     </g>
   );
 }
@@ -402,12 +378,11 @@ function SelectedMark({ s, Y, personId }: { s: SeatView; Y: (y: number) => numbe
 }
 
 /** 平面図と同じ内容の表（キーボード・読み上げでの代替）。 */
-function SeatTable({ view, title, onSeat, clickable, reservationLabel }: {
+function SeatTable({ view, title, onSeat, clickable }: {
   view: FloorView;
   title: string;
   onSeat?: (s: SeatView) => void;
   clickable: (s: SeatView) => boolean;
-  reservationLabel: string;
 }) {
   return (
     <details className="shrink-0 border-t border-border bg-surface text-sm">
@@ -439,7 +414,7 @@ function SeatTable({ view, title, onSeat, clickable, reservationLabel }: {
                   </td>
                   <td className="py-1 pr-3">
                     {STATE_LABEL[s.state]}
-                    {p?.today && <span className="ml-1 rounded-sm border border-border px-1 text-[11px]">{reservationLabel}</span>}
+                    {p?.today && <span className="ml-1 rounded-sm border border-border px-1 text-[11px]">今日</span>}
                   </td>
                   <td className="py-1 pr-3">{p ? (p.name ?? "（氏名非公開）") : ""}</td>
                   <td className="py-1 text-muted">{p?.orgName ?? ""}</td>

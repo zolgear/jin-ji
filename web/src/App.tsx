@@ -6,7 +6,6 @@ import { SessionGate } from "./auth/session";
 import { Spinner } from "./components/ui";
 import { AdapterProvider, DEMO_AVAILABLE, useAdapter, type AdapterChoice } from "./data/adapterContext";
 import { CorrectionsView } from "./features/corrections/CorrectionsView";
-import { BookingView } from "./features/floor/BookingView";
 import { OrgOutline } from "./features/org/OrgOutline";
 import { OrgPanel } from "./features/org/OrgPanel";
 import { OrgChartView } from "./features/orgchart/OrgChartView";
@@ -63,8 +62,8 @@ function SidePanel() {
  *  タイムマシンは過去を見るためのまれな機能なので、主役の画面名から離して右端に置く。 */
 function TopBar() {
   const { view } = useNav();
-  // 修正依頼と今日の席（予約の日を自分の引数で持つ）は、タイムマシンの日付を持たない
-  const dated = view !== "corrections" && view !== "floor-booking";
+  // 修正依頼は、タイムマシンの日付を持たない
+  const dated = view !== "corrections";
   return (
     <header className="flex min-h-14 shrink-0 items-center gap-x-4 gap-y-2 border-b border-border bg-surface px-4 py-2 md:px-5">
       {/* スマホでは下のタブが現在地を示すので、日付のある画面では名前を読み上げだけにして幅を空ける */}
@@ -96,7 +95,6 @@ function Shell() {
             )}
             {view === "search" && <SearchView />}
             {view === "corrections" && <CorrectionsView />}
-            {view === "floor-booking" && <BookingView />}
           </section>
           <SidePanel />
         </main>

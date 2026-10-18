@@ -32,18 +32,18 @@ const layout: FloorLayout = {
   fixtures: [],
   grid_mm: 100,
   zones: [
-    { zone_key: "z1", name: "3F Aエリア", kind: "office", polygon: [[0, 0], [10000, 0], [10000, 10000], [0, 10000]], home_org_units: [] },
-    { zone_key: "z2", name: "3F Bエリア", kind: "free_address", polygon: [[10000, 0], [20000, 0], [20000, 10000], [10000, 10000]], home_org_units: [{ id: "d2", name: "営業部" }] },
+    { zone_key: "z1", name: "3F Aエリア", kind: "office", polygon: [[0, 0], [10000, 0], [10000, 10000], [0, 10000]] },
+    { zone_key: "z2", name: "3F Bエリア", kind: "office", polygon: [[10000, 0], [20000, 0], [20000, 10000], [10000, 10000]] },
   ],
   seats: [
     seat("a1", 1000, "fixed", "occupied"),
     seat("a2", 2000, "fixed", "occupied"),
     seat("a3", 3000, "fixed", "vacant"),
     seat("a4", 4000, "fixed", "unavailable"),
-    seat("b1", 11000, "free", "vacant", "z2"),
-    seat("b2", 12000, "free", "vacant", "z2"),
-    seat("b3", 13000, "free", "vacant", "z2"),
-    seat("b4", 14000, "free", "vacant", "z2"),
+    seat("b1", 11000, "fixed", "vacant", "z2"),
+    seat("b2", 12000, "fixed", "vacant", "z2"),
+    seat("b3", 13000, "fixed", "vacant", "z2"),
+    seat("b4", 14000, "fixed", "vacant", "z2"),
   ],
 };
 
@@ -63,7 +63,7 @@ const occ = (person: string, seatId: string, org = "o1"): FloorOccupant => ({
 });
 const occupants = [occ("p1", "a1"), occ("p2", "a2")];
 
-describe("buildFloorView（席の状態と当日の所在の重ね）", () => {
+describe("buildFloorView（席の状態と今日の所在の重ね）", () => {
   it("当日の所在が無ければ、席の状態は配置図のまま 3 つ（人・空席・使えない席）", () => {
     const v = buildFloorView({ layout, occupants, presence: null, groupOf });
     expect(v.seats.map((s) => s.state)).toEqual(["person", "person", "vacant", "unavailable", "vacant", "vacant", "vacant", "vacant"]);
@@ -72,19 +72,18 @@ describe("buildFloorView（席の状態と当日の所在の重ね）", () => {
     expect(v.seats.some((s) => s.today)).toBe(false);
   });
 
-  it("見える人の予約は「今日」の印の人、見えない人の予約は使えない席。状態は 3 つのまま増えない", () => {
+  it("見える人の所在は「今日」の印の人、見えない人の所在は使えない席。状態は 3 つのまま増えない", () => {
     const presence: FloorPresence = {
       floor_id: "f1",
       date: "2026-10-01",
       unavailable_seat_ids: ["b2"],
-      reservations: [
+      items: [
         { person_id: "p3", display_name: "p3", org_unit_id: "o2", org_unit_name: "営業課", seat_id: "b1", zone_key: "z2" },
-        // 固定席の人の申告（今日は自分の席に来る）
+        // 割り当ての席に来ている人
         { person_id: "p1", display_name: "p1", org_unit_id: "o1", org_unit_name: "総務課", seat_id: "a1", zone_key: "z1" },
-        // エリアだけの予約は席に出さない
+        // エリアだけの所在は席に出さない
         { person_id: "p4", display_name: "p4", org_unit_id: "o2", org_unit_name: "営業課", seat_id: null, zone_key: "z2" },
       ],
-      vacant_count: 3,
     };
     const v = buildFloorView({ layout, occupants, presence, groupOf });
     const by = new Map(v.seats.map((s) => [s.seat.seat_id, s]));
@@ -94,7 +93,7 @@ describe("buildFloorView（席の状態と当日の所在の重ね）", () => {
     expect(by.get("a1")!.state).toBe("person");
     expect(by.get("a1")!.today).toBe(true);
     expect(by.get("a1")!.people).toHaveLength(1);
-    // 予約の無い固定席の人は所属上の席のまま（「不在」にしない）
+    // 所在の無い人は割り当ての席のまま（「不在」にしない）
     expect(by.get("a2")!.state).toBe("person");
     expect(by.get("a2")!.today).toBe(false);
     expect(new Set(v.seats.map((s) => s.state))).toEqual(new Set(["person", "vacant", "unavailable"]));
@@ -103,7 +102,7 @@ describe("buildFloorView（席の状態と当日の所在の重ね）", () => {
     expect(seatOfPerson(v, "p3")?.seat.seat_id).toBe("b1");
   });
 
-  it("色は席の多い組織 3 つまで（4 つ目以降は「その他」）。エリアの札はホームエリアの組織か、席の半分以上を占める組織", () => {
+  it("色は席の多い組織 3 つまで（4 つ目以降は「その他」）。エリアの札は席の半分以上を占める組織", () => {
     const many = ["o1", "o2", "o3", "o4"];
     const g = (id: string | null) => (id ? { id: `d-${id}`, name: id, code: id } : null);
     const occ4 = [occ("q1", "a1", "o1"), occ("q2", "a2", "o1"), occ("q3", "a3", "o2"), occ("q4", "b1", "o3"), occ("q5", "b2", "o4"), occ("q6", "b3", "o4")];
@@ -113,12 +112,12 @@ describe("buildFloorView（席の状態と当日の所在の重ね）", () => {
     expect(v.legend.find((e) => e.group.id === "d-o3")!.slot).toBeNull();
     expect(many).toHaveLength(4);
     expect(v.zones[0]!.label).toBe("o1");
-    expect(v.zones[1]!.label).toBe("営業部");
+    expect(v.zones[1]!.label).toBe("o4");
     const mono = buildFloorView({ layout, occupants, presence: null, groupOf, monochrome: true });
     expect(mono.seats.filter((s) => s.state === "person").every((s) => s.slot === null)).toBe(true);
   });
 
-  it("当日の所在は今日を表示しているときだけ（過去・将来の日、機能が無効、presence=0 では重ねない）", () => {
+  it("今日の所在は今日を表示しているときだけ（過去・将来の日、提供元が無い、presence=0 では重ねない）", () => {
     expect(presenceOverlayOn("2026-10-01", "2026-10-01", true, null)).toBe(true);
     expect(presenceOverlayOn("2026-09-30", "2026-10-01", true, null)).toBe(false);
     expect(presenceOverlayOn("2026-10-02", "2026-10-01", true, null)).toBe(false);

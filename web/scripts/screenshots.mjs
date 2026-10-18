@@ -83,8 +83,6 @@ const shots = [
   } },
   { name: "floor-help", hash: `#/overview-3d?mode=floor&floor=${mainFloor("3F")}`, wait: "canvas", settle: 3500, only: "desktop", action: (page) => page.click("button[aria-label='図の見方']") },
   { name: "floor-large", hash: `#/overview-3d?mode=floor&source=demo-large&floor=bld-S01-MAIN-5F`, wait: "canvas", settle: 6000, only: "desktop" },
-  // 今日の席（本人の予約の画面）
-  { name: "floor-booking", hash: "#/floor-booking", wait: "svg[aria-labelledby]" },
   { name: "person-suspended", hash: `#/org-chart?person=${suspended.id}`, wait: "text=人の詳細" },
   { name: "person-private-fields", hash: `#/org-chart?person=${auditMember.id}`, wait: "text=人の詳細" },
   { name: "person-concurrent", hash: `#/search?q=${encodeURIComponent(concurrentPerson.family_name_kana)}&person=${concurrentPerson.id}`, wait: "text=人の詳細" },

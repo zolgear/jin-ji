@@ -32,7 +32,7 @@ export function createDemoAdapterFrom(data: DemoDataset, label = DEMO_LABEL): Di
     if (!deptCache.has(p.id)) deptCache.set(p.id, deptToday(p.id));
     return viewerDept !== null && deptCache.get(p.id) === viewerDept;
   });
-  const workplace = new DemoWorkplaceService(dir, generateWorkplace(data, { viewerId: viewer.id }), viewer);
+  const workplace = new DemoWorkplaceService(dir, generateWorkplace(data));
   dir.workplaceProjection = (person, asOf, visible) => workplace.project(person, asOf, visible);
   // API と同じく非同期で返す（呼び出し側の作りを揃えるため）
   const later = <T,>(fn: () => T): Promise<T> =>

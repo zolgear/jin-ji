@@ -1,6 +1,6 @@
 // 建物・フロアモードの URL の状態と取得のフック。
 // URL: #/overview-3d?mode=floor&site=&building=&floor=&plan=1&person=&color=none&presence=0（as_of はタイムマシンと共有。仕様 §5.5）
-import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useAdapter } from "../../data/adapterContext";
 import { fetchCached, useQuery } from "../../data/query";
 import type { Building, FloorLayout } from "../../data/types";
@@ -15,7 +15,7 @@ export interface FloorRoute {
   personId: string | null;
   /** 組織で色分け（既定）か単色か。 */
   monochrome: boolean;
-  /** URL の presence（"0" なら当日の所在を重ねない）。 */
+  /** URL の presence（"0" なら今日の所在を重ねない）。 */
   presenceParam: string | null;
 }
 
@@ -53,9 +53,7 @@ export function useFloorRoute() {
 
 export function useBuildings(siteId: string | null, asOf: string) {
   const { adapter } = useAdapter();
-  // 今日の空き席数は予約で変わるので、当日の所在の版もキーに含める
-  const version = usePresenceVersion();
-  return useQuery(adapter, siteId ? `buildings:${siteId}:${asOf}:${version}` : null, () => adapter.workplace.listBuildings(siteId!, asOf));
+  return useQuery(adapter, siteId ? `buildings:${siteId}:${asOf}` : null, () => adapter.workplace.listBuildings(siteId!, asOf));
 }
 
 export function useFloorLayout(floorId: string | null, asOf: string) {
@@ -68,44 +66,10 @@ export function useFloorOccupants(floorId: string | null, asOf: string) {
   return useQuery(adapter, floorId ? `occupants:${floorId}:${asOf}` : null, () => adapter.workplace.listFloorOccupants(floorId!, asOf));
 }
 
-export function usePresenceSettings() {
-  const { adapter } = useAdapter();
-  return useQuery(adapter, "presence-settings", () => adapter.workplace.getPresenceSettings());
-}
-
-// ---- 当日の所在の取り直し ----
-// 当日の所在は API が no-store で返す（ETag で使い回さない）。画面の中では予約・取り消しのたびに版を上げ、キーを変えて取り直す。
-
-let presenceVersion = 0;
-const listeners = new Set<() => void>();
-
-/** 予約・取り消しの後に呼ぶ（当日の所在と、空き席数を含む階の一覧を取り直す）。 */
-export function bumpPresenceVersion(): void {
-  presenceVersion++;
-  listeners.forEach((l) => l());
-}
-
-export function usePresenceVersion(): number {
-  return useSyncExternalStore(
-    (cb) => {
-      listeners.add(cb);
-      return () => listeners.delete(cb);
-    },
-    () => presenceVersion,
-    () => presenceVersion,
-  );
-}
-
+/** 階の今日の所在（外部から届いたもの。提供元が無い導入先では null）。今日のときだけ取る。 */
 export function useFloorPresence(floorId: string | null, date: string | null) {
   const { adapter } = useAdapter();
-  const version = usePresenceVersion();
-  return useQuery(adapter, floorId && date ? `presence:${floorId}:${date}:${version}` : null, () => adapter.workplace.getFloorPresence(floorId!, date!));
-}
-
-export function useMyPresence(enabled: boolean) {
-  const { adapter } = useAdapter();
-  const version = usePresenceVersion();
-  return useQuery(adapter, enabled ? `my-presence:${version}` : null, () => adapter.workplace.listMyPresence());
+  return useQuery(adapter, floorId && date ? `presence:${floorId}:${date}` : null, () => adapter.workplace.getFloorPresence(floorId!, date!));
 }
 
 /** 階の ID から、建物の一覧の中の建物と階。 */

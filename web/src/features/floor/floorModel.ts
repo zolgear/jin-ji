@@ -1,11 +1,12 @@
 // 建物・フロアモードの表示の組み立て（three・React に依存しない純粋な関数）。仕様 docs/design/building-floor-mode.md §3.2・§5。
 //
-// - 席の状態は閲覧者から見た 3 つだけ（人・空席・使えない席）。当日の所在を重ねても増やさない（§5.7）
-//   - 見える人の予約 → 人（「今日」の印）。見えない人の予約で埋まった席 → 使えない席。予約の無いフリーアドレスの席 → 空席
-//   - 固定席の人が予約をしていなくても、固定席は所属上の席のまま人を出す（「不在」の印は付けない）
+// - 席の状態は閲覧者から見た 3 つだけ（人・空席・使えない席）。空席は「割り当ての無い席」の意味だけ
+//   - 席を扱うのは人の決まった席・持ち場（有効期間付きの割り当て）だけ。タイムマシンで見た日の割り当てがその日の所在
+//   - 外部から届いた今日の所在を重ねても増やさない（§5.7）。見える人の所在 → 人（「今日」の印）、見えない人の所在で埋まった席 → 使えない席
+//   - 所在が無い人の固定席は、割り当てのまま人を出す（「不在」の印は付けない）
 // - 色は「組織で色分け」: その階で席の多い組織（既定は部の段）3 つまでを categorical の 3 枠にし、残りは灰の「その他」
 //   （lib/siteColors.ts と同じ all-pairs の制約）。色だけに頼らず、エリアの札に組織名を文字で出す
-import type { FloorLayout, FloorOccupant, FloorPresence, FloorReservation, LayoutSeat, LayoutZone, OrgTree, PointMm } from "../../data/types";
+import type { FloorLayout, FloorOccupant, FloorPresence, FloorPresenceItem, LayoutSeat, LayoutZone, OrgTree, PointMm } from "../../data/types";
 
 /** 色の枠の数（all-pairs で検証を通る categorical の先頭 3 枠。lib/siteColors.ts と同じ）。 */
 export const ORG_COLOR_SLOTS = 3;
@@ -29,29 +30,29 @@ export interface SeatPerson {
   orgId: string | null;
   orgName: string | null;
   group: OrgGroup | null;
-  /** 当日の所在（今日の予約）による人か。 */
+  /** 今日の所在（外部から届いたもの）による人か。 */
   today: boolean;
 }
 
 export interface SeatView {
   seat: LayoutSeat;
   state: SeatState;
-  /** 席にいる人（所属上の席・持ち場の人と、今日の予約の人）。持ち場は定員まで複数。 */
+  /** 席にいる人（その日の割り当てと、今日の所在の人）。持ち場は定員まで複数。 */
   people: SeatPerson[];
   /** 色の枠（0〜2）。null は「その他」、undefined は色なし（空席・使えない席）。 */
   slot: number | null | undefined;
-  /** 今日の予約による人がいるか（「今日」の印）。 */
+  /** 今日の所在による人がいるか（「今日」の印）。 */
   today: boolean;
 }
 
 export interface ZoneView {
   zone: LayoutZone;
-  /** 札の名前（ホームエリアの組織名。無ければエリアの名前）。 */
+  /** 札の名前（席の半分以上を占める組織名。無ければエリアの名前）。 */
   label: string;
   seats: number;
   used: number;
   vacant: number;
-  /** エリアの色の枠（ホームエリアの組織の枠。無ければ席の多い組織の枠）。 */
+  /** エリアの色の枠（エリアの席で多い組織の枠）。 */
   slot: number | null | undefined;
   /** 札を置く位置（多角形の左上の角）。 */
   anchor: PointMm;
@@ -77,10 +78,10 @@ export interface FloorView {
   /** 色を付けた組織（枠の順）と「その他」。 */
   legend: LegendEntry[];
   counts: FloorCounts;
-  /** 当日の所在を重ねているか（今日を表示していて、機能が有効なとき）。 */
+  /** 今日の所在を重ねているか。 */
   presenceShown: boolean;
-  /** 席を持たないエリアだけの予約（見える人の分）。 */
-  zoneOnly: FloorReservation[];
+  /** 席を持たない所在（見える人の分。エリアだけ）。 */
+  zoneOnly: FloorPresenceItem[];
   bounds: { minX: number; minY: number; maxX: number; maxY: number };
 }
 
@@ -135,14 +136,14 @@ export function pointInPolygon([x, y]: PointMm, polygon: readonly PointMm[]): bo
 export interface FloorViewInput {
   layout: FloorLayout;
   occupants: readonly FloorOccupant[];
-  /** 当日の所在（今日を表示していて、機能が有効なときだけ渡す。それ以外は null）。 */
+  /** 今日の所在（今日を表示していて、提供元があるときだけ渡す。それ以外は null）。 */
   presence: FloorPresence | null;
   groupOf: (orgId: string | null) => OrgGroup | null;
   /** 色分けをしない（単色。選んだ人だけ色）。 */
   monochrome?: boolean;
 }
 
-/** 配置図・在籍者・当日の所在から、階の表示を組む。 */
+/** 配置図・在籍者・今日の所在から、階の表示を組む。 */
 export function buildFloorView({ layout, occupants, presence, groupOf, monochrome = false }: FloorViewInput): FloorView {
   const bySeat = new Map<string, SeatPerson[]>();
   const person = (o: { person_id: string; display_name: string | null; org_unit_id: string | null; org_unit_name: string | null }, today: boolean): SeatPerson => ({
@@ -159,17 +160,18 @@ export function buildFloorView({ layout, occupants, presence, groupOf, monochrom
     list.push(person(o, false));
     bySeat.set(o.seat_id, list);
   }
+
   const unavailableToday = new Set(presence?.unavailable_seat_ids ?? []);
-  const zoneOnly: FloorReservation[] = [];
+  const zoneOnly: FloorPresenceItem[] = [];
   if (presence) {
-    for (const r of presence.reservations) {
+    for (const r of presence.items) {
       if (!r.seat_id) {
         zoneOnly.push(r);
         continue;
       }
       const list = bySeat.get(r.seat_id) ?? [];
       const own = list.find((p) => p.personId === r.person_id);
-      // 固定席の人の申告（今日は自分の席に来る）は、所属上の席の人に「今日」の印を付ける
+      // 割り当ての席に来ている人は、割り当ての人に「今日」の印を付ける
       if (own) own.today = true;
       else list.push(person(r, true));
       bySeat.set(r.seat_id, list);
@@ -212,22 +214,17 @@ export function buildFloorView({ layout, occupants, presence, groupOf, monochrom
 
   const zones: ZoneView[] = layout.zones.map((zone) => {
     const mine = seats.filter((s) => s.seat.zone_key === zone.zone_key);
-    const homeGroups = zone.home_org_units.map((o) => groupOf(o.id)).filter((g): g is OrgGroup => g !== null);
     let slot: number | null | undefined;
     if (!monochrome) {
-      const home = homeGroups.find((g) => slotOf.has(g.id));
-      if (home) slot = slotOf.get(home.id) ?? null;
-      else {
-        const tally = new Map<number | null, number>();
-        for (const s of mine) if (s.slot !== undefined) tally.set(s.slot, (tally.get(s.slot) ?? 0) + 1);
-        const top = [...tally.entries()].sort((a, b) => b[1] - a[1])[0];
-        slot = top ? top[0] : undefined;
-      }
+      const tally = new Map<number | null, number>();
+      for (const s of mine) if (s.slot !== undefined) tally.set(s.slot, (tally.get(s.slot) ?? 0) + 1);
+      const top = [...tally.entries()].sort((a, b) => b[1] - a[1])[0];
+      slot = top ? top[0] : undefined;
     }
     const b = boundsOf(zone.polygon);
-    // 札の名前: ホームエリアの組織。無ければ、席の半分以上を占める組織（固定席の島）。どちらも無ければエリアの名前
-    let label = zone.home_org_units.map((o) => o.name).join("・");
-    if (!label) {
+    // 札の名前: 席の半分以上を占める組織（固定席の島）。無ければエリアの名前
+    let label: string;
+    {
       const tally = new Map<string, { name: string; n: number }>();
       for (const s of mine) {
         const g = s.people[0]?.group;
@@ -266,11 +263,11 @@ export function seatOfPerson(view: FloorView, personId: string | null): SeatView
 }
 
 /**
- * 当日の所在を重ねるか（§5.7）: 機能が有効で、今日を表示しているときだけ。過去・将来の日には出さない。
+ * 今日の所在を重ねるか（§5.7）: 提供元があって、今日を表示しているときだけ。過去・将来の日には出さない。
  * presenceParam は URL の presence（"0" なら重ねない）。
  */
-export function presenceOverlayOn(asOf: string, businessDate: string, enabled: boolean, presenceParam: string | null): boolean {
-  return enabled && asOf === businessDate && presenceParam !== "0";
+export function presenceOverlayOn(asOf: string, businessDate: string, available: boolean, presenceParam: string | null): boolean {
+  return available && asOf === businessDate && presenceParam !== "0";
 }
 
 /** 席の向きから、人（椅子）の位置（机の中心から向きの反対へ off mm）。rotation 0 は +y（奥）を向く。 */

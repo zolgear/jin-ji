@@ -3,7 +3,8 @@
 // 段: 拠点（建物を並べる）→ 建物（分解した階の積層）→ 階（選んだ階の詳細）→ 人を探す（その席へカメラが移る）。
 // 2D の簡易フロアマップ（plan=1）は同じ画面で切り替える（3D と並べると、右の詳細のパネルと合わせて 3 列になり狭いため）。
 // WebGL が使えない環境では、3D の代わりに 2D の平面図を出す。
-// 当日の所在（§5.7）は、機能が有効で今日を表示しているときだけ重ねる（過去・将来の日には出さない）。
+// 席は人の決まった席・持ち場の割り当てだけ。タイムマシンで見た日の割り当てが、その日の所在になる。
+// 外部から届いた今日の所在（§5.7）は、提供元があって今日を表示しているときだけ重ねる（過去・将来の日には出さない）。
 import { Component, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useOrgTree, usePerson } from "../../app/hooks";
 import { useNav } from "../../app/nav";
@@ -24,7 +25,6 @@ import {
   useFloorOccupants,
   useFloorPresence,
   useFloorRoute,
-  usePresenceSettings,
 } from "./floorHooks";
 import { isLowEndDevice, placeBuildings, stackFloors } from "./floorLayout3d";
 import { buildFloorView, groupResolver, presenceOverlayOn, slotColorVar, type FloorView } from "./floorModel";
@@ -45,21 +45,19 @@ class WebGlFallback extends Component<{ fallback: ReactNode; children: ReactNode
 
 const selectClass = "h-8 max-w-[11em] rounded-md border border-border bg-surface px-2 text-[13px]";
 
-/** 階の数字（割り当て / 席数、今日の空き席数）。 */
-function floorNumbers(f: FloorSummary, presence: boolean): string {
-  if (f.seat_count === 0) return "—";
-  const base = `${f.assigned_count}/${f.seat_count}`;
-  return presence && f.today_vacant_count !== null ? `${base}・空き ${f.today_vacant_count}` : base;
+/** 階の数字（割り当て / 席数）。 */
+function floorNumbers(f: FloorSummary): string {
+  return f.seat_count === 0 ? "—" : `${f.assigned_count}/${f.seat_count}`;
 }
 
 /** 左上の階の一覧（3D と同じことを違う粒度で示す。押すとその階を選ぶ）。 */
-function FloorList({ building, selectedId, presence, onSelect }: { building: Building; selectedId: string | null; presence: boolean; onSelect: (id: string) => void }) {
+function FloorList({ building, selectedId, onSelect }: { building: Building; selectedId: string | null; onSelect: (id: string) => void }) {
   const floors = [...building.floors].sort((a, b) => b.level_order - a.level_order);
   return (
     <nav aria-label={`${building.name}の階`} className="pointer-events-auto absolute top-3 left-3 z-10 hidden w-[200px] rounded-lg border border-border bg-surface/95 py-1.5 text-[12px] shadow-sm md:block">
       <p className="m-0 flex items-center justify-between px-3 pb-1 text-[11px] text-muted">
         <span className="font-bold text-fg">{building.name}の階</span>
-        <span>{presence ? "割り当て / 席数・空き" : "割り当て / 席数"}</span>
+        <span>割り当て / 席数</span>
       </p>
       <ul className="m-0 max-h-[55dvh] list-none overflow-y-auto p-0">
         {floors.map((f) => {
@@ -78,7 +76,7 @@ function FloorList({ building, selectedId, presence, onSelect }: { building: Bui
                 <span aria-hidden="true" className="h-[3px] rounded-full bg-border">
                   {f.seat_count > 0 && <span className="block h-full rounded-full bg-muted" style={{ width: `${Math.round(ratio * 100)}%` }} />}
                 </span>
-                <span className="tabular text-muted">{floorNumbers(f, presence)}</span>
+                <span className="tabular text-muted">{floorNumbers(f)}</span>
               </button>
             </li>
           );
@@ -195,8 +193,6 @@ export function FloorMode() {
   const palette = PALETTE[theme];
   const tree = useOrgTree(asOf);
   const sites = useQuery(adapter, `sites:${asOf}`, () => adapter.listSites({ asOf }));
-  const settings = usePresenceSettings();
-  const presenceOn = presenceOverlayOn(asOf, adapter.businessDate, Boolean(settings.data), route.presenceParam);
   const [fitRequest, setFitRequest] = useState(0);
   const [narrow, setNarrow] = useState(() => window.innerWidth < 1024);
   useEffect(() => {
@@ -232,7 +228,9 @@ export function FloorMode() {
   const layouts = useFloorLayouts(floorIds, asOf);
   const layout = useFloorLayout(floorId, asOf);
   const occupants = useFloorOccupants(floorId, asOf);
-  const presence = useFloorPresence(presenceOn ? floorId : null, presenceOn ? adapter.businessDate : null);
+  const isToday = asOf === adapter.businessDate;
+  const presence = useFloorPresence(isToday ? floorId : null, isToday ? adapter.businessDate : null);
+  const presenceOn = presenceOverlayOn(asOf, adapter.businessDate, Boolean(presence.data), route.presenceParam);
   const groupOf = useMemo(() => groupResolver(tree.data), [tree.data]);
   const view = useMemo(() => {
     if (!layout.data || layout.data.floor_id !== floorId || !occupants.data) return null;
@@ -256,9 +254,9 @@ export function FloorMode() {
 
   const floorLabels = useMemo(() => {
     const m = new Map<string, FloorLabel>();
-    for (const b of shown) for (const f of b.floors) m.set(f.id, { text: f.label, detail: floorNumbers(f, presenceOn) });
+    for (const b of shown) for (const f of b.floors) m.set(f.id, { text: f.label, detail: floorNumbers(f) });
     return m;
-  }, [shown, presenceOn]);
+  }, [shown]);
   const buildingLabels = useMemo(() => {
     const m = new Map<string, FloorLabel>();
     for (const b of shown) {
@@ -336,15 +334,15 @@ export function FloorMode() {
           >
             平面図
           </button>
-          {/* 当日の所在（今日を表示していて、機能が有効なときだけ切り替えられる） */}
-          {Boolean(settings.data) && asOf === adapter.businessDate && (
+          {/* 今日の所在（今日を表示していて、提供元があるときだけ切り替えられる） */}
+          {isToday && Boolean(presence.data) && (
             <button
               type="button"
               aria-pressed={presenceOn}
               onClick={() => route.set({ presence: presenceOn ? "0" : null })}
               className={`inline-flex h-8 items-center gap-1 rounded-md border px-3 ${presenceOn ? "border-accent bg-accent text-accent-fg" : "border-border hover:bg-surface-2"}`}
             >
-              今日の予約
+              今日の所在
             </button>
           )}
         </span>
@@ -362,7 +360,7 @@ export function FloorMode() {
             全体を表示
           </ToolbarButton>
           <HelpTip label="図の見方" width={340}>
-            <FloorHowToRead presenceEnabled={Boolean(settings.data)} presenceShown={presenceOn} purpose={settings.data?.purpose ?? null} />
+            <FloorHowToRead presenceShown={presenceOn} />
           </HelpTip>
         </ChartToolbarEnd>
       </ChartToolbar>
@@ -411,7 +409,7 @@ export function FloorMode() {
             <Spinner />
           </div>
         )}
-        {building && !plan && <FloorList building={building} selectedId={floorId} presence={presenceOn} onSelect={(id) => selectFloor(id === floorId ? null : id)} />}
+        {building && !plan && <FloorList building={building} selectedId={floorId} onSelect={(id) => selectFloor(id === floorId ? null : id)} />}
       </div>
     </div>
   );

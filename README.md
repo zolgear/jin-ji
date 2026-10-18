@@ -214,8 +214,14 @@ scripts/dotnet.sh run --project src/JinJi.Host -- sync-result <plan-id> /src/out
 | `GET /api/v1/orgs/stats?as_of=` | 組織ごとの人数（`primary` 主務・`primary_total` 配下を含む主務・`concurrent` 兼務・`secondment` 出向）と、兼務・出向の組織間の集計（`links`: 主務の組織 → 兼務・出向の組織の組ごとの人数）。閲覧者に見える人だけを数える |
 | `GET /api/v1/sites?query=&legal_entity=&site_type=&prefecture=&as_of=` | 拠点の一覧（コード・名称・種別・都道府県・所在地〔事業所の住所〕・拠点を持つ組織と、拠点の人数・リモートワークの対象の人数。人数は閲覧者に拠点が見える人だけ。人は返さない。設計 §4.7） |
 | `GET /api/v1/sites/{id}?as_of=` | 拠点の詳細（一覧と同じ形） |
+| `GET /api/v1/sites/{id}/buildings?as_of=` | 拠点の建物と階の一覧（階ごとの `seat_count`・`occupied_count`・`vacant_count`・`unavailable_count`。空席は割り当ての無い席。閲覧者に席が見えない人の席・保守中の席は使えない席。人は返さない。[建物・フロアモードの仕様](docs/design/building-floor-mode.md) §6） |
+| `GET /api/v1/buildings/{id}?as_of=` | 建物と階の一覧（同上） |
+| `GET /api/v1/floors/{id}/layout?as_of=` | その日の配置図（外形・固定の部分・ゾーン・席の置き場所と状態 `vacant` / `occupied` / `unavailable`。整数のミリメートル。人は返さない。ETag） |
+| `GET /api/v1/floors/{id}/occupants?zone=&as_of=&cursor=&limit=` | 階の在籍者と席（決まった席・持ち場だけ。席の人は席が見える人だけ、ゾーンの持ち場の人は階が見える人だけ。返却人数の制限の対象） |
+| `GET /api/v1/seats?floor=&building=&site=&zone=&kind=&feature=&vacant=true&as_of=&limit=` | 席の検索（空席など。`kind` は `fixed` / `station`。人は返さない） |
+| `GET /api/v1/floors/{id}/presence` | 今日の階の所在（所在の提供を登録したときだけ。下の「当日の所在の提供」。提供が無ければ 404。`no-store`） |
 | `GET /api/v1/meta` | メタ情報（業務日付・法人ごとの段の定義・時点の目盛り〔組織改編・一斉異動の日。人事管理者以外には `max_as_of` 以前だけ〕・未来の時点を指定できるか・指定できる最後の時点 `max_as_of`〔先行提供の社内システムは業務日付 + 日数〕） |
-| `GET /api/v1/changes?since=&limit=` | 変更フィード（種別〔`person` / `org_unit` / `site`〕と ID だけ。拠点の変更は、その拠点を使う組織・人の変更としても届く。limit は 1〜1000） |
+| `GET /api/v1/changes?since=&limit=` | 変更フィード（種別〔`person` / `org_unit` / `site`〕と ID だけ。拠点の変更は、その拠点を使う組織・人の変更としても届く。席の割り当て・配置図の改訂は人の変更として届く。当日の所在は流さない。limit は 1〜1000） |
 | `GET /api/v1/admin/clients` | 自動スロットル・一時停止中のクライアント（人事管理者の人だけ） |
 | `POST /api/v1/admin/clients/{clientId}/release` | 一時停止・自動スロットルの解除（人事管理者の人だけ） |
 | `GET /api/v1/ingest/proposals/{id}` | 変更提案の根拠（名寄せ・組織の候補、LLM による推定）。値は返さない（人事管理者の人だけ） |
@@ -386,6 +392,9 @@ scripts/dotnet.sh run --project src/JinJi.Host -- revoke-tokens --client-id my-a
 | `get_org_tree` | `jinji.read` | 組織図の部分木（根と深さを指定。最大 500 組織） |
 | `search_orgs` | `jinji.read` | 組織の検索（名前・略称・コード） |
 | `list_sites` | `jinji.read` | 拠点の一覧と人数（REST の `/sites` と同じ規則。人数は委任元に見える人だけ） |
+| `list_floors` | `jinji.read` | 拠点・建物の階の一覧と席数・空席数（REST の `/sites/{id}/buildings`・`/buildings/{id}` と同じ） |
+| `find_vacant_seats` | `jinji.read` | 空席（割り当ての無い席）を探す（人は返さない。最大 100 件） |
+| `list_floor_occupants` | `jinji.read` | 階の在籍者と席（決まった席・持ち場だけ。当日の所在は含めない） |
 | `get_changes` | `jinji.read` | 変更フィード（種別と ID だけ） |
 | `get_directory_info` | `jinji.read` | 業務日付・法人ごとの組織の段の定義・時点の目盛り |
 | `list_review_proposals` | `jinji.read` | 取込の要確認の提案の根拠（委任元が人事管理者か取込の実行者のときだけ） |
@@ -394,6 +403,7 @@ scripts/dotnet.sh run --project src/JinJi.Host -- revoke-tokens --client-id my-a
 | `report_correction` | `jinji.propose` | 修正依頼の起票（委任元の名義。人事パッケージで直せる人への情報提供で、jin-ji の公開データは変わらない） |
 
 - 時点の指定（`as_of`）・返却人数の上限・ページング（署名付きのカーソル）・項目の上限・関係スコープは REST API と同じ（同じサービスを通る）。値の無い項目は省略する（REST は `null`）
+- 項目の上限の `*` は当日の所在（`presence`）を含まない。`get_person` の `presence` は、所在の提供があり、項目の上限に `presence` を明示したクライアントにだけ返す
 - ツールはクライアントごとの許可リスト（`--mcp-tools`。空は何も許さない、`*` はすべて）とトークンのスコープの両方を満たすものだけが見え、使える。提案のツールは `jinji.propose` が要り、無ければ 403（`insufficient_scope`）
 - 呼び出しは監査ログ `mcp.tool.call`（ツール名・委任元・クライアント・対象の人）に残る
 - 停止スイッチ: `JinJi:Mcp:Enabled=false` で MCP のポートを止める（`/healthz` 以外は 503。appsettings.json の変更は再起動なしで効く）。REST API・UI は動き続ける
@@ -509,6 +519,27 @@ web/scripts/screenshots.sh                  # 最後に「CSP 違反: 0 件」�
 - ライト / ダーク（OS の設定に従い、レールの「設定」で固定もできる。認証の画面は右上）。`prefers-reduced-motion` では遷移・カメラの移動を即時にする
 - タイムマシンのスライダーの目盛りは取得元が持つ日付（API は `GET /api/v1/meta` の milestones、デモでは組織改編・一斉異動の日）。業務日付より後は、`meta.can_view_future` が true（人事管理者）のときだけ選べる
 
+## 当日の所在の提供（拡張点）
+
+設計は [建物・フロアモードの仕様](docs/design/building-floor-mode.md) §3.4。jin-ji は当日の所在を保存せず、座席予約も受けない（人事の範疇を超える施設管理で、連携先の範疇）。**所在は保持せず、外部の提供を注入して表示する**（リアルタイムの所在は連携先の範疇）。
+
+- 拡張点は `JinJi.Application.Presence.IPresenceProvider`。今日（業務日付）・階または人を受け取り、人ごとの今日の階と、席（`seat.id`）またはエリア（配置図のゾーンの `zone_key`）を返す。型は時刻・入退館の記録を持たない
+- 既定は `NoPresenceProvider`（提供なし）で、`GET /api/v1/floors/{id}/presence` は 404（`urn:jinji:problem:presence-unavailable`）、人の応答に `presence` は出ない
+- 登録は、`JinJi.Host` を参照する小さな起動プロジェクトから差し替える（外部への問い合わせ・認証・失敗時の扱いは実装の責任。失敗したら空の結果を返すことを勧める）
+
+  ```csharp
+  using JinJi.Application.Presence;
+  using JinJi.Host;
+  using Microsoft.Extensions.DependencyInjection;
+  using Microsoft.Extensions.DependencyInjection.Extensions;
+
+  return await JinJiHost.RunAsync(args, services =>
+      services.Replace(ServiceDescriptor.Singleton<IPresenceProvider, MyPresenceProvider>()));
+  ```
+
+- jin-ji は返った所在に必ず自分の認可を適用する: 項目 `presence` の公開範囲（既定は本人と同じ部。`JinJi:Directory:PresenceVisibilityScope`）・ポリシー・個人単位の例外・クライアントの項目の上限（`*` は `presence` を含まないので、使うクライアントは `--fields '*,presence'` のように明示する）。席番号は項目 `seat` も見えるときだけ
+- 今日だけ問い合わせ、`as_of`（過去・将来）では呼ばない。キャッシュ・永続化せず、変更フィード・Webhook・同期・監査ログに記録しない。応答は `Cache-Control: no-store`。所在は `GET /people/{id}`・MCP の `get_person`（1 人の参照）と `GET /floors/{id}/presence` だけに出し、人の一覧・検索には出さない
+
 ## 取り込み
 
 設計は [アーキテクチャ概要 §8](docs/architecture/overview.md#8-取り込み名寄せ同期)（実装上の規則も §8 にある）。
@@ -537,8 +568,8 @@ web/scripts/screenshots.sh                  # 最後に「CSP 違反: 0 件」�
   }
   ```
 
-  - `target`: `people`（在籍者名簿）、`org_units`（組織図。`org_code`・`org_name`・`org_level`・`parent_org_code`・`org_head_employee_number` / `org_head_name`・`org_remarks` など）、`personnel_actions`（辞令。`action_date`・`action_text` など）、`directory_users`（Entra ID のユーザー。`external_id`・`account_enabled` など）
-  - `source`: `kind`（`csv` / `xlsx` / `graph_json`。省略時は拡張子）、`encoding`（`auto` / `utf-8` / `shift_jis`）、`delimiter`、`headerRow`（表題の行がある場合）、`sheet`、`fillMergedCells`（結合セルの値を補完する）、`hierarchy`（列が階層の組織図。`entityColumn`・`columns`・`noCarrySuffixes`）
+  - `target`: `people`（在籍者名簿）、`org_units`（組織図。`org_code`・`org_name`・`org_level`・`parent_org_code`・`org_head_employee_number` / `org_head_name`・`org_remarks` など）、`personnel_actions`（辞令。`action_date`・`action_text` など）、`directory_users`（Entra ID のユーザー。`external_id`・`account_enabled` など）、`sites`（拠点マスタ）、`floor_layouts`（建物・階・配置図の改訂。配置図の JSON〔`source.kind: layout_json`、形式 `jinji-floor-layout/v1`〕か席の CSV。外形の行の無い CSV は今の配置図を引き継いで席だけを置き換える）、`workplace_assignments`（人の決まった席・持ち場。社員番号・席番号〔全角・ハイフンの揺れをそろえる〕かエリア・主副・開始日・最終日）
+  - `source`: `kind`（`csv` / `xlsx` / `graph_json` / `layout_json`。省略時は拡張子）、`encoding`（`auto` / `utf-8` / `shift_jis`）、`delimiter`、`headerRow`（表題の行がある場合）、`sheet`、`fillMergedCells`（結合セルの値を補完する）、`hierarchy`（列が階層の組織図。`entityColumn`・`columns`・`noCarrySuffixes`）
   - 候補の列名は全角・空白のゆれを吸収して比べ、行ごとに先に書いた列の値を優先する（空なら次の候補）。候補・無視する列名に保持禁止の項目名は書けない
   - `legalEntityAliases`（法人のコード → 別名）、`employeeNumber.prefixedPadLength`（L45 → L0045）、`discardWhenPresent`（列に値がある行で捨てる項目）、`fullSnapshot`（Entra の全件の取込）
   - サンプルの設定は `samples/messy-corp/mappings/`
@@ -696,6 +727,7 @@ scripts/dotnet.sh run --project src/JinJi.Host -- purge-expired      # 表ごと
 | --- | --- | --- |
 | `JinJi:Directory:RetiredPublicDays` | `90` | 退職者を人事管理者以外に公開する日数（退職年月日の翌日から数える） |
 | `JinJi:Directory:MassActionThreshold` | `10` | 一斉異動とみなす発令の件数（同じ発令日の異動・役職の任免・兼務・出向）。メタ情報の時点の目盛りに使い、件数は返さない |
+| `JinJi:Directory:PresenceVisibilityScope` | `same_level(department)` | 当日の所在（項目 `presence`。所在の提供を登録したときだけ）の公開範囲（関係スコープの表記。`none` は不可）。ポリシーでさらに狭められる |
 | `JinJi:Web:RootPath` | `web/dist`（コンテンツルートからの相対） | Web UI の成果物の場所。`index.html` が無ければ SPA を配信せず API だけで動く |
 | `JinJi:Web:Hsts:Enabled` / `MaxAge` / `IncludeSubDomains` | `false` / `365.00:00:00` / `false` | HSTS。TLS を終端するリバースプロキシの後ろに置くときだけ有効にする |
 | `JinJi:OrgSnapshotCache:VersionCheckInterval` | `00:00:05` | 他のプロセスの書き込みを確かめる間隔（反映の最大の遅れ） |

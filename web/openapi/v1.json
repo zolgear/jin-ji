@@ -17,7 +17,7 @@
           "PeopleEndpoints"
         ],
         "summary": "人を参照する",
-        "description": "見える項目だけを返す（visible_fields）。存在しない人と参照できない人は区別せず 404。as_of（yyyy-MM-dd）に今日より後を指定できるのは人事管理者と、先行提供を許された社内システム（/meta の max_as_of まで）だけ。",
+        "description": "見える項目だけを返す（visible_fields）。存在しない人と参照できない人は区別せず 404。as_of（yyyy-MM-dd）に今日より後を指定できるのは人事管理者と、先行提供を許された社内システム（/meta の max_as_of まで）だけ。workplace（階・エリア）・seat（主の席）はその時点の席の割り当て。presence（今日の所在）は配備側が所在の提供を登録していて、時点が今日で、閲覧者に見えるときだけ返す（jin-ji は所在を保持しない。既定の公開範囲は本人と同じ部）。presence を返したときの応答は Cache-Control: no-store。",
         "operationId": "GetPerson",
         "parameters": [
           {
@@ -1186,6 +1186,604 @@
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{id}/buildings": {
+      "get": {
+        "tags": [
+          "WorkplaceEndpoints"
+        ],
+        "summary": "拠点の建物と階の一覧（階ごとの席数・使用中・空席・使えない席）",
+        "description": "その時点で有効な建物（並び順・建物コードの順）と階（下の階が先）。件数は閲覧者に見える人だけで数え、閲覧者に席が見えない人の席・保守中の席は使えない席（unavailable_count）に数える（空席に数えない）。空席は割り当ての無い席の意味だけ（予約の空きではない）。人は返さない（集計の種別 org_stats）。拠点がその時点に無ければ 404。",
+        "operationId": "ListSiteBuildings",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "as_of",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BuildingListResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/buildings/{id}": {
+      "get": {
+        "tags": [
+          "WorkplaceEndpoints"
+        ],
+        "summary": "建物と階の一覧を参照する",
+        "description": "件数の規則は拠点の建物の一覧と同じ。その時点に無い建物（人事管理者以外には新設の予定）は 404。",
+        "operationId": "GetBuilding",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "as_of",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BuildingDetailResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/floors/{id}/layout": {
+      "get": {
+        "tags": [
+          "WorkplaceEndpoints"
+        ],
+        "summary": "その日の配置図（外形・固定の部分・ゾーン・席の置き場所と状態）",
+        "description": "座標は階ごとのローカル座標（整数のミリメートル。原点は左下、x は右、y は奥）。席の状態は vacant（空席）/ occupied（閲覧者に席が見える人の席）/ unavailable（保守中・予備と、閲覧者に見えない人の席。区別しない）。人は返さない（人と席の対応は /floors/{id}/occupants）。改訂の有効期間の終了日は返さない。配置図の無い階は layout が null。ETag を返し、If-None-Match が一致すれば 304。",
+        "operationId": "GetFloorLayout",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "as_of",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FloorLayoutResponse"
+                }
+              }
+            }
+          },
+          "304": {
+            "description": "Not Modified"
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/floors/{id}/occupants": {
+      "get": {
+        "tags": [
+          "WorkplaceEndpoints"
+        ],
+        "summary": "階の在籍者と席（所属上の席だけ。当日の所在は含めない）",
+        "description": "席の割り当ての人は閲覧者に席（seat）が見える人だけ、席の無い持ち場の人（ゾーンの割り当て）は階・エリア（workplace）が見える人だけ。zone（ゾーンの zone_key）で絞れる。並びは席番号の順（席の無い人は後）。limit は 1〜200（既定 50）、続きは next_cursor。返した人数は返却人数の制限に数える。",
+        "operationId": "ListFloorOccupants",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "zone",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "as_of",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FloorOccupantListResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/floors/{id}/presence": {
+      "get": {
+        "tags": [
+          "WorkplaceEndpoints"
+        ],
+        "summary": "今日の階の所在（外部の提供を注入したときだけ）",
+        "description": "jin-ji は所在を保持せず、配備側が登録した提供（IPresenceProvider）の今日の所在に jin-ji の認可を適用して返す。提供が無ければ 404（type は presence-unavailable）。今日だけで、時点（as_of）は受け付けない。人は閲覧者に当日の所在（presence）が見える人だけ（既定の公開範囲は本人と同じ部。ポリシーと個人単位の例外でさらに狭まる）、席番号は席（seat）も見えるときだけ。seats は所在のある席の状態だけ（occupied 見える人 / unavailable 見えない人）。所在が無いことは不在・在宅・休みを意味しない。応答は Cache-Control: no-store。変更フィード・Webhook・監査ログには記録しない。返した人数は返却人数の制限に数える。",
+        "operationId": "GetFloorPresence",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FloorPresenceResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/seats": {
+      "get": {
+        "tags": [
+          "WorkplaceEndpoints"
+        ],
+        "summary": "席の検索（空席など。人は返さない）",
+        "description": "floor（階の ID。繰り返し可）・building・site のいずれかで範囲を決める。zone（zone_key）・kind（fixed / station）・feature（設備のタグ。すべてを持つ席）・vacant=true（空席だけ。空席は割り当ての無い席で、予約の空きではない。使えない席は空席として返さない）で絞る。limit は 1〜100（既定 50）。",
+        "operationId": "SearchSeats",
+        "parameters": [
+          {
+            "name": "floor",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "building",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "site",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "zone",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "kind",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "feature",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "vacant",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "as_of",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SeatSearchResponse"
                 }
               }
             }
@@ -4508,6 +5106,97 @@
           }
         }
       },
+      "BuildingDetailResponse": {
+        "required": [
+          "as_of",
+          "building"
+        ],
+        "type": "object",
+        "properties": {
+          "as_of": {
+            "type": "string",
+            "format": "date"
+          },
+          "building": {
+            "$ref": "#/components/schemas/BuildingResponse"
+          }
+        }
+      },
+      "BuildingListResponse": {
+        "required": [
+          "as_of",
+          "site_id",
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "as_of": {
+            "type": "string",
+            "format": "date"
+          },
+          "site_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BuildingResponse"
+            }
+          }
+        }
+      },
+      "BuildingResponse": {
+        "required": [
+          "id",
+          "site_id",
+          "site_code",
+          "site_name",
+          "code",
+          "name",
+          "sort_order",
+          "floors"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "site_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "site_code": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "site_name": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "sort_order": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "floors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FloorSummaryResponse"
+            }
+          }
+        }
+      },
       "CandidateResponse": {
         "required": [
           "person_id",
@@ -4932,7 +5621,12 @@
               "suspected_employee_number_typo",
               "referred_from_review",
               "reported_value",
-              "unknown_site"
+              "unknown_site",
+              "unknown_building",
+              "unknown_floor",
+              "unknown_seat",
+              "unknown_zone",
+              "site_mismatch"
             ],
             "type": "string"
           },
@@ -5123,6 +5817,8 @@
               "work_mobile_phone",
               "site",
               "remote_work",
+              "workplace",
+              "seat",
               "employment_type",
               "job_type",
               "hire_date",
@@ -5419,6 +6115,310 @@
           }
         }
       },
+      "FixtureResponse": {
+        "required": [
+          "kind",
+          "name",
+          "polygon"
+        ],
+        "type": "object",
+        "properties": {
+          "kind": {
+            "enum": [
+              "core",
+              "room",
+              "void"
+            ],
+            "type": "string"
+          },
+          "name": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "polygon": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int32"
+              }
+            }
+          }
+        }
+      },
+      "FloorLayoutResponse": {
+        "required": [
+          "as_of",
+          "floor",
+          "layout"
+        ],
+        "type": "object",
+        "properties": {
+          "as_of": {
+            "type": "string",
+            "format": "date"
+          },
+          "floor": {
+            "$ref": "#/components/schemas/FloorRefResponse"
+          },
+          "layout": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/LayoutResponse"
+              }
+            ]
+          }
+        }
+      },
+      "FloorOccupantListResponse": {
+        "required": [
+          "as_of",
+          "floor_id",
+          "items",
+          "next_cursor"
+        ],
+        "type": "object",
+        "properties": {
+          "as_of": {
+            "type": "string",
+            "format": "date"
+          },
+          "floor_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FloorOccupantResponse"
+            }
+          },
+          "next_cursor": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "FloorOccupantResponse": {
+        "required": [
+          "person",
+          "seat_id",
+          "seat_code",
+          "zone_key",
+          "zone_name",
+          "role",
+          "source"
+        ],
+        "type": "object",
+        "properties": {
+          "person": {
+            "$ref": "#/components/schemas/PersonResponse"
+          },
+          "seat_id": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "seat_code": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "zone_key": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "zone_name": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "role": {
+            "enum": [
+              "primary",
+              "secondary"
+            ],
+            "type": "string"
+          },
+          "source": {
+            "enum": [
+              "seat",
+              "zone"
+            ],
+            "type": "string"
+          }
+        }
+      },
+      "FloorPresenceResponse": {
+        "required": [
+          "date",
+          "floor",
+          "seats",
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "floor": {
+            "$ref": "#/components/schemas/FloorRefResponse"
+          },
+          "seats": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PresenceSeatResponse"
+            }
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PresenceItemResponse"
+            }
+          }
+        }
+      },
+      "FloorRefResponse": {
+        "required": [
+          "id",
+          "building_id",
+          "building_code",
+          "building_name",
+          "site_id",
+          "label",
+          "level_order",
+          "kind"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "building_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "building_code": {
+            "type": "string"
+          },
+          "building_name": {
+            "type": "string"
+          },
+          "site_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "label": {
+            "type": "string"
+          },
+          "level_order": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "kind": {
+            "enum": [
+              "office",
+              "factory",
+              "warehouse",
+              "lobby",
+              "service",
+              "other"
+            ],
+            "type": "string"
+          }
+        }
+      },
+      "FloorSummaryResponse": {
+        "required": [
+          "id",
+          "building_id",
+          "label",
+          "level_order",
+          "kind",
+          "layout_id",
+          "layout_valid_from",
+          "seat_count",
+          "occupied_count",
+          "vacant_count",
+          "unavailable_count"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "building_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "label": {
+            "type": "string"
+          },
+          "level_order": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "kind": {
+            "enum": [
+              "office",
+              "factory",
+              "warehouse",
+              "lobby",
+              "service",
+              "other"
+            ],
+            "type": "string"
+          },
+          "layout_id": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "layout_valid_from": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "seat_count": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "occupied_count": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "vacant_count": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "unavailable_count": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "IssueClientSecretRequest": {
         "required": [
           "lifetime_days"
@@ -5449,6 +6449,151 @@
         }
       },
       "JsonElement": {},
+      "LayoutResponse": {
+        "required": [
+          "id",
+          "valid_from",
+          "grid_mm",
+          "outline",
+          "fixtures",
+          "zones",
+          "seats"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "valid_from": {
+            "type": "string",
+            "format": "date"
+          },
+          "grid_mm": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "outline": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int32"
+              }
+            }
+          },
+          "fixtures": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FixtureResponse"
+            }
+          },
+          "zones": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ZoneResponse"
+            }
+          },
+          "seats": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LayoutSeatResponse"
+            }
+          }
+        }
+      },
+      "LayoutSeatResponse": {
+        "required": [
+          "seat_id",
+          "code",
+          "zone_key",
+          "x_mm",
+          "y_mm",
+          "rotation_deg",
+          "desk_type",
+          "kind",
+          "capacity",
+          "features",
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "seat_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string"
+          },
+          "zone_key": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "x_mm": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "y_mm": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "rotation_deg": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "desk_type": {
+            "enum": [
+              "desk_1000",
+              "desk_1200",
+              "desk_1400",
+              "desk_1600",
+              "desk_1800",
+              "station",
+              "counter",
+              "booth"
+            ],
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "fixed",
+              "station"
+            ],
+            "type": "string"
+          },
+          "capacity": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "features": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "monitor",
+                "dual_monitor",
+                "standing",
+                "phone_booth",
+                "docking_station",
+                "locker",
+                "quiet"
+              ],
+              "type": "string"
+            }
+          },
+          "status": {
+            "enum": [
+              "vacant",
+              "occupied",
+              "unavailable"
+            ],
+            "type": "string"
+          }
+        }
+      },
       "LegalEntityLevelsResponse": {
         "required": [
           "id",
@@ -6521,6 +7666,9 @@
           "work_mobile_phone",
           "site",
           "remote_work",
+          "workplace",
+          "seat",
+          "presence",
           "employment_type",
           "job_type",
           "hire_date",
@@ -6635,6 +7783,36 @@
             "type": [
               "null",
               "boolean"
+            ]
+          },
+          "workplace": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/WorkplaceRefResponse"
+              }
+            ]
+          },
+          "seat": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/SeatRefResponse"
+              }
+            ]
+          },
+          "presence": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/PresenceRefResponse"
+              }
             ]
           },
           "employment_type": {
@@ -6774,6 +7952,131 @@
           }
         }
       },
+      "PresenceItemResponse": {
+        "required": [
+          "person",
+          "seat_id",
+          "seat_code",
+          "zone_key",
+          "zone_name"
+        ],
+        "type": "object",
+        "properties": {
+          "person": {
+            "$ref": "#/components/schemas/PersonResponse"
+          },
+          "seat_id": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "seat_code": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "zone_key": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "zone_name": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "PresenceRefResponse": {
+        "required": [
+          "date",
+          "building_id",
+          "building_name",
+          "floor_id",
+          "floor_label",
+          "zone_key",
+          "zone_name",
+          "seat_id",
+          "seat_code"
+        ],
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "building_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "building_name": {
+            "type": "string"
+          },
+          "floor_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "floor_label": {
+            "type": "string"
+          },
+          "zone_key": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "zone_name": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "seat_id": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "seat_code": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "PresenceSeatResponse": {
+        "required": [
+          "seat_id",
+          "code",
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "seat_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "occupied",
+              "unavailable"
+            ],
+            "type": "string"
+          }
+        }
+      },
       "ProblemDetails": {
         "type": "object",
         "properties": {
@@ -6851,7 +8154,13 @@
               "account_suspension",
               "external_identity",
               "site",
-              "site_version"
+              "site_version",
+              "building",
+              "building_version",
+              "floor",
+              "floor_version",
+              "floor_layout",
+              "workplace_assignment"
             ],
             "type": "string"
           },
@@ -7371,6 +8680,188 @@
               "integer"
             ],
             "format": "int32"
+          }
+        }
+      },
+      "SeatRefResponse": {
+        "required": [
+          "seat_id",
+          "code",
+          "building_id",
+          "building_name",
+          "floor_id",
+          "floor_label",
+          "zone_key",
+          "zone_name",
+          "x_mm",
+          "y_mm",
+          "rotation_deg",
+          "kind"
+        ],
+        "type": "object",
+        "properties": {
+          "seat_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string"
+          },
+          "building_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "building_name": {
+            "type": "string"
+          },
+          "floor_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "floor_label": {
+            "type": "string"
+          },
+          "zone_key": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "zone_name": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "x_mm": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "y_mm": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "rotation_deg": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "kind": {
+            "enum": [
+              "fixed",
+              "station"
+            ],
+            "type": "string"
+          }
+        }
+      },
+      "SeatSearchItemResponse": {
+        "required": [
+          "seat_id",
+          "code",
+          "building_id",
+          "building_name",
+          "floor_id",
+          "floor_label",
+          "zone_key",
+          "zone_name",
+          "kind",
+          "capacity",
+          "features",
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "seat_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string"
+          },
+          "building_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "building_name": {
+            "type": "string"
+          },
+          "floor_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "floor_label": {
+            "type": "string"
+          },
+          "zone_key": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "zone_name": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "kind": {
+            "enum": [
+              "fixed",
+              "station"
+            ],
+            "type": "string"
+          },
+          "capacity": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "features": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "monitor",
+                "dual_monitor",
+                "standing",
+                "phone_booth",
+                "docking_station",
+                "locker",
+                "quiet"
+              ],
+              "type": "string"
+            }
+          },
+          "status": {
+            "enum": [
+              "vacant",
+              "occupied",
+              "unavailable"
+            ],
+            "type": "string"
+          }
+        }
+      },
+      "SeatSearchResponse": {
+        "required": [
+          "as_of",
+          "items",
+          "has_more"
+        ],
+        "type": "object",
+        "properties": {
+          "as_of": {
+            "type": "string",
+            "format": "date"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SeatSearchItemResponse"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
           }
         }
       },
@@ -8483,6 +9974,106 @@
             "type": "string"
           }
         }
+      },
+      "WorkplaceRefResponse": {
+        "required": [
+          "site_id",
+          "building_id",
+          "building_code",
+          "building_name",
+          "floor_id",
+          "floor_label",
+          "level_order",
+          "zone_key",
+          "zone_name",
+          "source"
+        ],
+        "type": "object",
+        "properties": {
+          "site_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "building_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "building_code": {
+            "type": "string"
+          },
+          "building_name": {
+            "type": "string"
+          },
+          "floor_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "floor_label": {
+            "type": "string"
+          },
+          "level_order": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "zone_key": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "zone_name": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "source": {
+            "enum": [
+              "seat",
+              "zone"
+            ],
+            "type": "string"
+          }
+        }
+      },
+      "ZoneResponse": {
+        "required": [
+          "zone_key",
+          "name",
+          "kind",
+          "polygon"
+        ],
+        "type": "object",
+        "properties": {
+          "zone_key": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "office",
+              "production_line",
+              "storage",
+              "common",
+              "restricted"
+            ],
+            "type": "string"
+          },
+          "polygon": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int32"
+              }
+            }
+          }
+        }
       }
     },
     "securitySchemes": {
@@ -8508,6 +10099,9 @@
     },
     {
       "name": "SiteEndpoints"
+    },
+    {
+      "name": "WorkplaceEndpoints"
     },
     {
       "name": "MetaEndpoints"

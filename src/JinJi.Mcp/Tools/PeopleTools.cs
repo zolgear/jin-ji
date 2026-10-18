@@ -189,6 +189,7 @@ internal sealed class GetPersonTool : McpTool
 
     public override string Description =>
         "1 人の詳細（見える項目だけ）と、指定すれば直属の上長を返す。存在しない人と参照できない人（公開範囲の外・退職後の公開期間を過ぎた人・入社前の人）は区別せず not_found。"
+        + "presence（今日の所在）は導入先が外部の提供をつないでいて、時点が今日で、項目の上限に presence を明示したクライアントのときだけ返す。"
         + $"上長の項目が見えない人の上長は返さない（managers は空）。{McpTexts.PersonShape}。";
 
     public override JsonElement InputSchema => Schema;
@@ -202,7 +203,7 @@ internal sealed class GetPersonTool : McpTool
         var asOf = arguments.Date("as_of");
         var people = context.Services.GetRequiredService<PersonDirectoryService>();
 
-        var views = await people.GetPeopleAsync(context.Viewer, [personId], asOf, cancellationToken);
+        var views = await people.GetPeopleAsync(context.Viewer, [personId], asOf, cancellationToken, includePresence: true);
         if (views.Count == 0)
         {
             throw McpToolException.NotFound("その人");

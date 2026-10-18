@@ -68,6 +68,25 @@ export interface components {
       valid_from: string; // date
       valid_until: string | null; // date
     };
+    BuildingDetailResponse: {
+      as_of: string; // date
+      building: components["schemas"]["BuildingResponse"];
+    };
+    BuildingListResponse: {
+      as_of: string; // date
+      site_id: string; // uuid
+      items: components["schemas"]["BuildingResponse"][];
+    };
+    BuildingResponse: {
+      id: string; // uuid
+      site_id: string; // uuid
+      site_code: string | null;
+      site_name: string | null;
+      code: string;
+      name: string;
+      sort_order: number; // int32
+      floors: components["schemas"]["FloorSummaryResponse"][];
+    };
     CandidateResponse: {
       person_id: string; // uuid
       rule: "employee_number" | "work_email" | "name_and_org";
@@ -141,7 +160,7 @@ export interface components {
       id: string; // uuid
       status: "open" | "resolved" | "dismissed" | "auto_resolved" | "superseded";
       origin: "ingest" | "user" | "agent";
-      issue: "missing_employee_number" | "missing_required" | "invalid_date" | "invalid_value" | "duplicate_row" | "unknown_legal_entity" | "unknown_org" | "unknown_org_level" | "unknown_head" | "conflicting_identity" | "suspected_sensitive_value" | "abolished_org" | "stale_head" | "uninterpretable_action" | "suspected_employee_number_typo" | "referred_from_review" | "reported_value" | "unknown_site";
+      issue: "missing_employee_number" | "missing_required" | "invalid_date" | "invalid_value" | "duplicate_row" | "unknown_legal_entity" | "unknown_org" | "unknown_org_level" | "unknown_head" | "conflicting_identity" | "suspected_sensitive_value" | "abolished_org" | "stale_head" | "uninterpretable_action" | "suspected_employee_number_typo" | "referred_from_review" | "reported_value" | "unknown_site" | "unknown_building" | "unknown_floor" | "unknown_seat" | "unknown_zone" | "site_mismatch";
       message: string;
       person_id: string | null; // uuid
       field: string | null;
@@ -174,7 +193,7 @@ export interface components {
     };
     CreateCorrectionRequest: {
       person_id?: string | null; // uuid
-      field?: "employee_number" | "legal_entity" | "display_name" | "family_name" | "given_name" | "family_name_kana" | "given_name_kana" | "family_name_latin" | "given_name_latin" | "work_email" | "extension_number" | "work_mobile_phone" | "site" | "remote_work" | "employment_type" | "job_type" | "hire_date" | "termination_date" | "employment_status" | "account_status" | "account_suspension" | "assignments" | "managers" | "personnel_actions" | null;
+      field?: "employee_number" | "legal_entity" | "display_name" | "family_name" | "given_name" | "family_name_kana" | "given_name_kana" | "family_name_latin" | "given_name_latin" | "work_email" | "extension_number" | "work_mobile_phone" | "site" | "remote_work" | "workplace" | "seat" | "employment_type" | "job_type" | "hire_date" | "termination_date" | "employment_status" | "account_status" | "account_suspension" | "assignments" | "managers" | "personnel_actions" | null;
       reason?: string | null;
       suggested_value?: string | null;
     };
@@ -228,6 +247,60 @@ export interface components {
       label: string;
       count: number; // int32
     };
+    FixtureResponse: {
+      kind: "core" | "room" | "void";
+      name: string | null;
+      polygon: number[][];
+    };
+    FloorLayoutResponse: {
+      as_of: string; // date
+      floor: components["schemas"]["FloorRefResponse"];
+      layout: components["schemas"]["LayoutResponse"] | null;
+    };
+    FloorOccupantListResponse: {
+      as_of: string; // date
+      floor_id: string; // uuid
+      items: components["schemas"]["FloorOccupantResponse"][];
+      next_cursor: string | null;
+    };
+    FloorOccupantResponse: {
+      person: components["schemas"]["PersonResponse"];
+      seat_id: string | null; // uuid
+      seat_code: string | null;
+      zone_key: string | null; // uuid
+      zone_name: string | null;
+      role: "primary" | "secondary";
+      source: "seat" | "zone";
+    };
+    FloorPresenceResponse: {
+      date: string; // date
+      floor: components["schemas"]["FloorRefResponse"];
+      seats: components["schemas"]["PresenceSeatResponse"][];
+      items: components["schemas"]["PresenceItemResponse"][];
+    };
+    FloorRefResponse: {
+      id: string; // uuid
+      building_id: string; // uuid
+      building_code: string;
+      building_name: string;
+      site_id: string; // uuid
+      label: string;
+      level_order: number; // int32
+      kind: "office" | "factory" | "warehouse" | "lobby" | "service" | "other";
+    };
+    FloorSummaryResponse: {
+      id: string; // uuid
+      building_id: string; // uuid
+      label: string;
+      level_order: number; // int32
+      kind: "office" | "factory" | "warehouse" | "lobby" | "service" | "other";
+      layout_id: string | null; // uuid
+      layout_valid_from: string | null; // date
+      seat_count: number; // int32
+      occupied_count: number; // int32
+      vacant_count: number; // int32
+      unavailable_count: number; // int32
+    };
     IssueClientSecretRequest: {
       lifetime_days: number | null; // int32
     };
@@ -235,6 +308,28 @@ export interface components {
       purpose: string | null;
     };
     JsonElement: unknown;
+    LayoutResponse: {
+      id: string; // uuid
+      valid_from: string; // date
+      grid_mm: number; // int32
+      outline: number[][];
+      fixtures: components["schemas"]["FixtureResponse"][];
+      zones: components["schemas"]["ZoneResponse"][];
+      seats: components["schemas"]["LayoutSeatResponse"][];
+    };
+    LayoutSeatResponse: {
+      seat_id: string; // uuid
+      code: string;
+      zone_key: string | null; // uuid
+      x_mm: number; // int32
+      y_mm: number; // int32
+      rotation_deg: number; // int32
+      desk_type: "desk_1000" | "desk_1200" | "desk_1400" | "desk_1600" | "desk_1800" | "station" | "counter" | "booth";
+      kind: "fixed" | "station";
+      capacity: number; // int32
+      features: ("monitor" | "dual_monitor" | "standing" | "phone_booth" | "docking_station" | "locker" | "quiet")[];
+      status: "vacant" | "occupied" | "unavailable";
+    };
     LegalEntityLevelsResponse: {
       id: string; // uuid
       code: string;
@@ -439,6 +534,9 @@ export interface components {
       work_mobile_phone: string | null;
       site: components["schemas"]["SiteRefResponse"] | null;
       remote_work: boolean | null;
+      workplace: components["schemas"]["WorkplaceRefResponse"] | null;
+      seat: components["schemas"]["SeatRefResponse"] | null;
+      presence: components["schemas"]["PresenceRefResponse"] | null;
       employment_type: string | null;
       job_type: string | null;
       hire_date: string | null; // date
@@ -466,6 +564,29 @@ export interface components {
       position_title: string | null;
       document_number: string | null;
     };
+    PresenceItemResponse: {
+      person: components["schemas"]["PersonResponse"];
+      seat_id: string | null; // uuid
+      seat_code: string | null;
+      zone_key: string | null; // uuid
+      zone_name: string | null;
+    };
+    PresenceRefResponse: {
+      date: string; // date
+      building_id: string; // uuid
+      building_name: string;
+      floor_id: string; // uuid
+      floor_label: string;
+      zone_key: string | null; // uuid
+      zone_name: string | null;
+      seat_id: string | null; // uuid
+      seat_code: string | null;
+    };
+    PresenceSeatResponse: {
+      seat_id: string; // uuid
+      code: string;
+      status: "occupied" | "unavailable";
+    };
     ProblemDetails: {
       type?: string | null;
       title?: string | null;
@@ -476,7 +597,7 @@ export interface components {
     ProposalResponse: {
       id: string; // uuid
       batch_id: string; // uuid
-      target_kind: "person" | "person_version" | "org_unit" | "org_unit_version" | "assignment" | "personnel_action" | "account_suspension" | "external_identity" | "site" | "site_version";
+      target_kind: "person" | "person_version" | "org_unit" | "org_unit_version" | "assignment" | "personnel_action" | "account_suspension" | "external_identity" | "site" | "site_version" | "building" | "building_version" | "floor" | "floor_version" | "floor_layout" | "workplace_assignment";
       operation: "create" | "correct" | "change" | "review" | "supplement" | "abolish" | "end";
       status: "proposed" | "needs_review" | "applied" | "rejected" | "resolved";
       target_id: string | null; // uuid
@@ -560,6 +681,39 @@ export interface components {
     };
     RotateWebhookSecretRequest: {
       overlap_hours: number | null; // int32
+    };
+    SeatRefResponse: {
+      seat_id: string; // uuid
+      code: string;
+      building_id: string; // uuid
+      building_name: string;
+      floor_id: string; // uuid
+      floor_label: string;
+      zone_key: string | null; // uuid
+      zone_name: string | null;
+      x_mm: number; // int32
+      y_mm: number; // int32
+      rotation_deg: number; // int32
+      kind: "fixed" | "station";
+    };
+    SeatSearchItemResponse: {
+      seat_id: string; // uuid
+      code: string;
+      building_id: string; // uuid
+      building_name: string;
+      floor_id: string; // uuid
+      floor_label: string;
+      zone_key: string | null; // uuid
+      zone_name: string | null;
+      kind: "fixed" | "station";
+      capacity: number; // int32
+      features: ("monitor" | "dual_monitor" | "standing" | "phone_booth" | "docking_station" | "locker" | "quiet")[];
+      status: "vacant" | "occupied" | "unavailable";
+    };
+    SeatSearchResponse: {
+      as_of: string; // date
+      items: components["schemas"]["SeatSearchItemResponse"][];
+      has_more: boolean;
     };
     SessionResponse: {
       kind: "person" | "break_glass";
@@ -755,6 +909,24 @@ export interface components {
       secret_id: string; // uuid
       secret: string;
     };
+    WorkplaceRefResponse: {
+      site_id: string; // uuid
+      building_id: string; // uuid
+      building_code: string;
+      building_name: string;
+      floor_id: string; // uuid
+      floor_label: string;
+      level_order: number; // int32
+      zone_key: string | null; // uuid
+      zone_name: string | null;
+      source: "seat" | "zone";
+    };
+    ZoneResponse: {
+      zone_key: string; // uuid
+      name: string;
+      kind: "office" | "production_line" | "storage" | "common" | "restricted";
+      polygon: number[][];
+    };
   };
 }
 
@@ -777,6 +949,19 @@ export interface paths {
       query: Record<string, never>;
       body: never;
       response: components["schemas"]["ClientStatusResponse"];
+    };
+  };
+  "/api/v1/buildings/{id}": {
+    /** 建物と階の一覧を参照する（GetBuilding） */
+    get: {
+      path: {
+        id: string;
+      };
+      query: {
+        as_of?: string;
+      };
+      body: never;
+      response: components["schemas"]["BuildingDetailResponse"];
     };
   };
   "/api/v1/changes": {
@@ -852,6 +1037,46 @@ export interface paths {
       query: Record<string, never>;
       body: components["schemas"]["CloseCorrectionRequest"];
       response: components["schemas"]["CorrectionResponse"];
+    };
+  };
+  "/api/v1/floors/{id}/layout": {
+    /** その日の配置図（外形・固定の部分・ゾーン・席の置き場所と状態）（GetFloorLayout） */
+    get: {
+      path: {
+        id: string;
+      };
+      query: {
+        as_of?: string;
+      };
+      body: never;
+      response: components["schemas"]["FloorLayoutResponse"];
+    };
+  };
+  "/api/v1/floors/{id}/occupants": {
+    /** 階の在籍者と席（所属上の席だけ。当日の所在は含めない）（ListFloorOccupants） */
+    get: {
+      path: {
+        id: string;
+      };
+      query: {
+        zone?: string;
+        limit?: string;
+        cursor?: string;
+        as_of?: string;
+      };
+      body: never;
+      response: components["schemas"]["FloorOccupantListResponse"];
+    };
+  };
+  "/api/v1/floors/{id}/presence": {
+    /** 今日の階の所在（外部の提供を注入したときだけ）（GetFloorPresence） */
+    get: {
+      path: {
+        id: string;
+      };
+      query: Record<string, never>;
+      body: never;
+      response: components["schemas"]["FloorPresenceResponse"];
     };
   };
   "/api/v1/ingest/proposals/{proposalId}": {
@@ -1025,6 +1250,25 @@ export interface paths {
       response: components["schemas"]["ManagerResponse"];
     };
   };
+  "/api/v1/seats": {
+    /** 席の検索（空席など。人は返さない）（SearchSeats） */
+    get: {
+      path: Record<string, never>;
+      query: {
+        floor?: string[];
+        building?: string;
+        site?: string;
+        zone?: string;
+        kind?: string[];
+        feature?: string[];
+        vacant?: string;
+        limit?: string;
+        as_of?: string;
+      };
+      body: never;
+      response: components["schemas"]["SeatSearchResponse"];
+    };
+  };
   "/api/v1/sites": {
     /** 拠点の一覧と、拠点ごとの人数（ListSites） */
     get: {
@@ -1051,6 +1295,19 @@ export interface paths {
       };
       body: never;
       response: components["schemas"]["SiteResponse"];
+    };
+  };
+  "/api/v1/sites/{id}/buildings": {
+    /** 拠点の建物と階の一覧（階ごとの席数・使用中・空席・使えない席）（ListSiteBuildings） */
+    get: {
+      path: {
+        id: string;
+      };
+      query: {
+        as_of?: string;
+      };
+      body: never;
+      response: components["schemas"]["BuildingListResponse"];
     };
   };
   "/api/v1/sync/plans": {

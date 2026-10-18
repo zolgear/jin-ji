@@ -18,7 +18,9 @@ internal static class PeopleEndpoints
         api.MapGet("/people/{id}", GetPersonAsync)
             .WithName("GetPerson")
             .WithSummary("人を参照する")
-            .WithDescription("見える項目だけを返す（visible_fields）。存在しない人と参照できない人は区別せず 404。as_of（yyyy-MM-dd）に今日より後を指定できるのは人事管理者と、先行提供を許された社内システム（/meta の max_as_of まで）だけ。")
+            .WithDescription("見える項目だけを返す（visible_fields）。存在しない人と参照できない人は区別せず 404。as_of（yyyy-MM-dd）に今日より後を指定できるのは人事管理者と、先行提供を許された社内システム（/meta の max_as_of まで）だけ。"
+                + "workplace（階・エリア）・seat（主の席）はその時点の席の割り当て。presence（今日の所在）は配備側が所在の提供を登録していて、時点が今日で、"
+                + "閲覧者に見えるときだけ返す（jin-ji は所在を保持しない。既定の公開範囲は本人と同じ部）。presence を返したときの応答は Cache-Control: no-store。")
             .WithMetadata(new RequestKindMetadata(RequestKind.PersonRead, true))
             .Produces<PersonResponse>()
             .ProducesProblem(StatusCodes.Status404NotFound);
@@ -80,10 +82,16 @@ internal static class PeopleEndpoints
             return Problems.BadRequest(http, "as_of は yyyy-MM-dd で指定してください。");
         }
 
-        var views = await people.GetPeopleAsync(http.Viewer(), [personId], date, cancellationToken);
+        var views = await people.GetPeopleAsync(http.Viewer(), [personId], date, cancellationToken, includePresence: true);
         if (views.Count == 0)
         {
             return Problems.NotFound(http);
+        }
+
+        if (views[0].Presence is not null)
+        {
+            // 所在は短命の情報なので、キャッシュに置かせない
+            http.Response.Headers.CacheControl = "no-store";
         }
 
         Problems.Observe(http).PeopleReturned = 1;

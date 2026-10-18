@@ -1,0 +1,18 @@
+{
+  "$comment": "jirei_2026.csv（Shift_JIS）。辞令一覧。発令内容（自由記述）をルールで解釈して発令の提案にする。",
+  "name": "messy-corp-jirei",
+  "target": "personnel_actions",
+  "source": { "kind": "csv", "encoding": "auto" },
+  "legalEntityAliases": {
+    "P": ["株式会社サンプル商事", "(株)サンプル商事", "サンプル商事"],
+    "L": ["株式会社サンプル物流", "(株)サンプル物流", "サンプル物流"]
+  },
+  "employeeNumber": { "padLength": 5, "prefixedPadLength": 4 },
+  "fields": {
+    "action_date": ["発令日"],
+    "employee_number": ["社員番号"],
+    "full_name": ["氏名"],
+    "action_text": ["発令内容"],
+    "action_note": ["備考"]
+  }
+}

@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- REST API。Host から登録されるクラスライブラリ。取込系（Ingest / Connectors）は参照しない -->
+
+  <ItemGroup>
+    <!-- ASP.NET Core 共有フレームワーク。NuGet 依存を増やさずにホスティング・DI・ロギングを使うため -->
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- OpenAPI 3.1 の文書を組み込みの生成器で作る（アーキテクチャ概要 §3。UI の API クライアントの型の元） -->
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../JinJi.Application/JinJi.Application.csproj" />
+    <ProjectReference Include="../JinJi.Policy/JinJi.Policy.csproj" />
+  </ItemGroup>
+
+</Project>

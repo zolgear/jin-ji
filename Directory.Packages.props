@@ -1,0 +1,43 @@
+<Project>
+  <!--
+    Central Package Management。パッケージの版はここでだけ指定する。
+    追加・更新の方針（ADR-0001）:
+    - 標準機能で済むものは入れない。追加する場合は ADR かレビューで理由を記録する
+    - 公開から 7 日以上経った版を使う
+    - packages.lock.json をコミットし、CI では locked mode で復元する
+  -->
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <!-- CI（ContinuousIntegrationBuild）または JINJI_LOCKED_RESTORE=true のとき、lock ファイルと異なる復元を失敗させる -->
+    <RestoreLockedMode Condition="'$(ContinuousIntegrationBuild)' == 'true' Or '$(JINJI_LOCKED_RESTORE)' == 'true'">true</RestoreLockedMode>
+  </PropertyGroup>
+
+  <ItemGroup Label="実行時">
+    <PackageVersion Include="Npgsql" Version="10.0.3" />
+    <!-- xlsx の読み込み。JinJi.Connectors（ワーカー側）だけが参照する。理由と推移的依存は docs/adr/0003-ingest-dependencies.md -->
+    <PackageVersion Include="ClosedXML" Version="0.105.1" />
+    <!-- OpenAPI 3.1 の文書の生成（ASP.NET Core 組み込み）。JinJi.Api だけが参照する -->
+    <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.12" />
+    <!-- Bearer トークン（JWT）の検証。合成ルート JinJi.Host だけが参照する（発行は持たない） -->
+    <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.12" />
+    <!--
+      人のログイン（Entra ID・汎用 OIDC 共通の OpenID Connect ハンドラ）。合成ルート JinJi.Host だけが参照する。
+      Microsoft.Identity.Web は使わない（MSAL・Azure SDK を連れてくるため）。推移的依存は JwtBearer と共通（Microsoft.IdentityModel.*）で、
+      上乗せはこのパッケージ自身だけ。理由は docs/adr/0004-authentication.md
+    -->
+    <PackageVersion Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="10.0.12" />
+    <!-- LLM の呼び出し（OpenAI 公式 .NET SDK）。JinJi.Llm（ワーカー側）だけが参照する。理由と推移的依存は docs/adr/0005-llm-dependency.md -->
+    <PackageVersion Include="OpenAI" Version="2.14.0" />
+    <!--
+      MCP サーバー（公式 C# SDK。Streamable HTTP と JSON-RPC・プロトコルの版の取り決め）。JinJi.Mcp だけが参照する。
+      推移的依存は ModelContextProtocol・ModelContextProtocol.Core・Microsoft.Extensions.AI.Abstractions の 3 件（共有フレームワークにあるものを除く）。
+      SDK の認証ハンドラ・ツールの属性による登録は使わない。理由は docs/adr/0006-mcp-sdk.md
+    -->
+    <PackageVersion Include="ModelContextProtocol.AspNetCore" Version="2.2.0" />
+  </ItemGroup>
+
+  <ItemGroup Label="テスト">
+    <PackageVersion Include="xunit.v3" Version="4.0.1" />
+  </ItemGroup>
+</Project>

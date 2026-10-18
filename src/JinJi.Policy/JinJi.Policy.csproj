@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- 認可エンジン・マスキング -->
+
+  <ItemGroup>
+    <ProjectReference Include="../JinJi.Domain/JinJi.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

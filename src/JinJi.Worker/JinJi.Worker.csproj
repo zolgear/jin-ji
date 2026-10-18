@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- 取込・同期・配信のバックグラウンド処理。Host からホスト型サービスとして登録される -->
+
+  <ItemGroup>
+    <!-- ASP.NET Core 共有フレームワーク。NuGet 依存を増やさずにホスティング・DI・ロギングを使うため -->
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../JinJi.Application/JinJi.Application.csproj" />
+    <ProjectReference Include="../JinJi.Ingest/JinJi.Ingest.csproj" />
+    <ProjectReference Include="../JinJi.Connectors/JinJi.Connectors.csproj" />
+    <ProjectReference Include="../JinJi.Sync/JinJi.Sync.csproj" />
+    <ProjectReference Include="../JinJi.Llm/JinJi.Llm.csproj" />
+  </ItemGroup>
+
+</Project>

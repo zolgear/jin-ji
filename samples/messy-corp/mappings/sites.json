@@ -1,0 +1,19 @@
+{
+  "$comment": "sites.csv（Shift_JIS）。拠点マスタ（総務部が管理する事業所の一覧）。所在地は事業所の住所（会社の情報）で、先頭の都道府県名を都道府県のコードに分ける。種別が空欄なら拠点名の末尾から推定する。閉鎖日のある拠点は有効期間を終える提案にする。",
+  "name": "messy-corp-sites",
+  "target": "sites",
+  "source": { "kind": "csv", "encoding": "auto" },
+  "legalEntityAliases": {
+    "P": ["株式会社サンプル商事", "(株)サンプル商事", "サンプル商事"],
+    "L": ["株式会社サンプル物流", "(株)サンプル物流", "サンプル物流"]
+  },
+  "fields": {
+    "legal_entity_code": ["会社"],
+    "site_code": ["拠点コード"],
+    "site_name": ["拠点名"],
+    "site_type": ["種別"],
+    "site_location": ["所在地"],
+    "site_valid_from": ["開設日"],
+    "site_closed_date": ["閉鎖日"]
+  }
+}

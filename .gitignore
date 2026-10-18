@@ -1,0 +1,30 @@
+# 秘密情報
+.env
+.env.*
+!.env.example
+
+# .NET
+bin/
+obj/
+*.user
+.vs/
+TestResults/
+
+# フロントエンド
+node_modules/
+dist/
+
+# エディタ・OS
+.idea/
+.DS_Store
+
+# クラッシュ時のコアダンプ
+core
+core.*
+
+# Web UI（web/）のデモ用ビルドとスクリーンショット
+web/dist-demo/
+web/screenshots/
+
+# Claude Code のローカル作業領域（エージェントの worktree など）
+.claude/

@@ -1,0 +1,29 @@
+{
+  "$comment": "org_chart_2026-04.csv（Shift_JIS）。列が階層（会社/本部/部・室/課・グループ/チーム）の組織図。空欄は上の行で補う。室は補いでは上位組織にしない。チームは補いで決めた上位組織（課）を飛ばして部の直下の可能性もあるので、上位組織の候補を要確認にする。拠点は最上位の組織の行にだけあり、配下は引き継ぐ。",
+  "name": "messy-corp-org-chart",
+  "target": "org_units",
+  "source": {
+    "kind": "csv",
+    "encoding": "auto",
+    "hierarchy": {
+      "entityColumn": "会社",
+      "columns": ["本部", "部・室", "課・グループ", "チーム"],
+      "noCarrySuffixes": ["室"],
+      "skipCandidateColumns": ["チーム"]
+    }
+  },
+  "legalEntityAliases": {
+    "P": ["株式会社サンプル商事", "(株)サンプル商事", "サンプル商事"],
+    "L": ["株式会社サンプル物流", "(株)サンプル物流", "サンプル物流"]
+  },
+  "employeeNumber": { "padLength": 5, "prefixedPadLength": 4 },
+  "fields": {
+    "legal_entity_code": ["会社"],
+    "org_code": ["組織コード"],
+    "org_head_name": ["責任者"],
+    "org_remarks": ["備考"],
+    "site_name": ["拠点"]
+  },
+  "ignore": ["人数"],
+  "defaults": { "org_valid_from": "2026-04-01" }
+}

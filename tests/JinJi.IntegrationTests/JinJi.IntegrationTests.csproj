@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    実 PostgreSQL を使う結合テスト。Compose の PostgreSQL に接続し、テストごとに一時データベースを作って捨てる。
+    接続情報は環境変数（JINJI_PG_*）で渡す。README を参照。
+  -->
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- xunit.v3 は Microsoft.Testing.Platform で動く（global.json の test.runner）。VSTest 用のパッケージは入れない -->
+    <PackageReference Include="xunit.v3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/JinJi.Host/JinJi.Host.csproj" />
+    <ProjectReference Include="../../src/JinJi.Infrastructure/JinJi.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="../../db/field-catalog.json" Link="field-catalog.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

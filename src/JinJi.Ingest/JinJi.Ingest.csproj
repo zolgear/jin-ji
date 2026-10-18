@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- 取込の許可リスト・正規化・名寄せ。ワーカーだけが参照する -->
+
+  <ItemGroup>
+    <ProjectReference Include="../JinJi.Application/JinJi.Application.csproj" />
+    <ProjectReference Include="../JinJi.Domain/JinJi.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

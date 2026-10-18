@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- 外部との差分計算・同期スクリプト生成 -->
+
+  <ItemGroup>
+    <ProjectReference Include="../JinJi.Application/JinJi.Application.csproj" />
+    <ProjectReference Include="../JinJi.Domain/JinJi.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="JinJi.IntegrationTests" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,20 @@
+{
+  "$comment": "Entra ID への同期の設定（JinJi.Host sync-plan --settings）。計画に全文と SHA-256 が保存され、計画の承認がこの設定の承認を兼ねる。部署名は勤務先の組織そのもの（サンプルの Entra は最下位の組織名を department に入れている）。",
+  "name": "messy-corp-entra-sync",
+  "sourceSystem": "entra_id",
+  "legalEntities": ["P", "L"],
+  "displayNameFormat": "{family} {given}",
+  "departmentLevel": null,
+  "departmentLevelByLegalEntity": {},
+  "jobTitle": "primary",
+  "clearJobTitleWhenEmpty": false,
+  "companyName": "legal_entity_name",
+  "secondmentUsesHostOrg": true,
+  "fields": ["displayName", "givenName", "surname", "department", "jobTitle", "companyName", "officeLocation", "employeeId", "manager", "accountEnabled"],
+  "exclude": [
+    { "userPrincipalName": "admin@example.co.jp", "note": "テナントの管理者アカウント（例）" }
+  ],
+  "reenableAccounts": false,
+  "includeCreatesInScript": false,
+  "planMaxAgeDays": 7
+}

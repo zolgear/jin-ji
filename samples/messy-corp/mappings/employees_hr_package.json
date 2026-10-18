@@ -1,0 +1,35 @@
+{
+  "$comment": "employees_hr_package.csv（UTF-8 BOM）。保持禁止列（生年月日・性別・住所など）は列名で捨てる。通称（旧姓使用）がある行は通称を業務上の氏名にし、戸籍名の読みである氏名カナは捨てる。勤務地は拠点名として拠点マスタに照合し、主務の組織の拠点と違う人だけ人ごとの拠点にする。",
+  "name": "messy-corp-hr-package",
+  "target": "people",
+  "source": { "kind": "csv", "encoding": "auto" },
+  "legalEntityAliases": {
+    "P": ["株式会社サンプル商事", "(株)サンプル商事", "サンプル商事"],
+    "L": ["株式会社サンプル物流", "(株)サンプル物流", "サンプル物流"]
+  },
+  "employeeNumber": { "padLength": 5, "prefixedPadLength": 4 },
+  "fields": {
+    "employee_number": ["社員番号"],
+    "full_name": ["通称(旧姓使用)", "氏名"],
+    "full_name_kana": ["氏名カナ"],
+    "legal_entity_code": ["会社"],
+    "org_code": ["所属コード"],
+    "org_name": ["所属部署"],
+    "position_title": ["役職"],
+    "concurrent_org_name": ["兼務部署"],
+    "concurrent_position_title": ["兼務役職"],
+    "hire_date": ["入社日"],
+    "termination_date": ["退職日"],
+    "employment_status": ["在籍区分"],
+    "secondment_legal_entity_code": ["出向先会社"],
+    "secondment_org_name": ["出向先部署"],
+    "secondment_start_date": ["出向開始日"],
+    "suspension_start_date": ["休職開始日"],
+    "work_email": ["メールアドレス"],
+    "extension_number": ["内線"],
+    "site_name": ["勤務地"],
+    "remote_work": ["リモートワーク"]
+  },
+  "discardWhenPresent": { "通称(旧姓使用)": ["full_name_kana"] },
+  "defaults": { "employment_type": "正社員" }
+}

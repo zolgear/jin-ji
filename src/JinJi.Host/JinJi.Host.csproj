@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <!--
+    jin-ji の唯一の実行可能プロジェクト（合成ルート）。
+    1 つのイメージを起動時の役割（role 引数: all, api, mcp, worker）で切り替える。migrate サブコマンドでマイグレーションを適用する。
+  -->
+
+  <ItemGroup>
+    <!-- API・MCP の Bearer トークン（JWT）の検証（発行者・audience・署名鍵は設定 JinJi:Auth） -->
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
+    <!-- 人のログイン（Entra ID・汎用 OIDC。ADR-0004）。Identity・Cookie・Data Protection・Antiforgery は共有フレームワーク -->
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../JinJi.Api/JinJi.Api.csproj" />
+    <ProjectReference Include="../JinJi.Mcp/JinJi.Mcp.csproj" />
+    <ProjectReference Include="../JinJi.Worker/JinJi.Worker.csproj" />
+    <ProjectReference Include="../JinJi.Infrastructure/JinJi.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="JinJi.IntegrationTests" />
+  </ItemGroup>
+
+</Project>

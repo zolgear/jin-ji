@@ -1,0 +1,6103 @@
+{
+  "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#users(id,displayName,givenName,surname,mail,userPrincipalName,department,jobTitle,employeeId,accountEnabled,companyName,officeLocation,businessPhones,mobilePhone)",
+  "value": [
+    {
+      "id": "7e96dc9b-a64c-4a58-990e-0566c692fb90",
+      "displayName": "佐々木 優奈",
+      "givenName": "優奈",
+      "surname": "佐々木",
+      "mail": "yuna.sasaki@example.co.jp",
+      "userPrincipalName": "yuna.sasaki@example.co.jp",
+      "department": "新規開拓ﾁｰﾑ",
+      "jobTitle": "主任",
+      "employeeId": "00352",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-1934"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "472ec5f3-1b38-432f-b74b-5b63d63470d9",
+      "displayName": "清水 絵里",
+      "givenName": "絵里",
+      "surname": "清水",
+      "mail": "eri.shimizu@example.co.jp",
+      "userPrincipalName": "eri.shimizu@example.co.jp",
+      "department": "公共営業チーム",
+      "jobTitle": null,
+      "employeeId": "00114",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "福岡支店",
+      "businessPhones": [
+        "+81 3-5550-8397"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "36475b2d-ef70-4981-88de-5a0005be6d9d",
+      "displayName": "佐々木裕子",
+      "givenName": "裕子",
+      "surname": "佐々木",
+      "mail": "yuko.sasaki@example.co.jp",
+      "userPrincipalName": "yuko.sasaki@example.co.jp",
+      "department": "法人営業チーム",
+      "jobTitle": null,
+      "employeeId": "00138",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "福岡支店",
+      "businessPhones": [
+        "+81 3-5550-9946"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "8d721924-9b14-4d91-9995-5cf0297b326f",
+      "displayName": "前田 大樹",
+      "givenName": "大樹",
+      "surname": "前田",
+      "mail": "daiki.maeda2@example.co.jp",
+      "userPrincipalName": "daiki.maeda2@example.co.jp",
+      "department": "西日本チーム",
+      "jobTitle": null,
+      "employeeId": "00127",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "福岡支店",
+      "businessPhones": [
+        "+81 3-5550-5235"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "9e8848bc-14cb-4544-972a-5fc186048a24",
+      "displayName": "阿部 美穂",
+      "givenName": "美穂",
+      "surname": "阿部",
+      "mail": "miho.abe@example.com",
+      "userPrincipalName": "miho.abe@example.com",
+      "department": "神戸倉庫グループ",
+      "jobTitle": null,
+      "employeeId": "L0044",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル物流",
+      "officeLocation": "大阪物流センター",
+      "businessPhones": [
+        "+81 43-5550-6886"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "2d509f5d-fd41-4dd2-8bc3-9b2d32dc2da4",
+      "displayName": "太田 陽子",
+      "givenName": "陽子",
+      "surname": "太田",
+      "mail": "yoko.ota@example.co.jp",
+      "userPrincipalName": "yoko.ota@example.co.jp",
+      "department": "基盤開発チーム",
+      "jobTitle": null,
+      "employeeId": "176",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [],
+      "mobilePhone": "+81 90-0000-8265"
+    },
+    {
+      "id": "12cb5fd5-2ba5-435a-9f67-8b806557ae2b",
+      "displayName": "山本 隆",
+      "givenName": "隆",
+      "surname": "山本",
+      "mail": "takashi.yamamoto@example.co.jp",
+      "userPrincipalName": "takashi.yamamoto@example.co.jp",
+      "department": "システム管理室",
+      "jobTitle": null,
+      "employeeId": "00275",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-6246"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "77ebee48-0502-44eb-b864-fc2361f92fde",
+      "displayName": "齋藤 陽子",
+      "givenName": "陽子",
+      "surname": "齋藤",
+      "mail": "yoko.saito@example.co.jp",
+      "userPrincipalName": "yoko.saito@example.co.jp",
+      "department": "総務人事課",
+      "jobTitle": "リーダー",
+      "employeeId": "00361",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-3993"
+      ],
+      "mobilePhone": "+81 90-0000-3731"
+    },
+    {
+      "id": "35389bd9-2690-4796-bfe9-cb4278f38339",
+      "displayName": "青木 里奈",
+      "givenName": "里奈",
+      "surname": "青木",
+      "mail": "rina.aoki@example.co.jp",
+      "userPrincipalName": "rina.aoki@example.co.jp",
+      "department": "公共営業チーム",
+      "jobTitle": null,
+      "employeeId": "00283",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-3043"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "7149b988-4c2d-4362-90ef-6aaead4a6a23",
+      "displayName": "田中 絵里",
+      "givenName": "絵里",
+      "surname": "田中",
+      "mail": "eri.tanaka@example.co.jp",
+      "userPrincipalName": "eri.tanaka@example.co.jp",
+      "department": "広報課",
+      "jobTitle": null,
+      "employeeId": "00422",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [],
+      "mobilePhone": null
+    },
+    {
+      "id": "413a40d6-200c-4d61-a9d4-00a313d2f636",
+      "displayName": "千葉　愛",
+      "givenName": "愛",
+      "surname": "千葉",
+      "mail": "ai.chiba@example.co.jp",
+      "userPrincipalName": "ai.chiba@example.co.jp",
+      "department": "経営企画室",
+      "jobTitle": null,
+      "employeeId": "00014",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-1439"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "2de5899b-e48c-4111-9493-82989c9554d2",
+      "displayName": "千葉 達也",
+      "givenName": "達也",
+      "surname": "千葉",
+      "mail": "tatsuya.chiba@example.co.jp",
+      "userPrincipalName": "tatsuya.chiba@example.co.jp",
+      "department": "品質保証課",
+      "jobTitle": null,
+      "employeeId": "00347",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [
+        "+81 3-5550-6364"
+      ],
+      "mobilePhone": "+81 90-0000-6765"
+    },
+    {
+      "id": "701278d0-8bf7-43d4-9bb0-4437a6eba5da",
+      "displayName": "近藤 沙織",
+      "givenName": "沙織",
+      "surname": "近藤",
+      "mail": "saori.kondo@example.co.jp",
+      "userPrincipalName": "saori.kondo@example.co.jp",
+      "department": "広報課 ",
+      "jobTitle": null,
+      "employeeId": "00330",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-9464"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "3adcaf1c-ad19-4f2f-9eca-ba04f1f3e0b9",
+      "displayName": "石川 裕介",
+      "givenName": "裕介",
+      "surname": "石川",
+      "mail": "yusuke.ishikawa@example.co.jp",
+      "userPrincipalName": "yusuke.ishikawa@example.co.jp",
+      "department": "総務課",
+      "jobTitle": null,
+      "employeeId": "00146",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-4068"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "5d19fbe0-fa5c-42e0-8ed0-dc01c7da4071",
+      "displayName": "久保 純",
+      "givenName": "純",
+      "surname": "久保",
+      "mail": "jun.kubo@example.co.jp",
+      "userPrincipalName": "jun.kubo@example.co.jp",
+      "department": "採用ﾁｰﾑ",
+      "jobTitle": null,
+      "employeeId": "00126",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-4910"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "e8ed5ef7-03f9-44f8-be1c-81d7a9feec72",
+      "displayName": "清水 香織",
+      "givenName": "香織",
+      "surname": "清水",
+      "mail": "kaori.shimizu@example.co.jp",
+      "userPrincipalName": "kaori.shimizu@example.co.jp",
+      "department": "東日本チーム",
+      "jobTitle": null,
+      "employeeId": "00051",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-6036"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "c5aa3c02-c449-4a75-8ddc-e0e0b47a51c2",
+      "displayName": "松本 典子",
+      "givenName": "典子",
+      "surname": "松本",
+      "mail": "noriko.matsumoto@example.co.jp",
+      "userPrincipalName": "noriko.matsumoto@example.co.jp",
+      "department": "品質保証課",
+      "jobTitle": null,
+      "employeeId": "377",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [
+        "+81 3-5550-8362"
+      ],
+      "mobilePhone": "+81 90-0000-6146"
+    },
+    {
+      "id": "883d1e78-8036-4915-a5b6-00b87c4bcf54",
+      "displayName": "谷口 剛",
+      "givenName": "剛",
+      "surname": "谷口",
+      "mail": "tsuyoshi.taniguchi@example.com",
+      "userPrincipalName": "tsuyoshi.taniguchi@example.com",
+      "department": "東日本物流部",
+      "jobTitle": "部長",
+      "employeeId": "L0055",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル物流",
+      "officeLocation": "千葉物流センター",
+      "businessPhones": [
+        "+81 43-5550-1755"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "42e6d6ca-81f2-4009-91a2-73a5daf57d3a",
+      "displayName": "藤井 健司",
+      "givenName": "健司",
+      "surname": "藤井",
+      "mail": "kenji.fujii@example.co.jp",
+      "userPrincipalName": "kenji.fujii@example.co.jp",
+      "department": "総務人事課",
+      "jobTitle": null,
+      "employeeId": "00286",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [],
+      "mobilePhone": null
+    },
+    {
+      "id": "0c609b78-60bd-4bc1-897a-0af3b6f99c66",
+      "displayName": "岡田 莉子",
+      "givenName": "莉子",
+      "surname": "岡田",
+      "mail": "riko.okada@example.co.jp",
+      "userPrincipalName": "riko.okada@example.co.jp",
+      "department": "マーケティング部",
+      "jobTitle": "部長",
+      "employeeId": "00046",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-1436"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "5325038d-7ab4-44b7-8100-38eee4b2f9d9",
+      "displayName": "太田 莉子",
+      "givenName": "莉子",
+      "surname": "太田",
+      "mail": "riko.ota@example.co.jp",
+      "userPrincipalName": "riko.ota@example.co.jp",
+      "department": "応用開発ﾁｰﾑ",
+      "jobTitle": "リーダー",
+      "employeeId": "00012",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [
+        "+81 3-5550-7622"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "51f493df-addc-48f7-8fb3-d6d465e052d4",
+      "displayName": "宮崎 裕子",
+      "givenName": "裕子",
+      "surname": "宮崎",
+      "mail": "yuko.miyazaki@example.co.jp",
+      "userPrincipalName": "yuko.miyazaki@example.co.jp",
+      "department": "経理課",
+      "jobTitle": null,
+      "employeeId": "00247",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-8555"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "28f9e596-0146-4925-99ef-e4c2e0427423",
+      "displayName": "橋本 由美",
+      "givenName": "由美",
+      "surname": "橋本",
+      "mail": "yumi.hashimoto@example.co.jp",
+      "userPrincipalName": "yumi.hashimoto@example.co.jp",
+      "department": "広報課",
+      "jobTitle": null,
+      "employeeId": "267",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [],
+      "mobilePhone": null
+    },
+    {
+      "id": "cf47bf3c-7398-4a11-b69d-ac101d4a6f03",
+      "displayName": "太田 圭介",
+      "givenName": "圭介",
+      "surname": "太田",
+      "mail": "keisuke.ota@example.co.jp",
+      "userPrincipalName": "keisuke.ota@example.co.jp",
+      "department": "広報課",
+      "jobTitle": null,
+      "employeeId": "00290",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-8369"
+      ],
+      "mobilePhone": "+81 90-0000-8769"
+    },
+    {
+      "id": "ed598501-851b-4ade-8209-f63dd1bc3721",
+      "displayName": "三浦 勇気",
+      "givenName": "勇気",
+      "surname": "三浦",
+      "mail": "yuki.miura@example.com",
+      "userPrincipalName": "yuki.miura@example.com",
+      "department": "大阪配送グループ",
+      "jobTitle": "主任",
+      "employeeId": "L0026",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル物流",
+      "officeLocation": "大阪物流センター",
+      "businessPhones": [
+        "+81 43-5550-7547"
+      ],
+      "mobilePhone": "+81 90-0000-5091"
+    },
+    {
+      "id": "6bb61e00-6955-446d-9131-24b83eb9610f",
+      "displayName": "山﨑俊介",
+      "givenName": "俊介",
+      "surname": "山﨑",
+      "mail": "shunsuke.yamazaki@example.co.jp",
+      "userPrincipalName": "shunsuke.yamazaki@example.co.jp",
+      "department": "採用ﾁｰﾑ",
+      "jobTitle": null,
+      "employeeId": "00265",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-7586"
+      ],
+      "mobilePhone": "+81 90-0000-9138"
+    },
+    {
+      "id": "3cd290f4-5b19-4e0a-b348-1e296afd6b45",
+      "displayName": "酒井 勇気",
+      "givenName": "勇気",
+      "surname": "酒井",
+      "mail": "yuki.sakai@example.co.jp",
+      "userPrincipalName": "yuki.sakai@example.co.jp",
+      "department": "製造二課",
+      "jobTitle": null,
+      "employeeId": "00225",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [
+        "+81 3-5550-5318"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "12d88ed0-4a4d-4fde-a4b9-1d92ca0e6cf2",
+      "displayName": "杉山　和也",
+      "givenName": "和也",
+      "surname": "杉山",
+      "mail": "kazuya.sugiyama@example.com",
+      "userPrincipalName": "kazuya.sugiyama@example.com",
+      "department": "千葉倉庫グループ　",
+      "jobTitle": null,
+      "employeeId": "L0001",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル物流",
+      "officeLocation": "千葉物流センター",
+      "businessPhones": [
+        "+81 43-5550-8139"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "db28da40-579c-429b-9dab-5fd4fedba230",
+      "displayName": "遠藤 浩二",
+      "givenName": "浩二",
+      "surname": "遠藤",
+      "mail": "koji.endo@example.co.jp",
+      "userPrincipalName": "koji.endo@example.co.jp",
+      "department": "法人営業チーム",
+      "jobTitle": null,
+      "employeeId": "00395",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-8232"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "fadd45c0-bc21-4217-a05d-4f0ce656b128",
+      "displayName": "加藤光",
+      "givenName": "光",
+      "surname": "加藤",
+      "mail": "hikaru.kato@example.co.jp",
+      "userPrincipalName": "hikaru.kato@example.co.jp",
+      "department": "法人営業チーム",
+      "jobTitle": null,
+      "employeeId": "217",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "福岡支店",
+      "businessPhones": [
+        "+81 3-5550-1019"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "2048da16-9869-425a-a34c-49acdf3c2034",
+      "displayName": "阿部 和也",
+      "givenName": "和也",
+      "surname": "阿部",
+      "mail": "kazuya.abe@example.co.jp",
+      "userPrincipalName": "kazuya.abe@example.co.jp",
+      "department": "品質保証課",
+      "jobTitle": null,
+      "employeeId": "00088",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [],
+      "mobilePhone": null
+    },
+    {
+      "id": "266e1583-03ac-4f4f-bc76-cb32a9f1c94d",
+      "displayName": "小川 瞳",
+      "givenName": "瞳",
+      "surname": "小川",
+      "mail": "hitomi.ogawa@example.co.jp",
+      "userPrincipalName": "hitomi.ogawa@example.co.jp",
+      "department": "インフラ課",
+      "jobTitle": "課長",
+      "employeeId": "00155",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-3770"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "4d22235c-d651-450f-890d-7202bad7c52b",
+      "displayName": "鈴木 真由美",
+      "givenName": "真由美",
+      "surname": "鈴木",
+      "mail": "mayumi.suzuki@example.com",
+      "userPrincipalName": "mayumi.suzuki@example.com",
+      "department": "管理部",
+      "jobTitle": "部長",
+      "employeeId": "L0013",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル物流",
+      "officeLocation": "千葉物流センター",
+      "businessPhones": [
+        "+81 43-5550-7775"
+      ],
+      "mobilePhone": "+81 90-0000-9517"
+    },
+    {
+      "id": "73ede825-b232-419b-b232-abee61643673",
+      "displayName": "山田 明日香",
+      "givenName": "明日香",
+      "surname": "山田",
+      "mail": "asuka.yamada@example.co.jp",
+      "userPrincipalName": "asuka.yamada@example.co.jp",
+      "department": "社内SE課",
+      "jobTitle": "主任",
+      "employeeId": "00052",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-6404"
+      ],
+      "mobilePhone": "+81 90-0000-2958"
+    },
+    {
+      "id": "0478f4ff-5099-4ed0-8a86-4b346a06f694",
+      "displayName": "後藤 愛",
+      "givenName": "愛",
+      "surname": "後藤",
+      "mail": "ai.goto@example.co.jp",
+      "userPrincipalName": "ai.goto@example.co.jp",
+      "department": "システム管理室",
+      "jobTitle": null,
+      "employeeId": null,
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [],
+      "mobilePhone": null
+    },
+    {
+      "id": "2b049189-bb93-475f-be5c-4a1af67ffee3",
+      "displayName": "村上 太郎",
+      "givenName": "太郎",
+      "surname": "村上",
+      "mail": "taro.murakami@example.co.jp",
+      "userPrincipalName": "taro.murakami@example.co.jp",
+      "department": "企画一課",
+      "jobTitle": null,
+      "employeeId": "00118",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-9651"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "fc03da16-1cb0-41c5-82c7-cc2711566e1b",
+      "displayName": "村上 光",
+      "givenName": "光",
+      "surname": "村上",
+      "mail": "hikaru.murakami@example.com",
+      "userPrincipalName": "hikaru.murakami@example.com",
+      "department": "業務改善グループ",
+      "jobTitle": null,
+      "employeeId": "L0053",
+      "accountEnabled": false,
+      "companyName": "株式会社サンプル物流",
+      "officeLocation": "千葉物流センター",
+      "businessPhones": [],
+      "mobilePhone": "+81 90-0000-7262"
+    },
+    {
+      "id": "28aa280b-5052-42b2-9a72-e0fa7b101ea5",
+      "displayName": "岡田 敦",
+      "givenName": "敦",
+      "surname": "岡田",
+      "mail": "atsushi.okada@example.co.jp",
+      "userPrincipalName": "atsushi.okada@example.co.jp",
+      "department": "製造四課",
+      "jobTitle": null,
+      "employeeId": "00007",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [
+        "+81 3-5550-9390"
+      ],
+      "mobilePhone": "+81 90-0000-4656"
+    },
+    {
+      "id": "9af8c94c-1c64-40ed-b697-ec8a7a656a4d",
+      "displayName": "伊藤　麻衣",
+      "givenName": "麻衣",
+      "surname": "伊藤",
+      "mail": "mai.ito@example.co.jp",
+      "userPrincipalName": "mai.ito@example.co.jp",
+      "department": "インフラ課",
+      "jobTitle": null,
+      "employeeId": "00404",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [],
+      "mobilePhone": null
+    },
+    {
+      "id": "1bfa6744-d621-4f9b-b2ad-12f1c0a3e4c9",
+      "displayName": "配送受付",
+      "givenName": null,
+      "surname": null,
+      "mail": "haiso@example.com",
+      "userPrincipalName": "haiso@example.com",
+      "department": "東日本物流部",
+      "jobTitle": null,
+      "employeeId": null,
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル物流",
+      "officeLocation": null,
+      "businessPhones": [],
+      "mobilePhone": null
+    },
+    {
+      "id": "eb752b8c-2c4c-4d59-8ab8-18a4ee219344",
+      "displayName": "総務部 共有メールボックス",
+      "givenName": null,
+      "surname": null,
+      "mail": "soumu@example.co.jp",
+      "userPrincipalName": "soumu@example.co.jp",
+      "department": "総務部",
+      "jobTitle": null,
+      "employeeId": null,
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": null,
+      "businessPhones": [],
+      "mobilePhone": null
+    },
+    {
+      "id": "946cb1ba-1cdc-49bf-aeb0-9e28e7ad4cea",
+      "displayName": "Hideki Abe",
+      "givenName": "Hideki",
+      "surname": "Abe",
+      "mail": "hideki.abe@example.co.jp",
+      "userPrincipalName": "hideki.abe@example.co.jp",
+      "department": "経営企画室",
+      "jobTitle": null,
+      "employeeId": "00200",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-2914"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "6de36745-3820-4a7f-9db2-033595f83336",
+      "displayName": "伊藤 秀樹",
+      "givenName": "秀樹",
+      "surname": "伊藤",
+      "mail": "hideki.ito@example.co.jp",
+      "userPrincipalName": "hideki.ito@example.co.jp",
+      "department": "製造二課 ",
+      "jobTitle": null,
+      "employeeId": "00231",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [
+        "+81 3-5550-3898"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "a8c272f4-d0d3-468d-b038-42642a536c23",
+      "displayName": "吉田 千尋",
+      "givenName": "千尋",
+      "surname": "吉田",
+      "mail": "chihiro.yoshida@example.co.jp",
+      "userPrincipalName": "chihiro.yoshida@example.co.jp",
+      "department": "システム管理室",
+      "jobTitle": null,
+      "employeeId": "00499",
+      "accountEnabled": true,
+      "companyName": "サンプル商事(株)",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-6595"
+      ],
+      "mobilePhone": "+81 90-0000-7339"
+    },
+    {
+      "id": "a9ba92a2-d8de-4262-a577-e6da6f51a507",
+      "displayName": "小川　美香",
+      "givenName": "美香",
+      "surname": "小川",
+      "mail": "mika.ogawa@example.com",
+      "userPrincipalName": "mika.ogawa@example.com",
+      "department": "神戸倉庫グループ",
+      "jobTitle": "グループ長",
+      "employeeId": "L0058",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル物流",
+      "officeLocation": "大阪物流センター",
+      "businessPhones": [],
+      "mobilePhone": "+81 90-0000-1875"
+    },
+    {
+      "id": "9fae6efe-11ef-4e85-972a-dcba7db1b93c",
+      "displayName": "工藤 夏美",
+      "givenName": "夏美",
+      "surname": "工藤",
+      "mail": "natsumi.kudo@example.co.jp",
+      "userPrincipalName": "natsumi.kudo@example.co.jp",
+      "department": "品質保証課",
+      "jobTitle": null,
+      "employeeId": "00388",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [
+        "+81 3-5550-3657"
+      ],
+      "mobilePhone": "+81 90-0000-7042"
+    },
+    {
+      "id": "aac2b00a-5f66-4334-8326-0b589f65dcf1",
+      "displayName": "前田 大樹",
+      "givenName": "大樹",
+      "surname": "前田",
+      "mail": "daiki.maeda@example.co.jp",
+      "userPrincipalName": "daiki.maeda@example.co.jp",
+      "department": "公共営業チーム",
+      "jobTitle": null,
+      "employeeId": "00073",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [],
+      "mobilePhone": null
+    },
+    {
+      "id": "c00e308b-76ce-4077-85b1-af4c45db4d3d",
+      "displayName": "和田 悠斗",
+      "givenName": "悠斗",
+      "surname": "和田",
+      "mail": "yuto.wada@example.co.jp",
+      "userPrincipalName": "yuto.wada@example.co.jp",
+      "department": "製造三課",
+      "jobTitle": null,
+      "employeeId": "00193",
+      "accountEnabled": true,
+      "companyName": "サンプル商事(株)",
+      "officeLocation": "横浜工場",
+      "businessPhones": [
+        "+81 3-5550-2903"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "7baded9e-61ac-4c29-ad8a-b38a51759576",
+      "displayName": "原田 美穂",
+      "givenName": "美穂",
+      "surname": "原田",
+      "mail": "miho.harada@example.com",
+      "userPrincipalName": "miho.harada@example.com",
+      "department": "神戸倉庫グループ",
+      "jobTitle": null,
+      "employeeId": "L0021",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル物流",
+      "officeLocation": "大阪物流センター",
+      "businessPhones": [
+        "+81 43-5550-3712"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "7dc2badb-4154-4674-82d3-1b8e26a93f80",
+      "displayName": "石井 修",
+      "givenName": "修",
+      "surname": "石井",
+      "mail": "osamu.ishii@example.co.jp",
+      "userPrincipalName": "osamu.ishii@example.co.jp",
+      "department": "企画２課",
+      "jobTitle": null,
+      "employeeId": "00327",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [],
+      "mobilePhone": null
+    },
+    {
+      "id": "56b6e061-b8e9-4079-8a8a-ed1687beb54c",
+      "displayName": "松本 優太",
+      "givenName": "優太",
+      "surname": "松本",
+      "mail": "yuta.matsumoto@example.co.jp",
+      "userPrincipalName": "yuta.matsumoto@example.co.jp",
+      "department": "総務部",
+      "jobTitle": "部長",
+      "employeeId": "329",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-1390"
+      ],
+      "mobilePhone": "+81 90-0000-8331"
+    },
+    {
+      "id": "ba1250df-42a6-4792-b162-0b89dae67a54",
+      "displayName": "Yuta Okamoto",
+      "givenName": "Yuta",
+      "surname": "Okamoto",
+      "mail": "yuta.okamoto@example.co.jp",
+      "userPrincipalName": "yuta.okamoto@example.co.jp",
+      "department": "製造三課",
+      "jobTitle": null,
+      "employeeId": "00067",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [
+        "+81 3-5550-9044"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "1f90187b-63c9-4ad7-b950-8692cd56ca86",
+      "displayName": "工藤 香織",
+      "givenName": "香織",
+      "surname": "工藤",
+      "mail": "kaori.kudo@example.co.jp",
+      "userPrincipalName": "kaori.kudo@example.co.jp",
+      "department": "西日本チーム　",
+      "jobTitle": null,
+      "employeeId": "360",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-6303"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "1d192f86-9605-43ce-bef5-9a22f66d173c",
+      "displayName": "和田 明日香",
+      "givenName": "明日香",
+      "surname": "和田",
+      "mail": "asuka.wada@example.co.jp",
+      "userPrincipalName": "asuka.wada@example.co.jp",
+      "department": "採用チーム",
+      "jobTitle": null,
+      "employeeId": "00208",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-9102"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "7bf2e3eb-33fe-46c2-a6e7-4b038587a2fc",
+      "displayName": "林典子",
+      "givenName": "典子",
+      "surname": "林",
+      "mail": "noriko.hayashi@example.co.jp",
+      "userPrincipalName": "noriko.hayashi@example.co.jp",
+      "department": "経営企画室",
+      "jobTitle": null,
+      "employeeId": "214",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-6249"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "740b82ee-0fd3-4f7f-a716-e02104860a74",
+      "displayName": "長谷川智子",
+      "givenName": "智子",
+      "surname": "長谷川",
+      "mail": "tomoko.hasegawa@example.co.jp",
+      "userPrincipalName": "tomoko.hasegawa@example.co.jp",
+      "department": "総務人事課",
+      "jobTitle": "課長",
+      "employeeId": "00308",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-4260"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "c7640306-fc7e-4bf4-817f-a2118194d1ca",
+      "displayName": "石井 香織",
+      "givenName": "香織",
+      "surname": "石井",
+      "mail": "kaori.ishii@example.co.jp",
+      "userPrincipalName": "kaori.ishii@example.co.jp",
+      "department": "財務課",
+      "jobTitle": null,
+      "employeeId": "00363",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-6580"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "c5baa052-b3b0-4059-b3a2-bd09d3b5d4c0",
+      "displayName": "高木 純子",
+      "givenName": "純子",
+      "surname": "高木",
+      "mail": "junko.takagi@example.co.jp",
+      "userPrincipalName": "junko.takagi@example.co.jp",
+      "department": "社内ＳＥ課",
+      "jobTitle": null,
+      "employeeId": "00185",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [],
+      "mobilePhone": null
+    },
+    {
+      "id": "aa190d55-7118-4019-87e9-ab8a0371fe6d",
+      "displayName": "高木 大輔",
+      "givenName": "大輔",
+      "surname": "高木",
+      "mail": "daisuke.takagi@example.co.jp",
+      "userPrincipalName": "daisuke.takagi@example.co.jp",
+      "department": "経理課　",
+      "jobTitle": "課長",
+      "employeeId": "00017",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-1043"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "5648e7ca-a9c1-4064-8da9-dd4c7dd9ab46",
+      "displayName": "山田哲也",
+      "givenName": "哲也",
+      "surname": "山田",
+      "mail": "tetsuya.yamada@example.co.jp",
+      "userPrincipalName": "tetsuya.yamada@example.co.jp",
+      "department": "労務ﾁｰﾑ",
+      "jobTitle": null,
+      "employeeId": "00463",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-4228"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "23c61583-eae1-4245-8edd-3abfa37775ba",
+      "displayName": "菊地　直子",
+      "givenName": "直子",
+      "surname": "菊地",
+      "mail": "naoko.kikuchi@example.co.jp",
+      "userPrincipalName": "naoko.kikuchi@example.co.jp",
+      "department": "財務課",
+      "jobTitle": "課長",
+      "employeeId": "00093",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-6911"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "7f8225e5-3fdb-44b2-965e-eed8901cea19",
+      "displayName": "村上　稔",
+      "givenName": "稔",
+      "surname": "村上",
+      "mail": "minoru.murakami@example.com",
+      "userPrincipalName": "minoru.murakami@example.com",
+      "department": "第二倉庫グループ",
+      "jobTitle": "グループ長",
+      "employeeId": "L0004",
+      "accountEnabled": true,
+      "companyName": "サンプル物流(株)",
+      "officeLocation": "千葉物流センター",
+      "businessPhones": [
+        "+81 43-5550-4622"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "10e85104-8eeb-4869-b5f0-9d3acb9aa2ea",
+      "displayName": "山本 菜々子",
+      "givenName": "菜々子",
+      "surname": "山本",
+      "mail": "nanako.yamamoto@example.co.jp",
+      "userPrincipalName": "nanako.yamamoto@example.co.jp",
+      "department": "公共営業チーム",
+      "jobTitle": null,
+      "employeeId": "00303",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "大阪支社",
+      "businessPhones": [
+        "+81 3-5550-4968"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "9a5cbbdd-8b54-4693-ba7c-b415b87519d4",
+      "displayName": "清水 菜々子",
+      "givenName": "菜々子",
+      "surname": "清水",
+      "mail": "nanako.shimizu@example.co.jp",
+      "userPrincipalName": "nanako.shimizu@example.co.jp",
+      "department": "公共営業チーム",
+      "jobTitle": null,
+      "employeeId": "00374",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-1542"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "f4a9545b-408d-4628-a692-f6d34aefed1d",
+      "displayName": "酒井 直子",
+      "givenName": "直子",
+      "surname": "酒井",
+      "mail": "naoko.sakai@example.com",
+      "userPrincipalName": "naoko.sakai@example.com",
+      "department": "神戸倉庫グループ",
+      "jobTitle": null,
+      "employeeId": "L0020",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル物流",
+      "officeLocation": "大阪物流センター",
+      "businessPhones": [],
+      "mobilePhone": null
+    },
+    {
+      "id": "981d8b65-10e4-4302-b608-fbdb6aee5c9c",
+      "displayName": "山本 智子",
+      "givenName": "智子",
+      "surname": "山本",
+      "mail": "tomoko.yamamoto@example.co.jp",
+      "userPrincipalName": "tomoko.yamamoto@example.co.jp",
+      "department": "第四営業課",
+      "jobTitle": "主任",
+      "employeeId": "00188",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-2653"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "27a74e06-6b43-44fb-877b-8b1edf5a4ad6",
+      "displayName": "渡辺 俊介",
+      "givenName": "俊介",
+      "surname": "渡辺",
+      "mail": "shunsuke.watanabe@example.com",
+      "userPrincipalName": "shunsuke.watanabe@example.com",
+      "department": "企画グループ",
+      "jobTitle": null,
+      "employeeId": "L0032",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル物流",
+      "officeLocation": "千葉物流センター",
+      "businessPhones": [],
+      "mobilePhone": null
+    },
+    {
+      "id": "37d02a81-a361-4a41-b5b1-3de60050d1e0",
+      "displayName": "吉田 夏美",
+      "givenName": "夏美",
+      "surname": "吉田",
+      "mail": "natsumi.yoshida@example.co.jp",
+      "userPrincipalName": "natsumi.yoshida@example.co.jp",
+      "department": "企画二課",
+      "jobTitle": "課長",
+      "employeeId": "00189",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-3371"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "9895d1ce-5dbf-4fb5-95fe-c24760fbb57a",
+      "displayName": "太田 遥",
+      "givenName": "遥",
+      "surname": "太田",
+      "mail": "haruka.ota@example.co.jp",
+      "userPrincipalName": "haruka.ota@example.co.jp",
+      "department": "総務課",
+      "jobTitle": null,
+      "employeeId": "00100",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-5800"
+      ],
+      "mobilePhone": "+81 90-0000-6962"
+    },
+    {
+      "id": "96c57892-ea11-4f1c-b911-f037ac18567a",
+      "displayName": "中野　浩二",
+      "givenName": "浩二",
+      "surname": "中野",
+      "mail": "koji.nakano@example.com",
+      "userPrincipalName": "koji.nakano@example.com",
+      "department": "総務経理グループ",
+      "jobTitle": null,
+      "employeeId": "L0017",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル物流",
+      "officeLocation": "千葉物流センター",
+      "businessPhones": [
+        "+81 43-5550-5610"
+      ],
+      "mobilePhone": "+81 90-0000-7285"
+    },
+    {
+      "id": "af0baf4d-fdb1-494b-99f8-65680a53abe1",
+      "displayName": "Minoru Suzuki",
+      "givenName": "Minoru",
+      "surname": "Suzuki",
+      "mail": "minoru.suzuki@example.co.jp",
+      "userPrincipalName": "minoru.suzuki@example.co.jp",
+      "department": "第三営業課",
+      "jobTitle": "主任",
+      "employeeId": "281",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-1819"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "6abd578f-3553-4067-9f45-4fbb2329fadd",
+      "displayName": "菊地 瞳",
+      "givenName": "瞳",
+      "surname": "菊地",
+      "mail": "hitomi.kikuchi@example.co.jp",
+      "userPrincipalName": "hitomi.kikuchi@example.co.jp",
+      "department": "応用開発チーム ",
+      "jobTitle": null,
+      "employeeId": "00195",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [
+        "+81 3-5550-9217"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "98fba90d-a3b8-4809-a073-0491c68429a1",
+      "displayName": "酒井　裕子",
+      "givenName": "裕子",
+      "surname": "酒井",
+      "mail": "yuko.sakai@example.co.jp",
+      "userPrincipalName": "yuko.sakai@example.co.jp",
+      "department": "販売促進課",
+      "jobTitle": null,
+      "employeeId": "00061",
+      "accountEnabled": true,
+      "companyName": "サンプル商事(株)",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-9565"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "7771c00d-7da4-42b0-b887-c9b4eab5c96c",
+      "displayName": "宮崎 友美",
+      "givenName": "友美",
+      "surname": "宮崎",
+      "mail": "tomomi.miyazaki@example.co.jp",
+      "userPrincipalName": "tomomi.miyazaki@example.co.jp",
+      "department": "製造二課",
+      "jobTitle": null,
+      "employeeId": "317",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [
+        "+81 3-5550-9555"
+      ],
+      "mobilePhone": "+81 90-0000-2601"
+    },
+    {
+      "id": "83eda309-7c7f-48b2-80f0-04f6793faa16",
+      "displayName": "岩﨑 純子",
+      "givenName": "純子",
+      "surname": "岩﨑",
+      "mail": "junko.iwasaki@example.co.jp",
+      "userPrincipalName": "junko.iwasaki@example.co.jp",
+      "department": "製造二課",
+      "jobTitle": null,
+      "employeeId": "498",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [
+        "+81 3-5550-1613"
+      ],
+      "mobilePhone": "+81 90-0000-8853"
+    },
+    {
+      "id": "07c07b47-72a5-48a8-80fc-c9265f5399dc",
+      "displayName": "Ryo Nishimura",
+      "givenName": "Ryo",
+      "surname": "Nishimura",
+      "mail": "ryo.nishimura@example.co.jp",
+      "userPrincipalName": "ryo.nishimura@example.co.jp",
+      "department": "営業１部",
+      "jobTitle": "部長",
+      "employeeId": "00345",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "大阪支社",
+      "businessPhones": [
+        "+81 3-5550-5537"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "3ede9947-8619-45e5-a192-23d7ba0f091f",
+      "displayName": "木村 慎一",
+      "givenName": "慎一",
+      "surname": "木村",
+      "mail": "shinichi.kimura@example.co.jp",
+      "userPrincipalName": "shinichi.kimura@example.co.jp",
+      "department": "基盤開発チーム",
+      "jobTitle": null,
+      "employeeId": "00487",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [
+        "+81 3-5550-4328"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "87b2c761-a745-4eca-907c-2bd8fc45849d",
+      "displayName": "内田 絵里",
+      "givenName": "絵里",
+      "surname": "内田",
+      "mail": "eri.uchida@example.co.jp",
+      "userPrincipalName": "eri.uchida@example.co.jp",
+      "department": "広報課",
+      "jobTitle": null,
+      "employeeId": "00472",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-2747"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "eee27485-bb1e-400b-8ef0-248220004b9d",
+      "displayName": "会議室 5F-A",
+      "givenName": null,
+      "surname": null,
+      "mail": "room-5fa@example.co.jp",
+      "userPrincipalName": "room-5fa@example.co.jp",
+      "department": null,
+      "jobTitle": null,
+      "employeeId": null,
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": null,
+      "businessPhones": [],
+      "mobilePhone": null
+    },
+    {
+      "id": "727f95a3-32ea-4e10-90c4-31f674aa3dfb",
+      "displayName": "Kumiko Chiba",
+      "givenName": "Kumiko",
+      "surname": "Chiba",
+      "mail": "kumiko.chiba@example.co.jp",
+      "userPrincipalName": "kumiko.chiba@example.co.jp",
+      "department": "製造四課",
+      "jobTitle": "主任",
+      "employeeId": "346",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [],
+      "mobilePhone": null
+    },
+    {
+      "id": "411d8789-891e-4af3-989d-21cb0362aa02",
+      "displayName": "平野 香織",
+      "givenName": "香織",
+      "surname": "平野",
+      "mail": "kaori.hirano@example.co.jp",
+      "userPrincipalName": "kaori.hirano@example.co.jp",
+      "department": "製造四課",
+      "jobTitle": null,
+      "employeeId": "00009",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [],
+      "mobilePhone": null
+    },
+    {
+      "id": "392c3004-0ae5-4434-9cbd-7b552c3d4aae",
+      "displayName": "原田 麻衣",
+      "givenName": "麻衣",
+      "surname": "原田",
+      "mail": "mai.harada@example.com",
+      "userPrincipalName": "mai.harada@example.com",
+      "department": "千葉倉庫グループ",
+      "jobTitle": null,
+      "employeeId": "L0011",
+      "accountEnabled": false,
+      "companyName": "株式会社サンプル物流",
+      "officeLocation": "千葉物流センター",
+      "businessPhones": [
+        "+81 43-5550-5912"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "79612502-c05f-4f08-a8f1-d39aa8a06647",
+      "displayName": "横山 裕子",
+      "givenName": "裕子",
+      "surname": "横山",
+      "mail": "yuko.yokoyama@example.co.jp",
+      "userPrincipalName": "yuko.yokoyama@example.co.jp",
+      "department": "西日本ﾁｰﾑ ",
+      "jobTitle": null,
+      "employeeId": "00131",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "福岡支店",
+      "businessPhones": [
+        "+81 3-5550-4803"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "2cbd0990-604b-489e-971f-2c259c3f5828",
+      "displayName": "井上 渉",
+      "givenName": "渉",
+      "surname": "井上",
+      "mail": "wataru.inoue@example.co.jp",
+      "userPrincipalName": "wataru.inoue@example.co.jp",
+      "department": "第三営業課",
+      "jobTitle": null,
+      "employeeId": "00497",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "福岡支店",
+      "businessPhones": [
+        "+81 3-5550-9730"
+      ],
+      "mobilePhone": "+81 90-0000-7482"
+    },
+    {
+      "id": "ca836250-fa46-48a9-88d7-49d6b8587ae3",
+      "displayName": "阿部 健太",
+      "givenName": "健太",
+      "surname": "阿部",
+      "mail": "kenta.abe@example.co.jp",
+      "userPrincipalName": "kenta.abe@example.co.jp",
+      "department": "企画２課",
+      "jobTitle": null,
+      "employeeId": "00059",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-1985"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "e38cdad7-5430-4e3f-9c18-27b43f316167",
+      "displayName": "今井 敦",
+      "givenName": "敦",
+      "surname": "今井",
+      "mail": "atsushi.imai@example.co.jp",
+      "userPrincipalName": "atsushi.imai@example.co.jp",
+      "department": "経営企画室",
+      "jobTitle": null,
+      "employeeId": "00183",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-6972"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "23157730-5bb3-4f24-9775-e7d5ae54341f",
+      "displayName": "三浦 裕介",
+      "givenName": "裕介",
+      "surname": "三浦",
+      "mail": "yusuke.miura@example.co.jp",
+      "userPrincipalName": "yusuke.miura@example.co.jp",
+      "department": "東日本チーム",
+      "jobTitle": "リーダー",
+      "employeeId": "00256",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-7070"
+      ],
+      "mobilePhone": "+81 90-0000-5099"
+    },
+    {
+      "id": "ce0802aa-0654-4b07-b6bd-0999c48c6f0c",
+      "displayName": "直子 宮崎",
+      "givenName": "宮崎",
+      "surname": "直子",
+      "mail": "naoko.miyazaki@example.co.jp",
+      "userPrincipalName": "naoko.miyazaki@example.co.jp",
+      "department": "第三営業課",
+      "jobTitle": null,
+      "employeeId": "00038",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-1145"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "6d86a028-e904-4733-8b80-83533a505cd5",
+      "displayName": "青木 優奈",
+      "givenName": "優奈",
+      "surname": "青木",
+      "mail": "yuna.aoki@example.co.jp",
+      "userPrincipalName": "yuna.aoki@example.co.jp",
+      "department": "品質管理課",
+      "jobTitle": null,
+      "employeeId": "00394",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [
+        "+81 3-5550-5145"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "6c33f9f4-18b4-417d-a926-9388a9293621",
+      "displayName": "高橋 理恵",
+      "givenName": "理恵",
+      "surname": "高橋",
+      "mail": "rie.takahashi@example.co.jp",
+      "userPrincipalName": "rie.takahashi@example.co.jp",
+      "department": "開発二課",
+      "jobTitle": null,
+      "employeeId": "00469",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [
+        "+81 3-5550-5441"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "4a3616b0-dedc-4a6e-a8a6-1863c3ff931b",
+      "displayName": "神崎 智子",
+      "givenName": "智子",
+      "surname": "神崎",
+      "mail": "tomoko.kanzaki@example.com",
+      "userPrincipalName": "tomoko.kanzaki@example.com",
+      "department": "東京配送ｸﾞﾙｰﾌﾟ",
+      "jobTitle": null,
+      "employeeId": null,
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル物流",
+      "officeLocation": "千葉物流センター",
+      "businessPhones": [],
+      "mobilePhone": "+81 90-0000-4921"
+    },
+    {
+      "id": "0dcd2d4a-f473-453e-8bd2-a4258737c3c8",
+      "displayName": "岡本 修",
+      "givenName": "修",
+      "surname": "岡本",
+      "mail": "osamu.okamoto@example.co.jp",
+      "userPrincipalName": "osamu.okamoto@example.co.jp",
+      "department": "法人営業チーム",
+      "jobTitle": "主任",
+      "employeeId": "411",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "福岡支店",
+      "businessPhones": [],
+      "mobilePhone": null
+    },
+    {
+      "id": "86d8e792-90a1-4d3b-9564-b68054707a82",
+      "displayName": "谷口 裕介",
+      "givenName": "裕介",
+      "surname": "谷口",
+      "mail": "yusuke.taniguchi@example.co.jp",
+      "userPrincipalName": "yusuke.taniguchi@example.co.jp",
+      "department": "製造三課",
+      "jobTitle": null,
+      "employeeId": "00382",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [
+        "+81 3-5550-9431"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "4c584814-e480-48e0-b29e-b854600c9372",
+      "displayName": "石川花子",
+      "givenName": "花子",
+      "surname": "石川",
+      "mail": "hanako.ishikawa@example.co.jp",
+      "userPrincipalName": "hanako.ishikawa@example.co.jp",
+      "department": "営業第三部",
+      "jobTitle": null,
+      "employeeId": "00199",
+      "accountEnabled": true,
+      "companyName": null,
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-8384"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "99791026-a6b8-4fd5-90f7-d6dff0706928",
+      "displayName": "中村俊介",
+      "givenName": "俊介",
+      "surname": "中村",
+      "mail": "shunsuke.nakamura@example.co.jp",
+      "userPrincipalName": "shunsuke.nakamura@example.co.jp",
+      "department": "企画一課",
+      "jobTitle": null,
+      "employeeId": null,
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-2603"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "53203654-3cdc-44c2-89c3-867d227b98b2",
+      "displayName": "今井 勇気",
+      "givenName": "勇気",
+      "surname": "今井",
+      "mail": "yuki.imai@example.co.jp",
+      "userPrincipalName": "yuki.imai@example.co.jp",
+      "department": "総務課",
+      "jobTitle": null,
+      "employeeId": "00470",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-6197"
+      ],
+      "mobilePhone": "+81 90-0000-8588"
+    },
+    {
+      "id": "a4a23f11-1b2f-429e-b440-f2c5ca984857",
+      "displayName": "清水典子",
+      "givenName": "典子",
+      "surname": "清水",
+      "mail": "noriko.shimizu@example.co.jp",
+      "userPrincipalName": "noriko.shimizu@example.co.jp",
+      "department": "第四営業課",
+      "jobTitle": "課長",
+      "employeeId": "00122",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-9205"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "bb52262d-9aef-4190-8ce6-41d106d61401",
+      "displayName": "竹内 修",
+      "givenName": "修",
+      "surname": "竹内",
+      "mail": "osamu.takeuchi@example.co.jp",
+      "userPrincipalName": "osamu.takeuchi@example.co.jp",
+      "department": "経理部",
+      "jobTitle": "部長",
+      "employeeId": "00471",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [],
+      "mobilePhone": null
+    },
+    {
+      "id": "cd64597b-55df-4fae-9102-4a8b3215835d",
+      "displayName": "中村 智也",
+      "givenName": "智也",
+      "surname": "中村",
+      "mail": "tomoya.nakamura@example.co.jp",
+      "userPrincipalName": "tomoya.nakamura@example.co.jp",
+      "department": "労務チーム",
+      "jobTitle": null,
+      "employeeId": "00165",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [],
+      "mobilePhone": "+81 90-0000-3963"
+    },
+    {
+      "id": "afa6ae1b-1b01-41ff-af24-d97e4249ee6f",
+      "displayName": "山口 菜々子",
+      "givenName": "菜々子",
+      "surname": "山口",
+      "mail": "nanako.yamaguchi@example.co.jp",
+      "userPrincipalName": "nanako.yamaguchi@example.co.jp",
+      "department": "東日本チーム",
+      "jobTitle": null,
+      "employeeId": "00130",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-4564"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "31b4c01d-e6f4-4aa2-b91b-e2282f4604f1",
+      "displayName": "千葉　亮",
+      "givenName": "亮",
+      "surname": "千葉",
+      "mail": "ryo.chiba@example.com",
+      "userPrincipalName": "ryo.chiba@example.com",
+      "department": "神戸倉庫グループ",
+      "jobTitle": null,
+      "employeeId": "L0051",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル物流",
+      "officeLocation": "大阪物流センター",
+      "businessPhones": [
+        "+81 43-5550-9645"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "bd676382-e7bf-467f-8b44-33795ebfea93",
+      "displayName": "木村 典子",
+      "givenName": "典子",
+      "surname": "木村",
+      "mail": "noriko.kimura@example.com",
+      "userPrincipalName": "noriko.kimura@example.com",
+      "department": "業務改善グループ",
+      "jobTitle": "グループ長",
+      "employeeId": "L0039",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル物流",
+      "officeLocation": "千葉物流センター",
+      "businessPhones": [
+        "+81 43-5550-1356"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "9325711d-8afa-4fed-bf11-53dccbab4b72",
+      "displayName": "岡田 奈緒",
+      "givenName": "奈緒",
+      "surname": "岡田",
+      "mail": "nao.okada@example.co.jp",
+      "userPrincipalName": "nao.okada@example.co.jp",
+      "department": "東日本ﾁｰﾑ",
+      "jobTitle": null,
+      "employeeId": "74",
+      "accountEnabled": true,
+      "companyName": "サンプル商事(株)",
+      "officeLocation": "東京本社",
+      "businessPhones": [],
+      "mobilePhone": "+81 90-0000-3909"
+    },
+    {
+      "id": "12bbd0a7-479c-4f82-9548-a8cafec13254",
+      "displayName": "吉田莉子",
+      "givenName": "莉子",
+      "surname": "吉田",
+      "mail": "riko.yoshida@example.co.jp",
+      "userPrincipalName": "riko.yoshida@example.co.jp",
+      "department": "法務室",
+      "jobTitle": null,
+      "employeeId": null,
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-4550"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "bad900d8-6aba-40b8-b711-f57e3df61e6b",
+      "displayName": "酒井 千尋",
+      "givenName": "千尋",
+      "surname": "酒井",
+      "mail": "chihiro.sakai@example.co.jp",
+      "userPrincipalName": "chihiro.sakai@example.co.jp",
+      "department": "組立チーム",
+      "jobTitle": null,
+      "employeeId": "00076",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [
+        "+81 3-5550-4657"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "d299dea1-f122-44b5-aaf9-38e8b5218a6b",
+      "displayName": "田中　美穂",
+      "givenName": "美穂",
+      "surname": "田中",
+      "mail": "miho.tanaka@example.co.jp",
+      "userPrincipalName": "miho.tanaka@example.co.jp",
+      "department": "基盤開発チーム",
+      "jobTitle": "リーダー",
+      "employeeId": "00405",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [
+        "+81 3-5550-3680"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "0b4836e4-173a-4905-8d41-3ac9b0f8a536",
+      "displayName": "高木 結衣",
+      "givenName": "結衣",
+      "surname": "高木",
+      "mail": "yui.takagi@example.co.jp",
+      "userPrincipalName": "yui.takagi@example.co.jp",
+      "department": "組立チーム",
+      "jobTitle": "リーダー",
+      "employeeId": "00373",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [
+        "+81 3-5550-2143"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "d9026701-fe12-4a7b-984a-594fbdf3b330",
+      "displayName": "岩﨑　麻衣",
+      "givenName": "麻衣",
+      "surname": "岩﨑",
+      "mail": "mai.iwasaki@example.co.jp",
+      "userPrincipalName": "mai.iwasaki@example.co.jp",
+      "department": "企画第１課",
+      "jobTitle": null,
+      "employeeId": "00106",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-5228"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "451fab81-d600-4062-be62-a2101e76c408",
+      "displayName": "林 沙織",
+      "givenName": "沙織",
+      "surname": "林",
+      "mail": "saori.hayashi@example.co.jp",
+      "userPrincipalName": "saori.hayashi@example.co.jp",
+      "department": "品質保証課",
+      "jobTitle": null,
+      "employeeId": "00370",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [
+        "+81 3-5550-3020"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "e8173270-4d3e-46b4-b675-a54b7b9aefd1",
+      "displayName": "阿部 慎一",
+      "givenName": "慎一",
+      "surname": "阿部",
+      "mail": "shinichi.abe@example.co.jp",
+      "userPrincipalName": "shinichi.abe@example.co.jp",
+      "department": "品質保証課",
+      "jobTitle": null,
+      "employeeId": "00229",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [],
+      "mobilePhone": null
+    },
+    {
+      "id": "6972811c-efa9-49a4-8a2d-985a47d1d812",
+      "displayName": "山口 達也",
+      "givenName": "達也",
+      "surname": "山口",
+      "mail": "tatsuya.yamaguchi@example.co.jp",
+      "userPrincipalName": "tatsuya.yamaguchi@example.co.jp",
+      "department": "経理課",
+      "jobTitle": null,
+      "employeeId": "216",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [],
+      "mobilePhone": null
+    },
+    {
+      "id": "c6c41cf7-2289-43cf-b33a-25a06538b160",
+      "displayName": "藤井 久美子",
+      "givenName": "久美子",
+      "surname": "藤井",
+      "mail": "kumiko.fujii@example.co.jp",
+      "userPrincipalName": "kumiko.fujii@example.co.jp",
+      "department": "内部監査部",
+      "jobTitle": null,
+      "employeeId": "00398",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-3382"
+      ],
+      "mobilePhone": "+81 90-0000-6063"
+    },
+    {
+      "id": "7f3ddac9-60d9-494f-8e66-15b5d509fa95",
+      "displayName": "金子 香織",
+      "givenName": "香織",
+      "surname": "金子",
+      "mail": "kaori.kaneko@example.co.jp",
+      "userPrincipalName": "kaori.kaneko@example.co.jp",
+      "department": "組立チーム",
+      "jobTitle": null,
+      "employeeId": "00023",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [
+        "+81 3-5550-8430"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "16b99e3b-ce70-4fa0-ae60-e4496be00f84",
+      "displayName": "佐々木 健太",
+      "givenName": "健太",
+      "surname": "佐々木",
+      "mail": "kenta.sasaki@example.co.jp",
+      "userPrincipalName": "kenta.sasaki@example.co.jp",
+      "department": "第二営業課",
+      "jobTitle": "課長",
+      "employeeId": "00102",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "名古屋支店",
+      "businessPhones": [
+        "+81 3-5550-6132"
+      ],
+      "mobilePhone": "+81 90-0000-8792"
+    },
+    {
+      "id": "34f21ca0-77f8-4192-810a-ec47eb9b855a",
+      "displayName": "高橋　大樹",
+      "givenName": "大樹",
+      "surname": "高橋",
+      "mail": "daiki.takahashi@example.co.jp",
+      "userPrincipalName": "daiki.takahashi@example.co.jp",
+      "department": "インフラ課",
+      "jobTitle": null,
+      "employeeId": "00243",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [],
+      "mobilePhone": null
+    },
+    {
+      "id": "0fddea71-976d-4d06-a517-0dcac3a2dd84",
+      "displayName": "鈴木 哲也",
+      "givenName": "哲也",
+      "surname": "鈴木",
+      "mail": "tetsuya.suzuki@example.co.jp",
+      "userPrincipalName": "tetsuya.suzuki@example.co.jp",
+      "department": "第五営業課",
+      "jobTitle": null,
+      "employeeId": "26",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "大阪支社",
+      "businessPhones": [
+        "+81 3-5550-7462"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "abd0ee04-0df7-4293-bace-ace64de8a5e4",
+      "displayName": "神﨑 恵子",
+      "givenName": "恵子",
+      "surname": "神﨑",
+      "mail": "keiko.kanzaki@example.co.jp",
+      "userPrincipalName": "keiko.kanzaki@example.co.jp",
+      "department": "東日本チーム",
+      "jobTitle": null,
+      "employeeId": "279",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "名古屋支店",
+      "businessPhones": [
+        "+81 3-5550-1877"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "a60f0d31-65b5-4274-b0b8-ec1634d4fe80",
+      "displayName": "工藤 達也",
+      "givenName": "達也",
+      "surname": "工藤",
+      "mail": "tatsuya.kudo@example.co.jp",
+      "userPrincipalName": "tatsuya.kudo@example.co.jp",
+      "department": "総務課",
+      "jobTitle": null,
+      "employeeId": "00476",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-7448"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "324fc452-2ee4-4e51-9a8a-cb04961b2d3a",
+      "displayName": "田中 葵",
+      "givenName": "葵",
+      "surname": "田中",
+      "mail": "aoi.tanaka@example.co.jp",
+      "userPrincipalName": "aoi.tanaka@example.co.jp",
+      "department": "法人営業チーム",
+      "jobTitle": null,
+      "employeeId": "00094",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [],
+      "mobilePhone": "+81 90-0000-2967"
+    },
+    {
+      "id": "e4a9e0a8-6bbb-442d-8e66-ffcca7472cce",
+      "displayName": "谷口太郎",
+      "givenName": "太郎",
+      "surname": "谷口",
+      "mail": "taro.taniguchi@example.co.jp",
+      "userPrincipalName": "taro.taniguchi@example.co.jp",
+      "department": "販売促進課",
+      "jobTitle": null,
+      "employeeId": "40",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-7532"
+      ],
+      "mobilePhone": "+81 90-0000-6582"
+    },
+    {
+      "id": "1b6ab658-e2ff-4a5a-bf63-e4b1d7026fff",
+      "displayName": "FUJITA Tomoya",
+      "givenName": "Tomoya",
+      "surname": "Fujita",
+      "mail": "tomoya.fujita@example.co.jp",
+      "userPrincipalName": "tomoya.fujita@example.co.jp",
+      "department": "財務課",
+      "jobTitle": "主任",
+      "employeeId": "00299",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-5783"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "f1d2bfb2-0bfd-4eda-b5c0-4bb13eb1923c",
+      "displayName": "坂本 美咲",
+      "givenName": "美咲",
+      "surname": "坂本",
+      "mail": "misaki.sakamoto@example.co.jp",
+      "userPrincipalName": "misaki.sakamoto@example.co.jp",
+      "department": "東日本チーム",
+      "jobTitle": null,
+      "employeeId": "00109",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-6438"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "25f051c3-fed0-4116-80c0-fb49f608c762",
+      "displayName": "松本 達也",
+      "givenName": "達也",
+      "surname": "松本",
+      "mail": "tatsuya.matsumoto@example.co.jp",
+      "userPrincipalName": "tatsuya.matsumoto@example.co.jp",
+      "department": "東日本ﾁｰﾑ",
+      "jobTitle": null,
+      "employeeId": "136",
+      "accountEnabled": true,
+      "companyName": null,
+      "officeLocation": "名古屋支店",
+      "businessPhones": [
+        "+81 3-5550-2987"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "caa34c73-01a2-41ee-9009-c5f0048b020b",
+      "displayName": "山口 敦",
+      "givenName": "敦",
+      "surname": "山口",
+      "mail": "atsushi.yamaguchi@example.co.jp",
+      "userPrincipalName": "atsushi.yamaguchi@example.co.jp",
+      "department": "東日本チーム",
+      "jobTitle": null,
+      "employeeId": "00108",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-2911"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "c3ebc353-cccb-452b-b398-cad14bb3e8e3",
+      "displayName": "花子 青木",
+      "givenName": "青木",
+      "surname": "花子",
+      "mail": "hanako.aoki@example.co.jp",
+      "userPrincipalName": "hanako.aoki@example.co.jp",
+      "department": "第三営業課",
+      "jobTitle": "課長",
+      "employeeId": "194",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-4942"
+      ],
+      "mobilePhone": "+81 90-0000-2604"
+    },
+    {
+      "id": "ad6eef06-ea49-4b7b-9e34-14d95c595728",
+      "displayName": "藤田 裕介",
+      "givenName": "裕介",
+      "surname": "藤田",
+      "mail": "yusuke.fujita@example.co.jp",
+      "userPrincipalName": "yusuke.fujita@example.co.jp",
+      "department": "基盤開発ﾁｰﾑ　",
+      "jobTitle": null,
+      "employeeId": "00029",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [
+        "+81 3-5550-1657"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "33526126-215e-447a-af1f-aa146f19e99c",
+      "displayName": "佐藤　瞳",
+      "givenName": "瞳",
+      "surname": "佐藤",
+      "mail": "hitomi.sato@example.co.jp",
+      "userPrincipalName": "hitomi.sato@example.co.jp",
+      "department": "製造2課",
+      "jobTitle": null,
+      "employeeId": "341",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [],
+      "mobilePhone": "+81 90-0000-2263"
+    },
+    {
+      "id": "dd3628e4-b8c0-4249-af73-40feee05bfa6",
+      "displayName": "俊介 阿部",
+      "givenName": "阿部",
+      "surname": "俊介",
+      "mail": "shunsuke.abe@example.co.jp",
+      "userPrincipalName": "shunsuke.abe@example.co.jp",
+      "department": "製造4課",
+      "jobTitle": null,
+      "employeeId": "00340",
+      "accountEnabled": true,
+      "companyName": null,
+      "officeLocation": "横浜工場",
+      "businessPhones": [
+        "+81 3-5550-4410"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "7354c26f-1feb-4ac7-b463-e0c0c1a0cd7c",
+      "displayName": "井上 美香",
+      "givenName": "美香",
+      "surname": "井上",
+      "mail": "mika.inoue@example.co.jp",
+      "userPrincipalName": "mika.inoue@example.co.jp",
+      "department": "新規開拓ﾁｰﾑ",
+      "jobTitle": null,
+      "employeeId": "00313",
+      "accountEnabled": true,
+      "companyName": "サンプル商事(株)",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-7527"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "5b11b98d-e21f-4534-ba84-61196f67b54b",
+      "displayName": "福田 秀樹",
+      "givenName": "秀樹",
+      "surname": "福田",
+      "mail": "hideki.fukuda@example.co.jp",
+      "userPrincipalName": "hideki.fukuda@example.co.jp",
+      "department": "経理課",
+      "jobTitle": null,
+      "employeeId": null,
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-6149"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "30987a86-19b5-48ac-bab9-081401d07522",
+      "displayName": "岡本 勇気",
+      "givenName": "勇気",
+      "surname": "岡本",
+      "mail": "yuki.okamoto@example.co.jp",
+      "userPrincipalName": "yuki.okamoto@example.co.jp",
+      "department": "採用ﾁｰﾑ",
+      "jobTitle": "リーダー",
+      "employeeId": "00414",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-3200"
+      ],
+      "mobilePhone": "+81 90-0000-4323"
+    },
+    {
+      "id": "e5caddea-0ecc-4673-b9fd-f906c197b419",
+      "displayName": "田中 奈緒",
+      "givenName": "奈緒",
+      "surname": "田中",
+      "mail": "nao.tanaka@example.co.jp",
+      "userPrincipalName": "nao.tanaka@example.co.jp",
+      "department": "検査チーム",
+      "jobTitle": null,
+      "employeeId": "00399",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [
+        "+81 3-5550-3426"
+      ],
+      "mobilePhone": "+81 90-0000-9210"
+    },
+    {
+      "id": "f3a09943-4535-49ec-9104-ed7ee39a57c5",
+      "displayName": "岡本 大樹",
+      "givenName": "大樹",
+      "surname": "岡本",
+      "mail": "daiki.okamoto@example.co.jp",
+      "userPrincipalName": "daiki.okamoto@example.co.jp",
+      "department": "広報課",
+      "jobTitle": null,
+      "employeeId": "00353",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-6383"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "f1ea63b4-9b99-467d-b1b5-cbf9a924e729",
+      "displayName": "工藤 勇気",
+      "givenName": "勇気",
+      "surname": "工藤",
+      "mail": "yuki.kudo@example.co.jp",
+      "userPrincipalName": "yuki.kudo@example.co.jp",
+      "department": "広報課",
+      "jobTitle": null,
+      "employeeId": "00365",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-4420"
+      ],
+      "mobilePhone": "+81 90-0000-7938"
+    },
+    {
+      "id": "f2004a19-0a7a-482f-813f-c2d9a07ede99",
+      "displayName": "長谷川 理恵",
+      "givenName": "理恵",
+      "surname": "長谷川",
+      "mail": "rie.hasegawa@example.co.jp",
+      "userPrincipalName": "rie.hasegawa@example.co.jp",
+      "department": "総務課",
+      "jobTitle": null,
+      "employeeId": "00334",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-7150"
+      ],
+      "mobilePhone": "+81 90-0000-6566"
+    },
+    {
+      "id": "6e6354ed-3c2a-45f2-9637-93df86e7f92b",
+      "displayName": "後藤 直子",
+      "givenName": "直子",
+      "surname": "後藤",
+      "mail": "naoko.goto@example.co.jp",
+      "userPrincipalName": "naoko.goto@example.co.jp",
+      "department": "第四営業課",
+      "jobTitle": null,
+      "employeeId": "00149",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-3424"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "cbf2e022-236a-4baf-8329-62955182596f",
+      "displayName": "清水 洋平",
+      "givenName": "洋平",
+      "surname": "清水",
+      "mail": "yohei.shimizu@example.co.jp",
+      "userPrincipalName": "yohei.shimizu@example.co.jp",
+      "department": "公共営業チーム",
+      "jobTitle": null,
+      "employeeId": "123",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "福岡支店",
+      "businessPhones": [
+        "+81 3-5550-5151"
+      ],
+      "mobilePhone": "+81 90-0000-4714"
+    },
+    {
+      "id": "faea3072-7afc-47bf-9248-d23759d8f807",
+      "displayName": "久保　絵里",
+      "givenName": "絵里",
+      "surname": "久保",
+      "mail": "eri.kubo@example.co.jp",
+      "userPrincipalName": "eri.kubo@example.co.jp",
+      "department": "西日本チーム",
+      "jobTitle": "リーダー",
+      "employeeId": "00097",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-3533"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "1b165852-2cb2-4a83-9bcc-d41203a7bed8",
+      "displayName": "清水 大樹",
+      "givenName": "大樹",
+      "surname": "清水",
+      "mail": "daiki.shimizu@example.co.jp",
+      "userPrincipalName": "daiki.shimizu@example.co.jp",
+      "department": "組立ﾁｰﾑ",
+      "jobTitle": null,
+      "employeeId": "00314",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [],
+      "mobilePhone": null
+    },
+    {
+      "id": "1e0e2731-65cb-4d60-8383-158941062a59",
+      "displayName": "清水 悠斗",
+      "givenName": "悠斗",
+      "surname": "清水",
+      "mail": "yuto.shimizu@example.co.jp",
+      "userPrincipalName": "yuto.shimizu@example.co.jp",
+      "department": "基盤開発チーム ",
+      "jobTitle": null,
+      "employeeId": "00248",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [
+        "+81 3-5550-4287"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "85bc42b4-4250-44ef-83a8-43d6741d54a0",
+      "displayName": "山本 蓮",
+      "givenName": "蓮",
+      "surname": "山本",
+      "mail": "ren.yamamoto@example.com",
+      "userPrincipalName": "ren.yamamoto@example.com",
+      "department": "総務課",
+      "jobTitle": null,
+      "employeeId": "L0003",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 43-5550-2001"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "9b29df34-2378-47ef-aa27-0c9ce469fd48",
+      "displayName": "大野 陽子",
+      "givenName": "陽子",
+      "surname": "大野",
+      "mail": "yoko.ono@example.co.jp",
+      "userPrincipalName": "yoko.ono@example.co.jp",
+      "department": "開発二課",
+      "jobTitle": null,
+      "employeeId": "00339",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [],
+      "mobilePhone": null
+    },
+    {
+      "id": "7525fa6b-2c12-427e-b03f-8ca66b84cf63",
+      "displayName": "藤田純子",
+      "givenName": "純子",
+      "surname": "藤田",
+      "mail": "junko.fujita@example.co.jp",
+      "userPrincipalName": "junko.fujita@example.co.jp",
+      "department": "応用開発チーム",
+      "jobTitle": null,
+      "employeeId": "00458",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [
+        "+81 3-5550-5364"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "6d64e5b9-2445-4fc0-8410-2239353f3826",
+      "displayName": "酒井純",
+      "givenName": "純",
+      "surname": "酒井",
+      "mail": "jun.sakai@example.co.jp",
+      "userPrincipalName": "jun.sakai@example.co.jp",
+      "department": "総務課",
+      "jobTitle": "主任",
+      "employeeId": "00378",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-9741"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "ad8e9187-22fd-454e-a965-ce1acc0637d4",
+      "displayName": "平野 浩二",
+      "givenName": "浩二",
+      "surname": "平野",
+      "mail": "koji.hirano@example.co.jp",
+      "userPrincipalName": "koji.hirano@example.co.jp",
+      "department": "法人営業チーム",
+      "jobTitle": null,
+      "employeeId": "00273",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "大阪支社",
+      "businessPhones": [],
+      "mobilePhone": "+81 90-0000-5168"
+    },
+    {
+      "id": "9f188a3f-6e56-4a4b-a43f-006f27cecffe",
+      "displayName": "前田 稔",
+      "givenName": "稔",
+      "surname": "前田",
+      "mail": "minoru.maeda@example.co.jp",
+      "userPrincipalName": "minoru.maeda@example.co.jp",
+      "department": "公共営業チーム",
+      "jobTitle": null,
+      "employeeId": "00445",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-5767"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "848bf60d-45f5-4236-9047-00cda356607c",
+      "displayName": "横山 修",
+      "givenName": "修",
+      "surname": "横山",
+      "mail": "osamu.yokoyama@example.co.jp",
+      "userPrincipalName": "osamu.yokoyama@example.co.jp",
+      "department": "商品本部",
+      "jobTitle": "本部長",
+      "employeeId": "00163",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-4109"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "41e986a3-d519-4206-8c77-78f39db6bd62",
+      "displayName": "高橋 麻衣",
+      "givenName": "麻衣",
+      "surname": "高橋",
+      "mail": "mai.takahashi@example.co.jp",
+      "userPrincipalName": "mai.takahashi@example.co.jp",
+      "department": "新規開拓チーム",
+      "jobTitle": null,
+      "employeeId": "00031",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [],
+      "mobilePhone": null
+    },
+    {
+      "id": "7b1bddf7-5938-404c-907c-c38ea77b7779",
+      "displayName": "池田慎一",
+      "givenName": "慎一",
+      "surname": "池田",
+      "mail": "shinichi.ikeda@example.co.jp",
+      "userPrincipalName": "shinichi.ikeda@example.co.jp",
+      "department": "製造二課",
+      "jobTitle": null,
+      "employeeId": "00166",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [
+        "+81 3-5550-4068"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "23228198-3b53-487e-818a-f9ad72b95939",
+      "displayName": "横山 玲奈",
+      "givenName": "玲奈",
+      "surname": "横山",
+      "mail": "rena.yokoyama@example.com",
+      "userPrincipalName": "rena.yokoyama@example.com",
+      "department": "業務改善グループ",
+      "jobTitle": null,
+      "employeeId": "L0033",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル物流",
+      "officeLocation": "千葉物流センター",
+      "businessPhones": [
+        "+81 43-5550-3901"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "69db72e1-9a5a-40bc-a0a4-a0a909086bbf",
+      "displayName": "内田 渉",
+      "givenName": "渉",
+      "surname": "内田",
+      "mail": "wataru.uchida@example.co.jp",
+      "userPrincipalName": "wataru.uchida@example.co.jp",
+      "department": "ヘルプデスクﾁｰﾑ",
+      "jobTitle": null,
+      "employeeId": "00296",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-8154"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "9cedab70-09bc-4384-8076-968613d13c2b",
+      "displayName": "石井　太郎",
+      "givenName": "太郎",
+      "surname": "石井",
+      "mail": "taro.ishii@example.co.jp",
+      "userPrincipalName": "taro.ishii@example.co.jp",
+      "department": "応用開発チーム",
+      "jobTitle": null,
+      "employeeId": "00142",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [
+        "+81 3-5550-7419"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "06147aac-ae1b-428c-b79b-fcd58f946f24",
+      "displayName": "長谷川純",
+      "givenName": "純",
+      "surname": "長谷川",
+      "mail": "jun.hasegawa@example.co.jp",
+      "userPrincipalName": "jun.hasegawa@example.co.jp",
+      "department": "製造第二部",
+      "jobTitle": "部長",
+      "employeeId": "00045",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [
+        "+81 3-5550-2684"
+      ],
+      "mobilePhone": "+81 90-0000-7403"
+    },
+    {
+      "id": "7d0fd1a8-87b0-47da-8704-0b7418566fa7",
+      "displayName": "和田 康平",
+      "givenName": "康平",
+      "surname": "和田",
+      "mail": "kohei.wada@example.co.jp",
+      "userPrincipalName": "kohei.wada@example.co.jp",
+      "department": "販売促進課",
+      "jobTitle": "課長",
+      "employeeId": null,
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-9106"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "4c59e317-7b95-417c-9525-ebef94e34177",
+      "displayName": "平野 純",
+      "givenName": "純",
+      "surname": "平野",
+      "mail": "jun.hirano@example.co.jp",
+      "userPrincipalName": "jun.hirano@example.co.jp",
+      "department": "品質保証課",
+      "jobTitle": null,
+      "employeeId": "00221",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [
+        "+81 3-5550-7207"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "f06e61ce-2269-4926-bf30-992ac8c1e0dd",
+      "displayName": "SVC_BACKUP",
+      "givenName": null,
+      "surname": null,
+      "mail": "svc-backup@example.co.jp",
+      "userPrincipalName": "svc-backup@example.co.jp",
+      "department": "情報システム部",
+      "jobTitle": null,
+      "employeeId": null,
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": null,
+      "businessPhones": [],
+      "mobilePhone": null
+    },
+    {
+      "id": "7a54a79d-558b-4c11-b3f5-2e0d931af5ee",
+      "displayName": "加藤 圭介",
+      "givenName": "圭介",
+      "surname": "加藤",
+      "mail": "keisuke.kato@example.co.jp",
+      "userPrincipalName": "keisuke.kato@example.co.jp",
+      "department": "検査チーム",
+      "jobTitle": null,
+      "employeeId": "00065",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [
+        "+81 3-5550-4002"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "35a5631b-bcb1-4fea-ae9b-910b063e39c8",
+      "displayName": "三浦亜希子",
+      "givenName": "亜希子",
+      "surname": "三浦",
+      "mail": "akiko.miura@example.com",
+      "userPrincipalName": "akiko.miura@example.com",
+      "department": "業務改善グループ",
+      "jobTitle": null,
+      "employeeId": "L0018",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル物流",
+      "officeLocation": "千葉物流センター",
+      "businessPhones": [
+        "+81 43-5550-3989"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "f07b77b2-d7f1-4e6f-be0f-37484e608200",
+      "displayName": "清水 久美子",
+      "givenName": "久美子",
+      "surname": "清水",
+      "mail": "kumiko.shimizu@example.co.jp",
+      "userPrincipalName": "kumiko.shimizu@example.co.jp",
+      "department": "製造二課",
+      "jobTitle": null,
+      "employeeId": null,
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [
+        "+81 3-5550-9014"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "9a7807d5-3bc1-4c75-b68e-da9f1ee1702d",
+      "displayName": "山口 雅人",
+      "givenName": "雅人",
+      "surname": "山口",
+      "mail": "masato.yamaguchi@example.co.jp",
+      "userPrincipalName": "masato.yamaguchi@example.co.jp",
+      "department": "ヘルプデスクチーム",
+      "jobTitle": null,
+      "employeeId": "00369",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-5794"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "2fef1c75-445b-4b74-830f-ee4ed8e0be63",
+      "displayName": "山口 麻衣",
+      "givenName": "麻衣",
+      "surname": "山口",
+      "mail": "mai.yamaguchi@example.co.jp",
+      "userPrincipalName": "mai.yamaguchi@example.co.jp",
+      "department": "検査チーム",
+      "jobTitle": null,
+      "employeeId": "00393",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [
+        "+81 3-5550-6530"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "26755e8f-64e7-45e0-a43d-03f5abf65bd6",
+      "displayName": "藤井 遥",
+      "givenName": "遥",
+      "surname": "藤井",
+      "mail": "haruka.fujii@example.co.jp",
+      "userPrincipalName": "haruka.fujii@example.co.jp",
+      "department": "ヘルプデスクチーム",
+      "jobTitle": null,
+      "employeeId": "00420",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-8994"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "844ae3e4-0498-47e5-b655-91f66f6d8337",
+      "displayName": "井上 誠",
+      "givenName": "誠",
+      "surname": "井上",
+      "mail": "makoto.inoue@example.co.jp",
+      "userPrincipalName": "makoto.inoue@example.co.jp",
+      "department": "応用開発チーム",
+      "jobTitle": null,
+      "employeeId": "00483",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [
+        "+81 3-5550-1150"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "8f962ef1-43a1-47f4-955c-0af89bfc405b",
+      "displayName": "中村 慎一",
+      "givenName": "慎一",
+      "surname": "中村",
+      "mail": "shinichi.nakamura@example.co.jp",
+      "userPrincipalName": "shinichi.nakamura@example.co.jp",
+      "department": "組立チーム",
+      "jobTitle": null,
+      "employeeId": null,
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [
+        "+81 3-5550-9842"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "a3ac1ef7-970d-44e6-af34-bd602177cdab",
+      "displayName": "石川 雅人",
+      "givenName": "雅人",
+      "surname": "石川",
+      "mail": "masato.ishikawa@example.co.jp",
+      "userPrincipalName": "masato.ishikawa@example.co.jp",
+      "department": "検査チーム ",
+      "jobTitle": "リーダー",
+      "employeeId": "00232",
+      "accountEnabled": true,
+      "companyName": "サンプル商事(株)",
+      "officeLocation": "横浜工場",
+      "businessPhones": [
+        "+81 3-5550-5897"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "df31ad8c-b8df-4782-aa89-5c54dd4775d3",
+      "displayName": "佐々木 康平",
+      "givenName": "康平",
+      "surname": "佐々木",
+      "mail": "kohei.sasaki@example.co.jp",
+      "userPrincipalName": "kohei.sasaki@example.co.jp",
+      "department": "検査チーム",
+      "jobTitle": null,
+      "employeeId": "00202",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [
+        "+81 3-5550-1696"
+      ],
+      "mobilePhone": "+81 90-0000-8142"
+    },
+    {
+      "id": "f94fe214-a5c1-4237-afdc-a60a8564aa3d",
+      "displayName": "MIURA Mika",
+      "givenName": "Mika",
+      "surname": "Miura",
+      "mail": "mika.miura@example.co.jp",
+      "userPrincipalName": "mika.miura@example.co.jp",
+      "department": "製造二課",
+      "jobTitle": null,
+      "employeeId": "00020",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [
+        "+81 3-5550-5716"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "ea805ce7-2add-492f-869b-e805d62eba73",
+      "displayName": "福田 陽子",
+      "givenName": "陽子",
+      "surname": "福田",
+      "mail": "yoko.fukuda@example.co.jp",
+      "userPrincipalName": "yoko.fukuda@example.co.jp",
+      "department": "法人営業ﾁｰﾑ",
+      "jobTitle": "主任",
+      "employeeId": "00426",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "福岡支店",
+      "businessPhones": [
+        "+81 3-5550-3065"
+      ],
+      "mobilePhone": "+81 90-0000-5713"
+    },
+    {
+      "id": "4f5d9a9b-ddbe-42f2-baaf-3450c5ac8a44",
+      "displayName": "横山 莉子",
+      "givenName": "莉子",
+      "surname": "横山",
+      "mail": "riko.yokoyama@example.com",
+      "userPrincipalName": "riko.yokoyama@example.com",
+      "department": "人事グループ",
+      "jobTitle": null,
+      "employeeId": "L0012",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル物流",
+      "officeLocation": "千葉物流センター",
+      "businessPhones": [],
+      "mobilePhone": null
+    },
+    {
+      "id": "4c75b876-54ff-4b73-9342-13a0e80855ee",
+      "displayName": "吉田 亮",
+      "givenName": "亮",
+      "surname": "吉田",
+      "mail": "ryo.yoshida@example.co.jp",
+      "userPrincipalName": "ryo.yoshida@example.co.jp",
+      "department": "製造三課",
+      "jobTitle": null,
+      "employeeId": "00249",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [
+        "+81 3-5550-1941"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "8de34af3-9462-4010-9d97-8006496ed0e9",
+      "displayName": "中村 理恵",
+      "givenName": "理恵",
+      "surname": "中村",
+      "mail": "rie.nakamura@example.co.jp",
+      "userPrincipalName": "rie.nakamura@example.co.jp",
+      "department": "東日本チーム",
+      "jobTitle": null,
+      "employeeId": "00489",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-7935"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "28a1de93-177d-43e9-9693-0c484db7d2fe",
+      "displayName": "久保 秀樹",
+      "givenName": "秀樹",
+      "surname": "久保",
+      "mail": "hideki.kubo@example.co.jp",
+      "userPrincipalName": "hideki.kubo@example.co.jp",
+      "department": "社内SE課",
+      "jobTitle": "課長",
+      "employeeId": "00289",
+      "accountEnabled": true,
+      "companyName": "サンプル商事(株)",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-6875"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "5ed7267d-0230-4eba-9df7-77ce8dd550ec",
+      "displayName": "斉藤 菜々子",
+      "givenName": "菜々子",
+      "surname": "斉藤",
+      "mail": "nanako.saito@example.co.jp",
+      "userPrincipalName": "nanako.saito@example.co.jp",
+      "department": "情報システム部",
+      "jobTitle": "部長",
+      "employeeId": "00224",
+      "accountEnabled": true,
+      "companyName": null,
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-9237"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "a2502815-88a5-4059-889f-d730d518d796",
+      "displayName": "伊藤 智也",
+      "givenName": "智也",
+      "surname": "伊藤",
+      "mail": "tomoya.ito@example.co.jp",
+      "userPrincipalName": "tomoya.ito@example.co.jp",
+      "department": "管理本部",
+      "jobTitle": "本部長",
+      "employeeId": "00246",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-6480"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "f37dbb94-2abf-4654-9993-ac3b29fd8404",
+      "displayName": "前田 典子",
+      "givenName": "典子",
+      "surname": "前田",
+      "mail": "noriko.maeda@example.co.jp",
+      "userPrincipalName": "noriko.maeda@example.co.jp",
+      "department": "人事課",
+      "jobTitle": "課長",
+      "employeeId": "00443",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-5649"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "76fd1186-967d-432d-b5b1-7623d40f13bb",
+      "displayName": "太田 遥",
+      "givenName": "遥",
+      "surname": "太田",
+      "mail": "haruka.ota@example.com",
+      "userPrincipalName": "haruka.ota@example.com",
+      "department": "神戸倉庫グループ",
+      "jobTitle": null,
+      "employeeId": "L0015",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル物流",
+      "officeLocation": "大阪物流センター",
+      "businessPhones": [
+        "+81 43-5550-2249"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "ca10b3e6-8264-4b9a-8dcf-49d1f9b2f038",
+      "displayName": "中野 秀樹",
+      "givenName": "秀樹",
+      "surname": "中野",
+      "mail": "hideki.nakano@example.co.jp",
+      "userPrincipalName": "hideki.nakano@example.co.jp",
+      "department": "法人営業チーム",
+      "jobTitle": null,
+      "employeeId": "00385",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-7548"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "a32ce36a-e280-4afd-bc63-1019dd68bf4c",
+      "displayName": "岡本 智子",
+      "givenName": "智子",
+      "surname": "岡本",
+      "mail": "tomoko.okamoto@example.co.jp",
+      "userPrincipalName": "tomoko.okamoto@example.co.jp",
+      "department": "応用開発ﾁｰﾑ",
+      "jobTitle": "主任",
+      "employeeId": "00293",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [
+        "+81 3-5550-1470"
+      ],
+      "mobilePhone": "+81 90-0000-5273"
+    },
+    {
+      "id": "c07a1bcc-9466-4fcf-bedc-8d95e3951ddf",
+      "displayName": "遠藤 雅人",
+      "givenName": "雅人",
+      "surname": "遠藤",
+      "mail": "masato.endo@example.co.jp",
+      "userPrincipalName": "masato.endo@example.co.jp",
+      "department": "開発二課",
+      "jobTitle": null,
+      "employeeId": null,
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [
+        "+81 3-5550-2157"
+      ],
+      "mobilePhone": "+81 90-0000-5033"
+    },
+    {
+      "id": "591384c8-67e2-4c32-aa68-e7287b016628",
+      "displayName": "石川 玲奈",
+      "givenName": "玲奈",
+      "surname": "石川",
+      "mail": "rena.ishikawa@example.co.jp",
+      "userPrincipalName": "rena.ishikawa@example.co.jp",
+      "department": "新規開拓チーム",
+      "jobTitle": "主任",
+      "employeeId": "00072",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "名古屋支店",
+      "businessPhones": [
+        "+81 3-5550-8512"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "097fb39e-f92a-456a-ae31-b9f68e7bee8d",
+      "displayName": "奈緒 竹内",
+      "givenName": "奈緒",
+      "surname": "竹内",
+      "mail": "nao.takeuchi@example.co.jp",
+      "userPrincipalName": "nao.takeuchi@example.co.jp",
+      "department": "基盤開発チーム",
+      "jobTitle": null,
+      "employeeId": "00350",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [
+        "+81 3-5550-2233"
+      ],
+      "mobilePhone": "+81 90-0000-3030"
+    },
+    {
+      "id": "3ea2b578-cade-4952-9545-dd0513219132",
+      "displayName": "岡田 圭介",
+      "givenName": "圭介",
+      "surname": "岡田",
+      "mail": "keisuke.okada@example.co.jp",
+      "userPrincipalName": "keisuke.okada@example.co.jp",
+      "department": "製造四課",
+      "jobTitle": null,
+      "employeeId": "00386",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [],
+      "mobilePhone": null
+    },
+    {
+      "id": "9f165e84-6716-471d-836c-2d86cdeb30ae",
+      "displayName": "小川 浩二",
+      "givenName": "浩二",
+      "surname": "小川",
+      "mail": "koji.ogawa@example.co.jp",
+      "userPrincipalName": "koji.ogawa@example.co.jp",
+      "department": "広報課",
+      "jobTitle": null,
+      "employeeId": "00304",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [],
+      "mobilePhone": "+81 90-0000-3528"
+    },
+    {
+      "id": "83b02c20-c36e-4bfe-ad9b-b7398957925f",
+      "displayName": "平野　拓也",
+      "givenName": "拓也",
+      "surname": "平野",
+      "mail": "takuya.hirano@example.co.jp",
+      "userPrincipalName": "takuya.hirano@example.co.jp",
+      "department": "企画グループ",
+      "jobTitle": null,
+      "employeeId": "00237",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル物流",
+      "officeLocation": "千葉物流センター",
+      "businessPhones": [
+        "+81 3-5550-4898"
+      ],
+      "mobilePhone": "+81 90-0000-7972"
+    },
+    {
+      "id": "df108f12-72d3-4561-8b1f-0f6542c48871",
+      "displayName": "今井直樹",
+      "givenName": "直樹",
+      "surname": "今井",
+      "mail": "naoki.imai@example.co.jp",
+      "userPrincipalName": "naoki.imai@example.co.jp",
+      "department": "品質管理課",
+      "jobTitle": null,
+      "employeeId": "00480",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [
+        "+81 3-5550-7263"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "a45ec235-7257-4001-9784-c44795edf3de",
+      "displayName": "高橋　結衣",
+      "givenName": "結衣",
+      "surname": "高橋",
+      "mail": "yui.takahashi@example.co.jp",
+      "userPrincipalName": "yui.takahashi@example.co.jp",
+      "department": "西日本チーム",
+      "jobTitle": "主任",
+      "employeeId": "00173",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "名古屋支店",
+      "businessPhones": [
+        "+81 3-5550-2058"
+      ],
+      "mobilePhone": "+81 90-0000-2483"
+    },
+    {
+      "id": "d0a688dc-a732-42dd-abe9-1b4446f60d50",
+      "displayName": "松井 玲奈",
+      "givenName": "玲奈",
+      "surname": "松井",
+      "mail": "rena.matsui@example.com",
+      "userPrincipalName": "rena.matsui@example.com",
+      "department": "大阪配送グループ",
+      "jobTitle": null,
+      "employeeId": "L0050",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル物流",
+      "officeLocation": "大阪物流センター",
+      "businessPhones": [
+        "+81 43-5550-2121"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "b7664783-4365-415c-b941-f1af011fb73d",
+      "displayName": "宮﨑 典子",
+      "givenName": "典子",
+      "surname": "宮﨑",
+      "mail": "noriko.miyazaki@example.co.jp",
+      "userPrincipalName": "noriko.miyazaki@example.co.jp",
+      "department": "組立チーム",
+      "jobTitle": null,
+      "employeeId": "00418",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [
+        "+81 3-5550-3232"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "aa756473-7309-46e4-ace5-b5e85c76dc18",
+      "displayName": "神崎　沙織",
+      "givenName": "沙織",
+      "surname": "神崎",
+      "mail": "saori.kanzaki@example.co.jp",
+      "userPrincipalName": "saori.kanzaki@example.co.jp",
+      "department": "製造四課",
+      "jobTitle": null,
+      "employeeId": null,
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [],
+      "mobilePhone": null
+    },
+    {
+      "id": "1385caac-07e3-4b61-934e-717ccc2d9508",
+      "displayName": "和田 沙織",
+      "givenName": "沙織",
+      "surname": "和田",
+      "mail": "saori.wada@example.co.jp",
+      "userPrincipalName": "saori.wada@example.co.jp",
+      "department": "労務チーム",
+      "jobTitle": null,
+      "employeeId": "00284",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-6334"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "706f4f50-ebc7-4287-89fe-7459ead7d55e",
+      "displayName": "中野 大樹",
+      "givenName": "大樹",
+      "surname": "中野",
+      "mail": "daiki.nakano@example.co.jp",
+      "userPrincipalName": "daiki.nakano@example.co.jp",
+      "department": "西日本チーム",
+      "jobTitle": "主任",
+      "employeeId": "00035",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "大阪支社",
+      "businessPhones": [],
+      "mobilePhone": null
+    },
+    {
+      "id": "a48c812f-a703-41ae-8782-c8fcbcafc020",
+      "displayName": "長谷川 美咲",
+      "givenName": "美咲",
+      "surname": "長谷川",
+      "mail": "misaki.hasegawa@example.co.jp",
+      "userPrincipalName": "misaki.hasegawa@example.co.jp",
+      "department": "公共営業ﾁｰﾑ",
+      "jobTitle": null,
+      "employeeId": "00039",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [],
+      "mobilePhone": null
+    },
+    {
+      "id": "af5581fa-18dc-413a-94fb-9fd0dd78afb3",
+      "displayName": "大野香織",
+      "givenName": "香織",
+      "surname": "大野",
+      "mail": "kaori.ono@example.co.jp",
+      "userPrincipalName": "kaori.ono@example.co.jp",
+      "department": "販売分析チーム",
+      "jobTitle": null,
+      "employeeId": "00150",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "名古屋支店",
+      "businessPhones": [
+        "+81 3-5550-9499"
+      ],
+      "mobilePhone": "+81 90-0000-4933"
+    },
+    {
+      "id": "4cbe9e75-9538-4ac2-987d-8bbd23ac318d",
+      "displayName": "井上 健太",
+      "givenName": "健太",
+      "surname": "井上",
+      "mail": "kenta.inoue@example.co.jp",
+      "userPrincipalName": "kenta.inoue@example.co.jp",
+      "department": "採用ﾁｰﾑ",
+      "jobTitle": "主任",
+      "employeeId": "00475",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-5796"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "10480437-0335-4546-b3f3-3bcd0c258ca5",
+      "displayName": "谷口 理恵",
+      "givenName": "理恵",
+      "surname": "谷口",
+      "mail": "rie.taniguchi@example.co.jp",
+      "userPrincipalName": "rie.taniguchi@example.co.jp",
+      "department": "新規開拓チーム",
+      "jobTitle": null,
+      "employeeId": null,
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-9435"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "1b9fd3bd-0b47-4631-a3f0-a2d2eadb2cb8",
+      "displayName": "福田 裕介",
+      "givenName": "裕介",
+      "surname": "福田",
+      "mail": "yusuke.fukuda@example.co.jp",
+      "userPrincipalName": "yusuke.fukuda@example.co.jp",
+      "department": "業務改善グループ",
+      "jobTitle": null,
+      "employeeId": "56",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル物流",
+      "officeLocation": "千葉物流センター",
+      "businessPhones": [
+        "+81 3-5550-2653"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "2f92f78b-64da-4252-866e-8c085310318c",
+      "displayName": "中野 香織",
+      "givenName": "香織",
+      "surname": "中野",
+      "mail": "kaori.nakano@example.co.jp",
+      "userPrincipalName": "kaori.nakano@example.co.jp",
+      "department": "製造一課",
+      "jobTitle": "課長",
+      "employeeId": "00135",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [
+        "+81 3-5550-6783"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "38d97eed-3a0f-401b-9087-20096beac638",
+      "displayName": "山口 純子",
+      "givenName": "純子",
+      "surname": "山口",
+      "mail": "junko.yamaguchi@example.co.jp",
+      "userPrincipalName": "junko.yamaguchi@example.co.jp",
+      "department": "社内SE課",
+      "jobTitle": null,
+      "employeeId": "00383",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-9220"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "9de8c5ca-1e30-42a5-b62a-545c76948bd5",
+      "displayName": "山田 裕子",
+      "givenName": "裕子",
+      "surname": "山田",
+      "mail": "yuko.yamada@example.co.jp",
+      "userPrincipalName": "yuko.yamada@example.co.jp",
+      "department": "第四営業課",
+      "jobTitle": null,
+      "employeeId": "00091",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-9970"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "bca01dae-f0d9-445f-9513-104469d2da6d",
+      "displayName": "代表お問い合わせ",
+      "givenName": null,
+      "surname": null,
+      "mail": "info@example.co.jp",
+      "userPrincipalName": "info@example.co.jp",
+      "department": null,
+      "jobTitle": null,
+      "employeeId": null,
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": null,
+      "businessPhones": [],
+      "mobilePhone": null
+    },
+    {
+      "id": "92d4ae5c-5bb1-4686-8ab3-78b065685d25",
+      "displayName": "内田 悠斗",
+      "givenName": "悠斗",
+      "surname": "内田",
+      "mail": "yuto.uchida@example.co.jp",
+      "userPrincipalName": "yuto.uchida@example.co.jp",
+      "department": "品質管理課",
+      "jobTitle": null,
+      "employeeId": "00270",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [
+        "+81 3-5550-7183"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "7c3d469c-e109-405e-a701-dc2b0b100ef6",
+      "displayName": "大野　瞳",
+      "givenName": "瞳",
+      "surname": "大野",
+      "mail": "hitomi.ono@example.co.jp",
+      "userPrincipalName": "hitomi.ono@example.co.jp",
+      "department": "営業本部",
+      "jobTitle": "本部長",
+      "employeeId": "440",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "大阪支社",
+      "businessPhones": [],
+      "mobilePhone": null
+    },
+    {
+      "id": "9217a14f-58f4-4de6-ad20-eb63518f195e",
+      "displayName": "山本　美香",
+      "givenName": "美香",
+      "surname": "山本",
+      "mail": "mika.yamamoto@example.co.jp",
+      "userPrincipalName": "mika.yamamoto@example.co.jp",
+      "department": "採用チーム",
+      "jobTitle": null,
+      "employeeId": "00179",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-4677"
+      ],
+      "mobilePhone": "+81 90-0000-8805"
+    },
+    {
+      "id": "8cc1ef8f-dac3-4007-a20b-edf8178b0602",
+      "displayName": "杉山 美香",
+      "givenName": "美香",
+      "surname": "杉山",
+      "mail": "mika.sugiyama@example.co.jp",
+      "userPrincipalName": "mika.sugiyama@example.co.jp",
+      "department": "法人営業ﾁｰﾑ",
+      "jobTitle": null,
+      "employeeId": "00335",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "名古屋支店",
+      "businessPhones": [
+        "+81 3-5550-5886"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "61337769-6d1b-401a-a52d-a7955cc254e0",
+      "displayName": "Wataru Kanzaki",
+      "givenName": "Wataru",
+      "surname": "Kanzaki",
+      "mail": "wataru.kanzaki@example.co.jp",
+      "userPrincipalName": "wataru.kanzaki@example.co.jp",
+      "department": "企画２課",
+      "jobTitle": null,
+      "employeeId": null,
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-6405"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "de39a060-ba0f-477e-b47e-86086478a9a5",
+      "displayName": "小林 沙織",
+      "givenName": "沙織",
+      "surname": "小林",
+      "mail": "saori.kobayashi@example.co.jp",
+      "userPrincipalName": "saori.kobayashi@example.co.jp",
+      "department": "製造二課　",
+      "jobTitle": null,
+      "employeeId": "00016",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [],
+      "mobilePhone": null
+    },
+    {
+      "id": "5c80db2a-c372-4bfa-b863-45ea489a3dc4",
+      "displayName": "木村直子",
+      "givenName": "直子",
+      "surname": "木村",
+      "mail": "naoko.kimura@example.co.jp",
+      "userPrincipalName": "naoko.kimura@example.co.jp",
+      "department": "公共営業チーム",
+      "jobTitle": null,
+      "employeeId": "00264",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-4453"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "db866649-930c-452a-beb5-b8e29f656872",
+      "displayName": "青木 遥",
+      "givenName": "遥",
+      "surname": "青木",
+      "mail": "haruka.aoki@example.co.jp",
+      "userPrincipalName": "haruka.aoki@example.co.jp",
+      "department": "インフラ課",
+      "jobTitle": null,
+      "employeeId": "00233",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-8599"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "400c05fd-e3f7-4eca-a1cd-28868577823b",
+      "displayName": "加藤 千尋",
+      "givenName": "千尋",
+      "surname": "加藤",
+      "mail": "chihiro.kato@example.co.jp",
+      "userPrincipalName": "chihiro.kato@example.co.jp",
+      "department": "公共営業ﾁｰﾑ",
+      "jobTitle": null,
+      "employeeId": "220",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [],
+      "mobilePhone": "+81 90-0000-8466"
+    },
+    {
+      "id": "b581c1ba-44b3-44b5-9399-d583eadd67f4",
+      "displayName": "今井 哲也",
+      "givenName": "哲也",
+      "surname": "今井",
+      "mail": "tetsuya.imai@example.co.jp",
+      "userPrincipalName": "tetsuya.imai@example.co.jp",
+      "department": "法人営業チーム",
+      "jobTitle": null,
+      "employeeId": "00160",
+      "accountEnabled": true,
+      "companyName": "サンプル商事(株)",
+      "officeLocation": "福岡支店",
+      "businessPhones": [
+        "+81 3-5550-8322"
+      ],
+      "mobilePhone": "+81 90-0000-2810"
+    },
+    {
+      "id": "8f36ee18-dfa2-46ac-a02b-f8160255075f",
+      "displayName": "原田 優太",
+      "givenName": "優太",
+      "surname": "原田",
+      "mail": "yuta.harada@example.co.jp",
+      "userPrincipalName": "yuta.harada@example.co.jp",
+      "department": "品質保証課",
+      "jobTitle": "課長",
+      "employeeId": "00288",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [],
+      "mobilePhone": "+81 90-0000-5126"
+    },
+    {
+      "id": "80090aef-bd62-47f1-9acb-76bea5d90e3d",
+      "displayName": "HR連携サービス",
+      "givenName": null,
+      "surname": null,
+      "mail": "svc-hrsync@example.co.jp",
+      "userPrincipalName": "svc-hrsync@example.co.jp",
+      "department": "情報システム部",
+      "jobTitle": null,
+      "employeeId": null,
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": null,
+      "businessPhones": [],
+      "mobilePhone": null
+    },
+    {
+      "id": "a015972e-a6f8-4452-950e-673e4130aad8",
+      "displayName": "千葉 菜々子",
+      "givenName": "菜々子",
+      "surname": "千葉",
+      "mail": "nanako.chiba@example.co.jp",
+      "userPrincipalName": "nanako.chiba@example.co.jp",
+      "department": "品質保証課",
+      "jobTitle": null,
+      "employeeId": "00092",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [
+        "+81 3-5550-3023"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "68673cc3-102b-4592-89e2-17dada81f0a5",
+      "displayName": "鈴木 修",
+      "givenName": "修",
+      "surname": "鈴木",
+      "mail": "osamu.suzuki@example.co.jp",
+      "userPrincipalName": "osamu.suzuki@example.co.jp",
+      "department": "検査チーム",
+      "jobTitle": null,
+      "employeeId": "00004",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [
+        "+81 3-5550-2589"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "dd7c038f-25d0-4496-80b9-f4af9420b59d",
+      "displayName": "高木 遥",
+      "givenName": "遥",
+      "surname": "高木",
+      "mail": "haruka.takagi@example.co.jp",
+      "userPrincipalName": "haruka.takagi@example.co.jp",
+      "department": "企画二課",
+      "jobTitle": null,
+      "employeeId": "00356",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-1643"
+      ],
+      "mobilePhone": "+81 90-0000-2360"
+    },
+    {
+      "id": "da5f1983-c130-4425-b6bc-d76b95ac5d0b",
+      "displayName": "金子 里奈",
+      "givenName": "里奈",
+      "surname": "金子",
+      "mail": "rina.kaneko@example.co.jp",
+      "userPrincipalName": "rina.kaneko@example.co.jp",
+      "department": "公共営業チーム",
+      "jobTitle": null,
+      "employeeId": "00435",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-7817"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "4967bc1f-c17d-4c70-b2cc-c0481859bc72",
+      "displayName": "金子 蓮",
+      "givenName": "蓮",
+      "surname": "金子",
+      "mail": "ren.kaneko@example.co.jp",
+      "userPrincipalName": "ren.kaneko@example.co.jp",
+      "department": "社内SE課",
+      "jobTitle": null,
+      "employeeId": "184",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-4200"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "27fee19f-fc6e-445f-8481-3037a27347c0",
+      "displayName": "Noriko Fujita",
+      "givenName": "Noriko",
+      "surname": "Fujita",
+      "mail": "noriko.fujita@example.co.jp",
+      "userPrincipalName": "noriko.fujita@example.co.jp",
+      "department": "品質保証課",
+      "jobTitle": null,
+      "employeeId": null,
+      "accountEnabled": true,
+      "companyName": null,
+      "officeLocation": "横浜工場",
+      "businessPhones": [
+        "+81 3-5550-1494"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "31569bff-cb3e-48fc-83f8-7eea793e7610",
+      "displayName": "中島　一郎",
+      "givenName": "一郎",
+      "surname": "中島",
+      "mail": "ichiro.nakajima@example.co.jp",
+      "userPrincipalName": "ichiro.nakajima@example.co.jp",
+      "department": "製造二課",
+      "jobTitle": null,
+      "employeeId": "00387",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [
+        "+81 3-5550-6283"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "280bc527-bb34-4289-8eb4-0fcabe1382df",
+      "displayName": "山田 香織",
+      "givenName": "香織",
+      "surname": "山田",
+      "mail": "kaori.yamada@example.co.jp",
+      "userPrincipalName": "kaori.yamada@example.co.jp",
+      "department": "製造二課",
+      "jobTitle": "主任",
+      "employeeId": "00085",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [],
+      "mobilePhone": null
+    },
+    {
+      "id": "fd538810-1c70-4415-9fe9-2f1d4b26c5d9",
+      "displayName": "太田　翔太",
+      "givenName": "翔太",
+      "surname": "太田",
+      "mail": "shota.ota@example.com",
+      "userPrincipalName": "shota.ota@example.com",
+      "department": "人事グループ",
+      "jobTitle": "主任",
+      "employeeId": "L37",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル物流",
+      "officeLocation": "千葉物流センター",
+      "businessPhones": [
+        "+81 43-5550-8079"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "8f63dc0b-1cd3-464c-b689-43c877d3f945",
+      "displayName": "竹内 誠",
+      "givenName": "誠",
+      "surname": "竹内",
+      "mail": "makoto.takeuchi@example.com",
+      "userPrincipalName": "makoto.takeuchi@example.com",
+      "department": "東京配送ｸﾞﾙｰﾌﾟ",
+      "jobTitle": "グループ長",
+      "employeeId": "L0043",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル物流",
+      "officeLocation": "千葉物流センター",
+      "businessPhones": [
+        "+81 43-5550-1409"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "0ab22a1d-6e71-4c65-96fe-ba6154a27a62",
+      "displayName": "中島 直子",
+      "givenName": "直子",
+      "surname": "中島",
+      "mail": "naoko.nakajima@example.co.jp",
+      "userPrincipalName": "naoko.nakajima@example.co.jp",
+      "department": "東日本チーム",
+      "jobTitle": null,
+      "employeeId": "00240",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-8492"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "20ef30cf-a5ee-46df-bdfe-d6e9648fe575",
+      "displayName": "鈴木 雅人",
+      "givenName": "雅人",
+      "surname": "鈴木",
+      "mail": "masato.suzuki@example.co.jp",
+      "userPrincipalName": "masato.suzuki@example.co.jp",
+      "department": "第三営業課",
+      "jobTitle": null,
+      "employeeId": "00495",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [],
+      "mobilePhone": null
+    },
+    {
+      "id": "9e2b790d-db97-4f06-8142-0e2007be7c0d",
+      "displayName": "山田美香",
+      "givenName": "美香",
+      "surname": "山田",
+      "mail": "mika.yamada@example.co.jp",
+      "userPrincipalName": "mika.yamada@example.co.jp",
+      "department": "法人営業ﾁｰﾑ",
+      "jobTitle": null,
+      "employeeId": null,
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-6865"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "b22ee582-ea72-4a8d-8964-86d1c0771db7",
+      "displayName": "山田 奈緒",
+      "givenName": "奈緒",
+      "surname": "山田",
+      "mail": "nao.yamada@example.co.jp",
+      "userPrincipalName": "nao.yamada@example.co.jp",
+      "department": "公共営業チーム",
+      "jobTitle": null,
+      "employeeId": "00037",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-6570"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "656bbf5f-f6c1-4d93-bba1-7e46aa52b86e",
+      "displayName": "山田 花子",
+      "givenName": "花子",
+      "surname": "山田",
+      "mail": "hanako.yamada@example.co.jp",
+      "userPrincipalName": "hanako.yamada@example.co.jp",
+      "department": "ヘルプデスクチーム",
+      "jobTitle": null,
+      "employeeId": "00024",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-8345"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "57b9a6ea-8467-42ff-8c67-f3e49ddeb429",
+      "displayName": "林 智也",
+      "givenName": "智也",
+      "surname": "林",
+      "mail": "tomoya.hayashi@example.co.jp",
+      "userPrincipalName": "tomoya.hayashi@example.co.jp",
+      "department": "ヘルプデスクﾁｰﾑ",
+      "jobTitle": null,
+      "employeeId": "00121",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-2426"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "aa0176b8-c601-42a1-b741-0a58d4b48bb2",
+      "displayName": "前田 亮",
+      "givenName": "亮",
+      "surname": "前田",
+      "mail": "ryo.maeda@example.co.jp",
+      "userPrincipalName": "ryo.maeda@example.co.jp",
+      "department": "応用開発ﾁｰﾑ",
+      "jobTitle": null,
+      "employeeId": "00143",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [],
+      "mobilePhone": null
+    },
+    {
+      "id": "e29407fb-fac8-46d5-9694-6bced1c9d1c6",
+      "displayName": "田中 裕介",
+      "givenName": "裕介",
+      "surname": "田中",
+      "mail": "yusuke.tanaka@example.co.jp",
+      "userPrincipalName": "yusuke.tanaka@example.co.jp",
+      "department": "広報課",
+      "jobTitle": null,
+      "employeeId": "00145",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-4119"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "b82ce99e-2f51-4401-908b-97df8860c7cb",
+      "displayName": "酒井 拓也",
+      "givenName": "拓也",
+      "surname": "酒井",
+      "mail": "takuya.sakai@example.co.jp",
+      "userPrincipalName": "takuya.sakai@example.co.jp",
+      "department": "組立チーム",
+      "jobTitle": null,
+      "employeeId": "00479",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [
+        "+81 3-5550-3494"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "cc9c9e64-5bee-4c95-849a-ee263b844109",
+      "displayName": "池田　純子",
+      "givenName": "純子",
+      "surname": "池田",
+      "mail": "junko.ikeda@example.co.jp",
+      "userPrincipalName": "junko.ikeda@example.co.jp",
+      "department": "東日本チーム ",
+      "jobTitle": null,
+      "employeeId": "00101",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "名古屋支店",
+      "businessPhones": [
+        "+81 3-5550-5641"
+      ],
+      "mobilePhone": "+81 90-0000-6614"
+    },
+    {
+      "id": "8bc42e3d-6891-430d-a576-eccc7a6811b9",
+      "displayName": "小林 圭介",
+      "givenName": "圭介",
+      "surname": "小林",
+      "mail": "keisuke.kobayashi@example.co.jp",
+      "userPrincipalName": "keisuke.kobayashi@example.co.jp",
+      "department": "製造二課",
+      "jobTitle": "課長",
+      "employeeId": "00390",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [
+        "+81 3-5550-6922"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "7b948600-0675-4ea0-97f1-b342637a4dda",
+      "displayName": "坂本 智也",
+      "givenName": "智也",
+      "surname": "坂本",
+      "mail": "tomoya.sakamoto@example.co.jp",
+      "userPrincipalName": "tomoya.sakamoto@example.co.jp",
+      "department": "総務人事課",
+      "jobTitle": "主任",
+      "employeeId": null,
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-3658"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "fae12cc1-dc70-4268-99cf-f1f4f183a728",
+      "displayName": "谷口 友美",
+      "givenName": "友美",
+      "surname": "谷口",
+      "mail": "tomomi.taniguchi@example.co.jp",
+      "userPrincipalName": "tomomi.taniguchi@example.co.jp",
+      "department": "第三営業課",
+      "jobTitle": null,
+      "employeeId": "00087",
+      "accountEnabled": false,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-8039"
+      ],
+      "mobilePhone": "+81 90-0000-6972"
+    },
+    {
+      "id": "c3a3ad17-0629-4e0f-9880-cb4686c342be",
+      "displayName": "内田 直樹",
+      "givenName": "直樹",
+      "surname": "内田",
+      "mail": "naoki.uchida@example.co.jp",
+      "userPrincipalName": "naoki.uchida@example.co.jp",
+      "department": "公共営業ﾁｰﾑ",
+      "jobTitle": null,
+      "employeeId": "00137",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-3398"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "dcb01dc3-ae73-42dc-91c3-b0b677a1c8be",
+      "displayName": "宮崎　莉子",
+      "givenName": "莉子",
+      "surname": "宮崎",
+      "mail": "riko.miyazaki@example.co.jp",
+      "userPrincipalName": "riko.miyazaki@example.co.jp",
+      "department": "検査チーム",
+      "jobTitle": null,
+      "employeeId": "00461",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [
+        "+81 3-5550-8243"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "3c026e05-761b-4674-858b-543d1abfcf1c",
+      "displayName": "佐藤 悠斗",
+      "givenName": "悠斗",
+      "surname": "佐藤",
+      "mail": "yuto.sato@example.co.jp",
+      "userPrincipalName": "yuto.sato@example.co.jp",
+      "department": "製造第4課",
+      "jobTitle": null,
+      "employeeId": null,
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [
+        "+81 3-5550-5799"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "14c2e626-2045-4f5a-8520-fc9e6c6d2c41",
+      "displayName": "山口 大輔",
+      "givenName": "大輔",
+      "surname": "山口",
+      "mail": "daisuke.yamaguchi@example.co.jp",
+      "userPrincipalName": "daisuke.yamaguchi@example.co.jp",
+      "department": "企画一課",
+      "jobTitle": "課長",
+      "employeeId": "00251",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-9077"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "b4cbb321-4070-4aef-ad8d-acfb1c606c79",
+      "displayName": "千葉 拓也",
+      "givenName": "拓也",
+      "surname": "千葉",
+      "mail": "takuya.chiba@example.co.jp",
+      "userPrincipalName": "takuya.chiba@example.co.jp",
+      "department": "新規開拓チーム",
+      "jobTitle": "主任",
+      "employeeId": "00167",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "大阪支社",
+      "businessPhones": [],
+      "mobilePhone": null
+    },
+    {
+      "id": "5d0b4ed2-0184-48c5-b949-8204f22325b4",
+      "displayName": "原田　純子",
+      "givenName": "純子",
+      "surname": "原田",
+      "mail": "junko.harada@example.co.jp",
+      "userPrincipalName": "junko.harada@example.co.jp",
+      "department": "企画二課",
+      "jobTitle": null,
+      "employeeId": "00238",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-6713"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "a8d88a66-c357-4f10-9d1e-263f4269c5a3",
+      "displayName": "坂本 直樹",
+      "givenName": "直樹",
+      "surname": "坂本",
+      "mail": "naoki.sakamoto@example.co.jp",
+      "userPrincipalName": "naoki.sakamoto@example.co.jp",
+      "department": "営業第三部",
+      "jobTitle": null,
+      "employeeId": "00062",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-7471"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "b32ed9f4-547d-40f0-ac22-8345eac38d11",
+      "displayName": "太郎 吉田",
+      "givenName": "太郎",
+      "surname": "吉田",
+      "mail": "taro.yoshida@example.co.jp",
+      "userPrincipalName": "taro.yoshida@example.co.jp",
+      "department": "公共営業チーム",
+      "jobTitle": null,
+      "employeeId": "311",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-6037"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "b07ad14a-5aff-4f1b-9e79-ae3aaa107c34",
+      "displayName": "田中 真由美",
+      "givenName": "真由美",
+      "surname": "田中",
+      "mail": "mayumi.tanaka@example.com",
+      "userPrincipalName": "mayumi.tanaka@example.com",
+      "department": "検査チーム　",
+      "jobTitle": null,
+      "employeeId": "L0049",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [
+        "+81 43-5550-4829"
+      ],
+      "mobilePhone": "+81 90-0000-7379"
+    },
+    {
+      "id": "a880e426-63f6-46cb-86db-a623d2c79679",
+      "displayName": "木村 拓也",
+      "givenName": "拓也",
+      "surname": "木村",
+      "mail": "takuya.kimura@example.co.jp",
+      "userPrincipalName": "takuya.kimura@example.co.jp",
+      "department": "法人営業チーム",
+      "jobTitle": null,
+      "employeeId": "00477",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [],
+      "mobilePhone": "+81 90-0000-9929"
+    },
+    {
+      "id": "e90d9118-6b85-4d35-b60f-185ac4b5f48d",
+      "displayName": "青木 愛",
+      "givenName": "愛",
+      "surname": "青木",
+      "mail": "ai.aoki@example.co.jp",
+      "userPrincipalName": "ai.aoki@example.co.jp",
+      "department": "開発二課",
+      "jobTitle": "課長",
+      "employeeId": "00013",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [
+        "+81 3-5550-7802"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "652f4b3a-ad97-42cc-ad0e-416f655d9cbc",
+      "displayName": "伊藤　蓮",
+      "givenName": "蓮",
+      "surname": "伊藤",
+      "mail": "ren.ito@example.co.jp",
+      "userPrincipalName": "ren.ito@example.co.jp",
+      "department": "第一営業課",
+      "jobTitle": "課長",
+      "employeeId": "00451",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [],
+      "mobilePhone": "+81 90-0000-4107"
+    },
+    {
+      "id": "c7884e29-8564-43fe-8a56-6a00bfd22a19",
+      "displayName": "坂本 沙織",
+      "givenName": "沙織",
+      "surname": "坂本",
+      "mail": "saori.sakamoto@example.co.jp",
+      "userPrincipalName": "saori.sakamoto@example.co.jp",
+      "department": "応用開発チーム",
+      "jobTitle": null,
+      "employeeId": "00124",
+      "accountEnabled": false,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [
+        "+81 3-5550-5788"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "652f7232-c8a2-4139-a7be-c45db954fea9",
+      "displayName": "岡本 明日香",
+      "givenName": "明日香",
+      "surname": "岡本",
+      "mail": "asuka.okamoto@example.co.jp",
+      "userPrincipalName": "asuka.okamoto@example.co.jp",
+      "department": "組立ﾁｰﾑ",
+      "jobTitle": null,
+      "employeeId": "321",
+      "accountEnabled": true,
+      "companyName": "サンプル商事(株)",
+      "officeLocation": "横浜工場",
+      "businessPhones": [],
+      "mobilePhone": "+81 90-0000-2499"
+    },
+    {
+      "id": "3fa1a3fd-b773-4514-8bf3-ae9f02a8e24d",
+      "displayName": "池田 恵子",
+      "givenName": "恵子",
+      "surname": "池田",
+      "mail": "keiko.ikeda@example.co.jp",
+      "userPrincipalName": "keiko.ikeda@example.co.jp",
+      "department": "内部監査部 ",
+      "jobTitle": null,
+      "employeeId": "00307",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [],
+      "mobilePhone": null
+    },
+    {
+      "id": "28cd2448-6696-46f5-8a06-44487f47a5df",
+      "displayName": "髙木 夏美",
+      "givenName": "夏美",
+      "surname": "髙木",
+      "mail": "natsumi.takagi@example.co.jp",
+      "userPrincipalName": "natsumi.takagi@example.co.jp",
+      "department": "労務ﾁｰﾑ",
+      "jobTitle": null,
+      "employeeId": "00425",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-1981"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "84628bcf-f2f5-4977-9958-9c757b794d8b",
+      "displayName": "清水 美咲",
+      "givenName": "美咲",
+      "surname": "清水",
+      "mail": "misaki.shimizu@example.co.jp",
+      "userPrincipalName": "misaki.shimizu@example.co.jp",
+      "department": "開発一課 ",
+      "jobTitle": "課長",
+      "employeeId": null,
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [],
+      "mobilePhone": null
+    },
+    {
+      "id": "ad2801ee-044a-4752-b01c-563e7b3ef658",
+      "displayName": "久保 里奈",
+      "givenName": "里奈",
+      "surname": "久保",
+      "mail": "rina.kubo@example.co.jp",
+      "userPrincipalName": "rina.kubo@example.co.jp",
+      "department": "社内SE課",
+      "jobTitle": "主任",
+      "employeeId": "00010",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-1339"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "c717c1ca-2dd0-4336-8bed-be23de98eea0",
+      "displayName": "佐藤 久美子",
+      "givenName": "久美子",
+      "surname": "佐藤",
+      "mail": "kumiko.sato@example.co.jp",
+      "userPrincipalName": "kumiko.sato@example.co.jp",
+      "department": "採用チーム",
+      "jobTitle": "主任",
+      "employeeId": "00272",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-8492"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "04aa743b-da28-4c75-94be-c443d6c72260",
+      "displayName": "福田美香",
+      "givenName": "美香",
+      "surname": "福田",
+      "mail": "mika.fukuda@example.co.jp",
+      "userPrincipalName": "mika.fukuda@example.co.jp",
+      "department": "営業第二部",
+      "jobTitle": "部長",
+      "employeeId": "77",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-6245"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "47fdee87-5674-4989-84e7-8a27fa5add49",
+      "displayName": "小川 絵里",
+      "givenName": "絵里",
+      "surname": "小川",
+      "mail": "eri.ogawa@example.co.jp",
+      "userPrincipalName": "eri.ogawa@example.co.jp",
+      "department": "応用開発チーム",
+      "jobTitle": null,
+      "employeeId": null,
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [],
+      "mobilePhone": null
+    },
+    {
+      "id": "647388c7-cc97-4a28-997f-9f832d159e30",
+      "displayName": "渡辺 一郎",
+      "givenName": "一郎",
+      "surname": "渡辺",
+      "mail": "ichiro.watanabe@example.com",
+      "userPrincipalName": "ichiro.watanabe@example.com",
+      "department": "大阪配送グループ",
+      "jobTitle": null,
+      "employeeId": "L0035",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル物流",
+      "officeLocation": "大阪物流センター",
+      "businessPhones": [
+        "+81 43-5550-9398"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "c1aa965d-a848-4ddd-947e-1c70eebff7c7",
+      "displayName": "久保 学",
+      "givenName": "学",
+      "surname": "久保",
+      "mail": "manabu.kubo@example.co.jp",
+      "userPrincipalName": "manabu.kubo@example.co.jp",
+      "department": "社内SE課",
+      "jobTitle": "主任",
+      "employeeId": "00460",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-7130"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "a0c96385-6248-4c8a-b044-e8c720f85d12",
+      "displayName": "横山 浩二",
+      "givenName": "浩二",
+      "surname": "横山",
+      "mail": "koji.yokoyama@example.co.jp",
+      "userPrincipalName": "koji.yokoyama@example.co.jp",
+      "department": "品質保証課",
+      "jobTitle": null,
+      "employeeId": "00170",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [],
+      "mobilePhone": "+81 90-0000-1713"
+    },
+    {
+      "id": "1ddc89e1-7fc4-4f26-8ed1-375845d29c86",
+      "displayName": "竹内 玲奈",
+      "givenName": "玲奈",
+      "surname": "竹内",
+      "mail": "rena.takeuchi@example.co.jp",
+      "userPrincipalName": "rena.takeuchi@example.co.jp",
+      "department": "組立チーム ",
+      "jobTitle": null,
+      "employeeId": "00355",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [
+        "+81 3-5550-8083"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "bb6b1e7e-7388-41da-8306-5790946b5f4f",
+      "displayName": "杉山 明日香",
+      "givenName": "明日香",
+      "surname": "杉山",
+      "mail": "asuka.sugiyama@example.co.jp",
+      "userPrincipalName": "asuka.sugiyama@example.co.jp",
+      "department": "総務人事課",
+      "jobTitle": null,
+      "employeeId": "00368",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-2131"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "448ee665-72b2-4da8-941c-f8b6105cea15",
+      "displayName": "神崎　美香",
+      "givenName": "美香",
+      "surname": "神崎",
+      "mail": "mika.kanzaki@example.co.jp",
+      "userPrincipalName": "mika.kanzaki@example.co.jp",
+      "department": "製造四課",
+      "jobTitle": "課長",
+      "employeeId": "00337",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [
+        "+81 3-5550-3812"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "e207b0b0-0abb-4c61-adf8-2426fd20d0a4",
+      "displayName": "山崎 瞳",
+      "givenName": "瞳",
+      "surname": "山崎",
+      "mail": "hitomi.yamazaki@example.co.jp",
+      "userPrincipalName": "hitomi.yamazaki@example.co.jp",
+      "department": "営業第三部",
+      "jobTitle": null,
+      "employeeId": "00253",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "大阪支社",
+      "businessPhones": [
+        "+81 3-5550-7385"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "55269c15-4592-41b1-a377-5e18ec71d317",
+      "displayName": "森 美香",
+      "givenName": "美香",
+      "surname": "森",
+      "mail": "mika.mori@example.co.jp",
+      "userPrincipalName": "mika.mori@example.co.jp",
+      "department": "販売促進課",
+      "jobTitle": null,
+      "employeeId": "00466",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-5471"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "5095acb3-0911-49c0-b613-4d053e145e79",
+      "displayName": "福田 勇気",
+      "givenName": "勇気",
+      "surname": "福田",
+      "mail": "yuki.fukuda@example.co.jp",
+      "userPrincipalName": "yuki.fukuda@example.co.jp",
+      "department": "経営企画室",
+      "jobTitle": null,
+      "employeeId": "00455",
+      "accountEnabled": true,
+      "companyName": "サンプル商事(株)",
+      "officeLocation": "東京本社",
+      "businessPhones": [],
+      "mobilePhone": null
+    },
+    {
+      "id": "f4b2498d-8aba-40b2-8d25-8f22d523416d",
+      "displayName": "石井 瞳",
+      "givenName": "瞳",
+      "surname": "石井",
+      "mail": "hitomi.ishii@example.com",
+      "userPrincipalName": "hitomi.ishii@example.com",
+      "department": "神戸倉庫グループ",
+      "jobTitle": null,
+      "employeeId": "L0030",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル物流",
+      "officeLocation": "大阪物流センター",
+      "businessPhones": [
+        "+81 43-5550-8131"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "1c372da0-e264-4230-be51-3c637cf33100",
+      "displayName": "中島 香織",
+      "givenName": "香織",
+      "surname": "中島",
+      "mail": "kaori.nakajima@example.co.jp",
+      "userPrincipalName": "kaori.nakajima@example.co.jp",
+      "department": "第三営業課",
+      "jobTitle": null,
+      "employeeId": null,
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "大阪支社",
+      "businessPhones": [
+        "+81 3-5550-8958"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "812694d7-3043-4bb3-9ef9-56ff4c3b9346",
+      "displayName": "髙木 友美",
+      "givenName": "友美",
+      "surname": "髙木",
+      "mail": "tomomi.takagi@example.com",
+      "userPrincipalName": "tomomi.takagi@example.com",
+      "department": "東京配送グループ",
+      "jobTitle": "主任",
+      "employeeId": "L0010",
+      "accountEnabled": true,
+      "companyName": "サンプル物流(株)",
+      "officeLocation": "千葉物流センター",
+      "businessPhones": [],
+      "mobilePhone": "+81 90-0000-5815"
+    },
+    {
+      "id": "941a36b0-285f-4cfc-b8e2-ef31d35586ca",
+      "displayName": "池田 瞳",
+      "givenName": "瞳",
+      "surname": "池田",
+      "mail": "hitomi.ikeda@example.com",
+      "userPrincipalName": "hitomi.ikeda@example.com",
+      "department": "企画グループ",
+      "jobTitle": "グループ長",
+      "employeeId": "L0040",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル物流",
+      "officeLocation": "千葉物流センター",
+      "businessPhones": [
+        "+81 43-5550-8198"
+      ],
+      "mobilePhone": "+81 90-0000-5931"
+    },
+    {
+      "id": "15b12cc2-f0c2-4f92-bf72-a84df9e7b00e",
+      "displayName": "福田　亜希子",
+      "givenName": "亜希子",
+      "surname": "福田",
+      "mail": "akiko.fukuda@example.co.jp",
+      "userPrincipalName": "akiko.fukuda@example.co.jp",
+      "department": "東日本チーム",
+      "jobTitle": null,
+      "employeeId": "00375",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-4280"
+      ],
+      "mobilePhone": "+81 90-0000-7147"
+    },
+    {
+      "id": "39ab3827-3df9-49ac-a621-75c7205148a0",
+      "displayName": "遠藤 亮",
+      "givenName": "亮",
+      "surname": "遠藤",
+      "mail": "ryo.endo@example.co.jp",
+      "userPrincipalName": "ryo.endo@example.co.jp",
+      "department": "公共営業チーム",
+      "jobTitle": null,
+      "employeeId": "00015",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-1553"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "5ff63f8e-07c5-4e04-bfcf-a03b76017e05",
+      "displayName": "絵里 松井",
+      "givenName": "絵里",
+      "surname": "松井",
+      "mail": "eri.matsui@example.co.jp",
+      "userPrincipalName": "eri.matsui@example.co.jp",
+      "department": "東日本チーム",
+      "jobTitle": null,
+      "employeeId": "60",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-4984"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "7e416fff-e74f-4ae5-9625-491bf789ef63",
+      "displayName": "小川　典子",
+      "givenName": "典子",
+      "surname": "小川",
+      "mail": "noriko.ogawa@example.com",
+      "userPrincipalName": "noriko.ogawa@example.com",
+      "department": "総務経理グループ",
+      "jobTitle": null,
+      "employeeId": "L8",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル物流",
+      "officeLocation": "千葉物流センター",
+      "businessPhones": [
+        "+81 43-5550-2580"
+      ],
+      "mobilePhone": "+81 90-0000-2985"
+    },
+    {
+      "id": "3e37b85b-2ca4-4a9e-9e9c-2c1cb9e19db1",
+      "displayName": "森彩",
+      "givenName": "彩",
+      "surname": "森",
+      "mail": "aya.mori@example.co.jp",
+      "userPrincipalName": "aya.mori@example.co.jp",
+      "department": "第五営業課",
+      "jobTitle": null,
+      "employeeId": "00082",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-7334"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "b40cb70f-38fb-4985-b773-53dbd8acb386",
+      "displayName": "石川 優奈",
+      "givenName": "優奈",
+      "surname": "石川",
+      "mail": "yuna.ishikawa@example.co.jp",
+      "userPrincipalName": "yuna.ishikawa@example.co.jp",
+      "department": "法人営業チーム",
+      "jobTitle": "リーダー",
+      "employeeId": "00300",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-6118"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "f30bacde-fba0-4948-96a0-eeed8af0b69a",
+      "displayName": "今井 真由美",
+      "givenName": "真由美",
+      "surname": "今井",
+      "mail": "mayumi.imai@example.co.jp",
+      "userPrincipalName": "mayumi.imai@example.co.jp",
+      "department": "西日本チーム",
+      "jobTitle": null,
+      "employeeId": null,
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "福岡支店",
+      "businessPhones": [
+        "+81 3-5550-2792"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "326c0f10-1c2e-49c7-b4f1-aefb469f6fa5",
+      "displayName": "岡田 浩二",
+      "givenName": "浩二",
+      "surname": "岡田",
+      "mail": "koji.okada@example.co.jp",
+      "userPrincipalName": "koji.okada@example.co.jp",
+      "department": "ヘルプデスクチーム",
+      "jobTitle": null,
+      "employeeId": "00324",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-5684"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "418ac1c7-aaad-4ad7-953e-0be73204d13b",
+      "displayName": "村上 恵子",
+      "givenName": "恵子",
+      "surname": "村上",
+      "mail": "keiko.murakami@example.co.jp",
+      "userPrincipalName": "keiko.murakami@example.co.jp",
+      "department": "販売促進課",
+      "jobTitle": "主任",
+      "employeeId": "00439",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-3302"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "983be3da-eff7-4d40-aca5-7be5961a2a3b",
+      "displayName": "山﨑 麻衣",
+      "givenName": "麻衣",
+      "surname": "山﨑",
+      "mail": "mai.yamazaki@example.com",
+      "userPrincipalName": "mai.yamazaki@example.com",
+      "department": "千葉倉庫グループ",
+      "jobTitle": null,
+      "employeeId": "L0046",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル物流",
+      "officeLocation": "千葉物流センター",
+      "businessPhones": [
+        "+81 43-5550-5123"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "22521ee4-6bac-4f48-8c9c-94b5e966786a",
+      "displayName": "髙橋 達也",
+      "givenName": "達也",
+      "surname": "髙橋",
+      "mail": "tatsuya.takahashi@example.co.jp",
+      "userPrincipalName": "tatsuya.takahashi@example.co.jp",
+      "department": "東日本チーム",
+      "jobTitle": null,
+      "employeeId": "00218",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-2934"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "89e539d7-c73e-45c8-b9ff-86f039eadb15",
+      "displayName": "山本 奈緒",
+      "givenName": "奈緒",
+      "surname": "山本",
+      "mail": "nao.yamamoto@example.com",
+      "userPrincipalName": "nao.yamamoto@example.com",
+      "department": "東京配送グループ",
+      "jobTitle": null,
+      "employeeId": "L0009",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル物流",
+      "officeLocation": "千葉物流センター",
+      "businessPhones": [],
+      "mobilePhone": null
+    },
+    {
+      "id": "fed4eb28-6441-423f-81ee-f3520ed54aae",
+      "displayName": "山田　秀樹",
+      "givenName": "秀樹",
+      "surname": "山田",
+      "mail": "hideki.yamada@example.co.jp",
+      "userPrincipalName": "hideki.yamada@example.co.jp",
+      "department": "東日本ﾁｰﾑ",
+      "jobTitle": "主任",
+      "employeeId": "00250",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-3616"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "3e92adb3-2551-411e-ae47-e767444532a5",
+      "displayName": "柴田 莉子",
+      "givenName": "莉子",
+      "surname": "柴田",
+      "mail": "riko.shibata@example.co.jp",
+      "userPrincipalName": "riko.shibata@example.co.jp",
+      "department": "公共営業ﾁｰﾑ",
+      "jobTitle": "リーダー",
+      "employeeId": "00030",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-7595"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "17c551dd-a3c9-4250-bc86-e2e2d990c252",
+      "displayName": "岡田 一郎",
+      "givenName": "一郎",
+      "surname": "岡田",
+      "mail": "ichiro.okada@example.com",
+      "userPrincipalName": "ichiro.okada@example.com",
+      "department": "大阪配送グループ",
+      "jobTitle": "主任",
+      "employeeId": "L0047",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル物流",
+      "officeLocation": "大阪物流センター",
+      "businessPhones": [
+        "+81 43-5550-6201"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "dd9f9d95-647e-411f-ae8c-cf1bc1a35568",
+      "displayName": "大樹 内田",
+      "givenName": "大樹",
+      "surname": "内田",
+      "mail": "daiki.uchida@example.co.jp",
+      "userPrincipalName": "daiki.uchida@example.co.jp",
+      "department": "製造本部",
+      "jobTitle": "本部長",
+      "employeeId": "00322",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [],
+      "mobilePhone": null
+    },
+    {
+      "id": "6b923b8b-08b5-4fb2-b526-3f88e0feeff8",
+      "displayName": "中村 浩二",
+      "givenName": "浩二",
+      "surname": "中村",
+      "mail": "koji.nakamura@example.co.jp",
+      "userPrincipalName": "koji.nakamura@example.co.jp",
+      "department": "品質保証課",
+      "jobTitle": null,
+      "employeeId": "00164",
+      "accountEnabled": false,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [
+        "+81 3-5550-7990"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "62c2ef37-a7b3-43b5-be5e-956181a5de08",
+      "displayName": "松井 洋平",
+      "givenName": "洋平",
+      "surname": "松井",
+      "mail": "yohei.matsui@example.co.jp",
+      "userPrincipalName": "yohei.matsui@example.co.jp",
+      "department": "製造第一部",
+      "jobTitle": "部長",
+      "employeeId": "111",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [
+        "+81 3-5550-7720"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "3ff5c06b-26f4-41f9-acc4-2d242842842d",
+      "displayName": "横山遥",
+      "givenName": "遥",
+      "surname": "横山",
+      "mail": "haruka.yokoyama@example.co.jp",
+      "userPrincipalName": "haruka.yokoyama@example.co.jp",
+      "department": "組立ﾁｰﾑ",
+      "jobTitle": null,
+      "employeeId": "00261",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [],
+      "mobilePhone": null
+    },
+    {
+      "id": "487c8fa3-9410-4361-a18a-edbd19601588",
+      "displayName": "久保 典子",
+      "givenName": "典子",
+      "surname": "久保",
+      "mail": "noriko.kubo@example.co.jp",
+      "userPrincipalName": "noriko.kubo@example.co.jp",
+      "department": "製造三課",
+      "jobTitle": "課長",
+      "employeeId": "00034",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [
+        "+81 3-5550-4186"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "31544afc-3016-4a6b-b376-92e4c20a569e",
+      "displayName": "高橋 慎一",
+      "givenName": "慎一",
+      "surname": "高橋",
+      "mail": "shinichi.takahashi@example.co.jp",
+      "userPrincipalName": "shinichi.takahashi@example.co.jp",
+      "department": "基盤開発チーム",
+      "jobTitle": null,
+      "employeeId": "00211",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [
+        "+81 3-5550-7926"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "76c04eff-a131-4794-aecf-14bf473c0694",
+      "displayName": "遠藤 隆",
+      "givenName": "隆",
+      "surname": "遠藤",
+      "mail": "takashi.endo@example.co.jp",
+      "userPrincipalName": "takashi.endo@example.co.jp",
+      "department": "神戸倉庫グループ",
+      "jobTitle": null,
+      "employeeId": "00320",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル物流",
+      "officeLocation": "大阪物流センター",
+      "businessPhones": [],
+      "mobilePhone": null
+    },
+    {
+      "id": "dac2c056-7714-4feb-b108-a92989472f5f",
+      "displayName": "井上　勇気",
+      "givenName": "勇気",
+      "surname": "井上",
+      "mail": "yuki.inoue@example.com",
+      "userPrincipalName": "yuki.inoue@example.com",
+      "department": "東京配送グループ",
+      "jobTitle": null,
+      "employeeId": "L28",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル物流",
+      "officeLocation": "千葉物流センター",
+      "businessPhones": [
+        "+81 43-5550-8446"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "f17802b3-ea42-4041-b1e7-90660d0e02cb",
+      "displayName": "中野 修",
+      "givenName": "修",
+      "surname": "中野",
+      "mail": "osamu.nakano@example.com",
+      "userPrincipalName": "osamu.nakano@example.com",
+      "department": "人事グループ　",
+      "jobTitle": "グループ長",
+      "employeeId": "L0006",
+      "accountEnabled": true,
+      "companyName": "サンプル物流(株)",
+      "officeLocation": "千葉物流センター",
+      "businessPhones": [
+        "+81 43-5550-9348"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "6cbb434a-7eb4-440c-a1ed-b93b210dddbe",
+      "displayName": "和田 美香",
+      "givenName": "美香",
+      "surname": "和田",
+      "mail": "mika.wada@example.co.jp",
+      "userPrincipalName": "mika.wada@example.co.jp",
+      "department": "新規開拓チーム",
+      "jobTitle": null,
+      "employeeId": "00359",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-6254"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "abb487e3-90be-4a33-bea0-778991ccc2f5",
+      "displayName": "岡田 莉子",
+      "givenName": "莉子",
+      "surname": "岡田",
+      "mail": "riko.okada@example.com",
+      "userPrincipalName": "riko.okada@example.com",
+      "department": "東京配送グループ",
+      "jobTitle": null,
+      "employeeId": "L0060",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル物流",
+      "officeLocation": "千葉物流センター",
+      "businessPhones": [
+        "+81 43-5550-1717"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "ac6c2b13-edad-4cf4-b02a-2fdeef47a4b8",
+      "displayName": "中島 夏美",
+      "givenName": "夏美",
+      "surname": "中島",
+      "mail": "natsumi.nakajima@example.co.jp",
+      "userPrincipalName": "natsumi.nakajima@example.co.jp",
+      "department": "販売分析チーム",
+      "jobTitle": null,
+      "employeeId": "00295",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-1617"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "04ddbf9c-800f-406b-9c4b-cf4923fa7015",
+      "displayName": "酒井 結衣",
+      "givenName": "結衣",
+      "surname": "酒井",
+      "mail": "yui.sakai@example.com",
+      "userPrincipalName": "yui.sakai@example.com",
+      "department": "企画グループ",
+      "jobTitle": null,
+      "employeeId": "L0007",
+      "accountEnabled": true,
+      "companyName": "サンプル物流(株)",
+      "officeLocation": "千葉物流センター",
+      "businessPhones": [
+        "+81 43-5550-7500"
+      ],
+      "mobilePhone": "+81 90-0000-4746"
+    },
+    {
+      "id": "6e6e09cd-aa1a-48f3-aece-b1c940de3638",
+      "displayName": "長谷川 久美子",
+      "givenName": "久美子",
+      "surname": "長谷川",
+      "mail": "kumiko.hasegawa@example.co.jp",
+      "userPrincipalName": "kumiko.hasegawa@example.co.jp",
+      "department": "公共営業チーム",
+      "jobTitle": null,
+      "employeeId": "00119",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-3423"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "d3d307c4-3c93-4ea2-8dd7-13252aad3e0d",
+      "displayName": "山本 優奈",
+      "givenName": "優奈",
+      "surname": "山本",
+      "mail": "yuna.yamamoto@example.co.jp",
+      "userPrincipalName": "yuna.yamamoto@example.co.jp",
+      "department": "企画二課",
+      "jobTitle": null,
+      "employeeId": "00201",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-4699"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "f05d08ec-9c79-4128-b903-3f573dad179c",
+      "displayName": "齊藤 大輔",
+      "givenName": "大輔",
+      "surname": "齊藤",
+      "mail": "daisuke.saito@example.co.jp",
+      "userPrincipalName": "daisuke.saito@example.co.jp",
+      "department": "ヘルプデスクチーム",
+      "jobTitle": null,
+      "employeeId": "00482",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-5640"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "34213dd0-148e-40f9-a643-a47caef8e1e4",
+      "displayName": "佐藤 麻衣",
+      "givenName": "麻衣",
+      "surname": "佐藤",
+      "mail": "mai.sato@example.com",
+      "userPrincipalName": "mai.sato@example.com",
+      "department": "神戸倉庫グループ",
+      "jobTitle": null,
+      "employeeId": "L0027",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル物流",
+      "officeLocation": "大阪物流センター",
+      "businessPhones": [
+        "+81 43-5550-1633"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "9cd402d7-ffaf-4a8f-a892-40041e8f4f3e",
+      "displayName": "西村 勇気",
+      "givenName": "勇気",
+      "surname": "西村",
+      "mail": "yuki.nishimura@example.co.jp",
+      "userPrincipalName": "yuki.nishimura@example.co.jp",
+      "department": "広報課",
+      "jobTitle": "課長",
+      "employeeId": "90",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-5878"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "24a0b54a-4a31-45cb-96e5-f178cef57e16",
+      "displayName": "田中隆",
+      "givenName": "隆",
+      "surname": "田中",
+      "mail": "takashi.tanaka@example.co.jp",
+      "userPrincipalName": "takashi.tanaka@example.co.jp",
+      "department": "労務チーム",
+      "jobTitle": null,
+      "employeeId": "00205",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [],
+      "mobilePhone": "+81 90-0000-4871"
+    },
+    {
+      "id": "56393dda-5e16-451f-a078-deddceb7b569",
+      "displayName": "岡本 浩二",
+      "givenName": "浩二",
+      "surname": "岡本",
+      "mail": "koji.okamoto@example.com",
+      "userPrincipalName": "koji.okamoto@example.com",
+      "department": "販売分析チーム",
+      "jobTitle": null,
+      "employeeId": "L0057",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "名古屋支店",
+      "businessPhones": [
+        "+81 43-5550-2288"
+      ],
+      "mobilePhone": "+81 90-0000-4032"
+    },
+    {
+      "id": "1924691d-b753-49aa-8e0c-0485d7c9432b",
+      "displayName": "酒井彩",
+      "givenName": "彩",
+      "surname": "酒井",
+      "mail": "aya.sakai@example.co.jp",
+      "userPrincipalName": "aya.sakai@example.co.jp",
+      "department": "品質保証課 ",
+      "jobTitle": null,
+      "employeeId": "00342",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [],
+      "mobilePhone": null
+    },
+    {
+      "id": "17d550b1-bcc0-4b97-956d-f2d5d38e0d63",
+      "displayName": "藤井 哲也",
+      "givenName": "哲也",
+      "surname": "藤井",
+      "mail": "tetsuya.fujii@example.com",
+      "userPrincipalName": "tetsuya.fujii@example.com",
+      "department": "大阪配送グループ",
+      "jobTitle": null,
+      "employeeId": "L0022",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル物流",
+      "officeLocation": "大阪物流センター",
+      "businessPhones": [],
+      "mobilePhone": "+81 90-0000-1081"
+    },
+    {
+      "id": "7b5bbc00-1826-4405-893c-392ce3a96ec3",
+      "displayName": "松本 直子",
+      "givenName": "直子",
+      "surname": "松本",
+      "mail": "naoko.matsumoto@example.co.jp",
+      "userPrincipalName": "naoko.matsumoto@example.co.jp",
+      "department": "基盤開発チーム",
+      "jobTitle": null,
+      "employeeId": "00448",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [],
+      "mobilePhone": null
+    },
+    {
+      "id": "e0116403-8225-4d09-b9c7-eee443582155",
+      "displayName": "経理 共有",
+      "givenName": null,
+      "surname": null,
+      "mail": "keiri@example.co.jp",
+      "userPrincipalName": "keiri@example.co.jp",
+      "department": "経理部",
+      "jobTitle": null,
+      "employeeId": null,
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": null,
+      "businessPhones": [],
+      "mobilePhone": null
+    },
+    {
+      "id": "bee53a44-0680-408e-91d2-afeb85385cd9",
+      "displayName": "福田 香織",
+      "givenName": "香織",
+      "surname": "福田",
+      "mail": "kaori.fukuda@example.co.jp",
+      "userPrincipalName": "kaori.fukuda@example.co.jp",
+      "department": "組立チーム",
+      "jobTitle": null,
+      "employeeId": "177",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [],
+      "mobilePhone": null
+    },
+    {
+      "id": "99089f30-56ee-4040-871e-4e3328577f85",
+      "displayName": "西村 千尋",
+      "givenName": "千尋",
+      "surname": "西村",
+      "mail": "chihiro.nishimura@example.co.jp",
+      "userPrincipalName": "chihiro.nishimura@example.co.jp",
+      "department": "品質管理課",
+      "jobTitle": "主任",
+      "employeeId": "00400",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [
+        "+81 3-5550-2682"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "dfd2658a-2504-4233-96e8-a77fbbc84ead",
+      "displayName": "和田修",
+      "givenName": "修",
+      "surname": "和田",
+      "mail": "osamu.wada@example.co.jp",
+      "userPrincipalName": "osamu.wada@example.co.jp",
+      "department": "企画二課",
+      "jobTitle": "主任",
+      "employeeId": "00192",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-3805"
+      ],
+      "mobilePhone": "+81 90-0000-7935"
+    },
+    {
+      "id": "d3f1017f-fd54-46f9-b64c-8d8ff7cfd32e",
+      "displayName": "太田 結衣",
+      "givenName": "結衣",
+      "surname": "太田",
+      "mail": "yui.ota@example.co.jp",
+      "userPrincipalName": "yui.ota@example.co.jp",
+      "department": "品質保証課",
+      "jobTitle": null,
+      "employeeId": "00433",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [
+        "+81 3-5550-5463"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "a4d0adce-94e5-4889-9e5e-715425eb1207",
+      "displayName": "三浦 陽子",
+      "givenName": "陽子",
+      "surname": "三浦",
+      "mail": "yoko.miura@example.co.jp",
+      "userPrincipalName": "yoko.miura@example.co.jp",
+      "department": "採用チーム",
+      "jobTitle": null,
+      "employeeId": "00333",
+      "accountEnabled": false,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-8410"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "4cd11075-9ebe-421e-9c00-da51eafe9b32",
+      "displayName": "中村香織",
+      "givenName": "香織",
+      "surname": "中村",
+      "mail": "kaori.nakamura@example.co.jp",
+      "userPrincipalName": "kaori.nakamura@example.co.jp",
+      "department": "法人営業ﾁｰﾑ",
+      "jobTitle": null,
+      "employeeId": "00484",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-8093"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "9e94a334-62ba-48dd-9aa0-4fd79448d1c2",
+      "displayName": "上田 麻衣",
+      "givenName": "麻衣",
+      "surname": "上田",
+      "mail": "mai.ueda@example.co.jp",
+      "userPrincipalName": "mai.ueda@example.co.jp",
+      "department": "品質管理課",
+      "jobTitle": "課長",
+      "employeeId": "00402",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [
+        "+81 3-5550-4223"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "3846e462-68c9-42af-bec2-b4bb1e1b3df2",
+      "displayName": "金子 玲奈",
+      "givenName": "玲奈",
+      "surname": "金子",
+      "mail": "rena.kaneko@example.com",
+      "userPrincipalName": "rena.kaneko@example.com",
+      "department": "第二倉庫グループ",
+      "jobTitle": null,
+      "employeeId": "L0024",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル物流",
+      "officeLocation": "千葉物流センター",
+      "businessPhones": [
+        "+81 43-5550-2354"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "f68f77ec-f08a-4af5-942d-5ac39a64d851",
+      "displayName": "和田 拓也",
+      "givenName": "拓也",
+      "surname": "和田",
+      "mail": "takuya.wada@example.co.jp",
+      "userPrincipalName": "takuya.wada@example.co.jp",
+      "department": "組立チーム",
+      "jobTitle": null,
+      "employeeId": "00408",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [],
+      "mobilePhone": null
+    },
+    {
+      "id": "97424fed-caa6-48e6-a0bc-68caccd46f2e",
+      "displayName": "長谷川 典子",
+      "givenName": "典子",
+      "surname": "長谷川",
+      "mail": "noriko.hasegawa@example.co.jp",
+      "userPrincipalName": "noriko.hasegawa@example.co.jp",
+      "department": "販売促進課",
+      "jobTitle": null,
+      "employeeId": "00245",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-9910"
+      ],
+      "mobilePhone": "+81 90-0000-2135"
+    },
+    {
+      "id": "6b7f7d09-1d1f-4b60-8f4c-aaa63bdccc5a",
+      "displayName": "宮崎　遥",
+      "givenName": "遥",
+      "surname": "宮崎",
+      "mail": "haruka.miyazaki@example.co.jp",
+      "userPrincipalName": "haruka.miyazaki@example.co.jp",
+      "department": "第四営業課",
+      "jobTitle": "主任",
+      "employeeId": null,
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-5167"
+      ],
+      "mobilePhone": "+81 90-0000-7454"
+    },
+    {
+      "id": "888bf5d1-b4ce-4871-9307-c6f0373b8fc3",
+      "displayName": "玲奈 長谷川",
+      "givenName": "玲奈",
+      "surname": "長谷川",
+      "mail": "rena.hasegawa@example.co.jp",
+      "userPrincipalName": "rena.hasegawa@example.co.jp",
+      "department": "東日本チーム",
+      "jobTitle": null,
+      "employeeId": "00133",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-5841"
+      ],
+      "mobilePhone": "+81 90-0000-9829"
+    },
+    {
+      "id": "64664bb2-c59e-4e47-b751-75fd21276fb9",
+      "displayName": "佐藤千尋",
+      "givenName": "千尋",
+      "surname": "佐藤",
+      "mail": "chihiro.sato@example.co.jp",
+      "userPrincipalName": "chihiro.sato@example.co.jp",
+      "department": "ヘルプデスクチーム",
+      "jobTitle": null,
+      "employeeId": null,
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-6875"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "339914e5-a23b-4b26-924a-7437e8da2cc8",
+      "displayName": "福田 誠",
+      "givenName": "誠",
+      "surname": "福田",
+      "mail": "makoto.fukuda@example.co.jp",
+      "userPrincipalName": "makoto.fukuda@example.co.jp",
+      "department": "インフラ課",
+      "jobTitle": null,
+      "employeeId": "00450",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-7667"
+      ],
+      "mobilePhone": "+81 90-0000-6042"
+    },
+    {
+      "id": "6cf885e2-7e38-4ea7-9a4c-3242b9fd5844",
+      "displayName": "福田 玲奈",
+      "givenName": "玲奈",
+      "surname": "福田",
+      "mail": "rena.fukuda@example.com",
+      "userPrincipalName": "rena.fukuda@example.com",
+      "department": "神戸倉庫ｸﾞﾙｰﾌﾟ",
+      "jobTitle": null,
+      "employeeId": "L0054",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル物流",
+      "officeLocation": "大阪物流センター",
+      "businessPhones": [
+        "+81 43-5550-1199"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "d1e1a69d-e930-4ff3-b970-3625409f2305",
+      "displayName": "採用窓口",
+      "givenName": null,
+      "surname": null,
+      "mail": "saiyo@example.co.jp",
+      "userPrincipalName": "saiyo@example.co.jp",
+      "department": "人事課",
+      "jobTitle": null,
+      "employeeId": null,
+      "accountEnabled": false,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": null,
+      "businessPhones": [],
+      "mobilePhone": null
+    },
+    {
+      "id": "294c1af6-98da-4894-a86b-9c1cea76f3fa",
+      "displayName": "谷口 蓮",
+      "givenName": "蓮",
+      "surname": "谷口",
+      "mail": "ren.taniguchi@example.co.jp",
+      "userPrincipalName": "ren.taniguchi@example.co.jp",
+      "department": "総務課",
+      "jobTitle": null,
+      "employeeId": "00141",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-8258"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "e5f600f7-a109-4e30-a8ef-2e0e46c9fa97",
+      "displayName": "千葉 剛",
+      "givenName": "剛",
+      "surname": "千葉",
+      "mail": "tsuyoshi.chiba@example.co.jp",
+      "userPrincipalName": "tsuyoshi.chiba@example.co.jp",
+      "department": "労務チーム",
+      "jobTitle": null,
+      "employeeId": "00312",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-8302"
+      ],
+      "mobilePhone": "+81 90-0000-4702"
+    },
+    {
+      "id": "16455173-e610-4aa2-a290-07c743da054f",
+      "displayName": "岩崎 健太",
+      "givenName": "健太",
+      "surname": "岩崎",
+      "mail": "kenta.iwasaki@example.co.jp",
+      "userPrincipalName": "kenta.iwasaki@example.co.jp",
+      "department": "西日本ﾁｰﾑ",
+      "jobTitle": null,
+      "employeeId": "00083",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "大阪支社",
+      "businessPhones": [
+        "+81 3-5550-1384"
+      ],
+      "mobilePhone": "+81 90-0000-3775"
+    },
+    {
+      "id": "6358aa8a-d40f-430a-949b-52cb6b8d941e",
+      "displayName": "木村敦",
+      "givenName": "敦",
+      "surname": "木村",
+      "mail": "atsushi.kimura@example.co.jp",
+      "userPrincipalName": "atsushi.kimura@example.co.jp",
+      "department": "品質管理課",
+      "jobTitle": null,
+      "employeeId": "00325",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [
+        "+81 3-5550-5198"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "3d723280-266c-4635-b742-0dc813d50bb1",
+      "displayName": "太田 誠",
+      "givenName": "誠",
+      "surname": "太田",
+      "mail": "makoto.ota@example.co.jp",
+      "userPrincipalName": "makoto.ota@example.co.jp",
+      "department": "品質保証課",
+      "jobTitle": "主任",
+      "employeeId": "00381",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [],
+      "mobilePhone": null
+    },
+    {
+      "id": "bdc89cff-4f2d-4775-88f8-3ea187bf49f9",
+      "displayName": "杉山 真由美",
+      "givenName": "真由美",
+      "surname": "杉山",
+      "mail": "mayumi.sugiyama@example.co.jp",
+      "userPrincipalName": "mayumi.sugiyama@example.co.jp",
+      "department": "製造二課 ",
+      "jobTitle": "主任",
+      "employeeId": "00049",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [],
+      "mobilePhone": null
+    },
+    {
+      "id": "fc77d006-6d62-4552-ba71-c05b3f83bc52",
+      "displayName": "高橋 絵里",
+      "givenName": "絵里",
+      "surname": "高橋",
+      "mail": "eri.takahashi@example.co.jp",
+      "userPrincipalName": "eri.takahashi@example.co.jp",
+      "department": "公共営業チーム",
+      "jobTitle": null,
+      "employeeId": "00075",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-8347"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "0bd4d98e-0dcd-4ee7-8736-c17e431ece62",
+      "displayName": "酒井 和也",
+      "givenName": "和也",
+      "surname": "酒井",
+      "mail": "kazuya.sakai@example.co.jp",
+      "userPrincipalName": "kazuya.sakai@example.co.jp",
+      "department": "商品企画部",
+      "jobTitle": "部長",
+      "employeeId": "00297",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-3829"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "64616e66-36f3-40b3-8255-208c7a8ea42a",
+      "displayName": "遠藤 優奈",
+      "givenName": "優奈",
+      "surname": "遠藤",
+      "mail": "yuna.endo@example.co.jp",
+      "userPrincipalName": "yuna.endo@example.co.jp",
+      "department": "公共営業チーム",
+      "jobTitle": null,
+      "employeeId": "00084",
+      "accountEnabled": false,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-6790"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "81d7c852-90e9-4fae-b5bd-f98de97b98a5",
+      "displayName": "山田 悠斗",
+      "givenName": "悠斗",
+      "surname": "山田",
+      "mail": "yuto.yamada@example.com",
+      "userPrincipalName": "yuto.yamada@example.com",
+      "department": "総務経理グループ",
+      "jobTitle": "グループ長",
+      "employeeId": "L0045",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル物流",
+      "officeLocation": "千葉物流センター",
+      "businessPhones": [
+        "+81 43-5550-3070"
+      ],
+      "mobilePhone": "+81 90-0000-7192"
+    },
+    {
+      "id": "12d50203-51a8-493e-aba3-7cd4de77a4b8",
+      "displayName": "Tetsuya Aoki",
+      "givenName": "Tetsuya",
+      "surname": "Aoki",
+      "mail": "tetsuya.aoki@example.co.jp",
+      "userPrincipalName": "tetsuya.aoki@example.co.jp",
+      "department": "総務課",
+      "jobTitle": null,
+      "employeeId": "00036",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-3248"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "bd66630a-0c2e-4d01-b6bc-98907be7d7a0",
+      "displayName": "和田 大輔",
+      "givenName": "大輔",
+      "surname": "和田",
+      "mail": "daisuke.wada@example.co.jp",
+      "userPrincipalName": "daisuke.wada@example.co.jp",
+      "department": "西日本チーム",
+      "jobTitle": null,
+      "employeeId": null,
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-9483"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "80108586-a6a8-4983-aad5-742c250b71a0",
+      "displayName": "藤井 美咲",
+      "givenName": "美咲",
+      "surname": "藤井",
+      "mail": "misaki.fujii@example.co.jp",
+      "userPrincipalName": "misaki.fujii@example.co.jp",
+      "department": "法務室",
+      "jobTitle": null,
+      "employeeId": "00116",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-1611"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "57ab8405-05c6-4475-b2f9-2d997ae83abf",
+      "displayName": "三浦 久美子",
+      "givenName": "久美子",
+      "surname": "三浦",
+      "mail": "kumiko.miura@example.co.jp",
+      "userPrincipalName": "kumiko.miura@example.co.jp",
+      "department": "公共営業チーム",
+      "jobTitle": null,
+      "employeeId": "00068",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "福岡支店",
+      "businessPhones": [
+        "+81 3-5550-9446"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "532df85c-1a0f-4557-a48f-9d8f0ff79d8b",
+      "displayName": "藤田 康平",
+      "givenName": "康平",
+      "surname": "藤田",
+      "mail": "kohei.fujita@example.co.jp",
+      "userPrincipalName": "kohei.fujita@example.co.jp",
+      "department": "法人営業チーム",
+      "jobTitle": null,
+      "employeeId": "153",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-2820"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "18b3c327-4c5c-4409-9869-e90be4bd9135",
+      "displayName": "橋本 美咲",
+      "givenName": "美咲",
+      "surname": "橋本",
+      "mail": "misaki.hashimoto@example.com",
+      "userPrincipalName": "misaki.hashimoto@example.com",
+      "department": "西日本物流部　",
+      "jobTitle": "部長",
+      "employeeId": null,
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル物流",
+      "officeLocation": "大阪物流センター",
+      "businessPhones": [
+        "+81 43-5550-9114"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "981fa117-15a2-4e13-b1b1-671f7eeacaed",
+      "displayName": "岡田 菜々子",
+      "givenName": "菜々子",
+      "surname": "岡田",
+      "mail": "nanako.okada@example.co.jp",
+      "userPrincipalName": "nanako.okada@example.co.jp",
+      "department": "販売分析ﾁｰﾑ",
+      "jobTitle": null,
+      "employeeId": null,
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-1248"
+      ],
+      "mobilePhone": "+81 90-0000-8978"
+    },
+    {
+      "id": "d5a446b7-31d8-4928-a22d-723c57e19431",
+      "displayName": "西村 裕介",
+      "givenName": "裕介",
+      "surname": "西村",
+      "mail": "yusuke.nishimura@example.co.jp",
+      "userPrincipalName": "yusuke.nishimura@example.co.jp",
+      "department": "公共営業チーム",
+      "jobTitle": null,
+      "employeeId": "00105",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "名古屋支店",
+      "businessPhones": [
+        "+81 3-5550-1634"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "7f51efe8-3dc8-41bb-906d-a6f0977259ee",
+      "displayName": "福田 俊介",
+      "givenName": "俊介",
+      "surname": "福田",
+      "mail": "shunsuke.fukuda@example.com",
+      "userPrincipalName": "shunsuke.fukuda@example.com",
+      "department": "大阪配送グループ",
+      "jobTitle": "グループ長",
+      "employeeId": "L0031",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル物流",
+      "officeLocation": "大阪物流センター",
+      "businessPhones": [
+        "+81 43-5550-6686"
+      ],
+      "mobilePhone": "+81 90-0000-1202"
+    },
+    {
+      "id": "2352dca1-5a33-4841-bd72-1a91ce842752",
+      "displayName": "西村 絵里",
+      "givenName": "絵里",
+      "surname": "西村",
+      "mail": "eri.nishimura@example.co.jp",
+      "userPrincipalName": "eri.nishimura@example.co.jp",
+      "department": "基盤開発チーム",
+      "jobTitle": null,
+      "employeeId": "00338",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [
+        "+81 3-5550-3139"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "9592ab36-2364-4a77-b458-305b1d62c451",
+      "displayName": "横山 由美",
+      "givenName": "由美",
+      "surname": "横山",
+      "mail": "yumi.yokoyama@example.co.jp",
+      "userPrincipalName": "yumi.yokoyama@example.co.jp",
+      "department": "品質保証課",
+      "jobTitle": null,
+      "employeeId": "00259",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "横浜工場",
+      "businessPhones": [
+        "+81 3-5550-6479"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "e7087daf-7b96-4b46-ae3f-39145dd3c929",
+      "displayName": "上田 学",
+      "givenName": "学",
+      "surname": "上田",
+      "mail": "manabu.ueda@example.co.jp",
+      "userPrincipalName": "manabu.ueda@example.co.jp",
+      "department": "新規開拓ﾁｰﾑ",
+      "jobTitle": null,
+      "employeeId": "376",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [
+        "+81 3-5550-9040"
+      ],
+      "mobilePhone": null
+    },
+    {
+      "id": "e794cded-682e-4007-8cf9-c9c88194aa92",
+      "displayName": "井上 稔",
+      "givenName": "稔",
+      "surname": "井上",
+      "mail": "minoru.inoue@example.co.jp",
+      "userPrincipalName": "minoru.inoue@example.co.jp",
+      "department": "企画二課",
+      "jobTitle": null,
+      "employeeId": "00452",
+      "accountEnabled": true,
+      "companyName": "株式会社サンプル商事",
+      "officeLocation": "東京本社",
+      "businessPhones": [],
+      "mobilePhone": "+81 90-0000-6564"
+    }
+  ]
+}

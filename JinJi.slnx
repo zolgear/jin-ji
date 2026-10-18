@@ -1,0 +1,19 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/JinJi.Domain/JinJi.Domain.csproj" />
+    <Project Path="src/JinJi.Policy/JinJi.Policy.csproj" />
+    <Project Path="src/JinJi.Application/JinJi.Application.csproj" />
+    <Project Path="src/JinJi.Infrastructure/JinJi.Infrastructure.csproj" />
+    <Project Path="src/JinJi.Connectors/JinJi.Connectors.csproj" />
+    <Project Path="src/JinJi.Ingest/JinJi.Ingest.csproj" />
+    <Project Path="src/JinJi.Llm/JinJi.Llm.csproj" />
+    <Project Path="src/JinJi.Sync/JinJi.Sync.csproj" />
+    <Project Path="src/JinJi.Api/JinJi.Api.csproj" />
+    <Project Path="src/JinJi.Mcp/JinJi.Mcp.csproj" />
+    <Project Path="src/JinJi.Worker/JinJi.Worker.csproj" />
+    <Project Path="src/JinJi.Host/JinJi.Host.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/JinJi.IntegrationTests/JinJi.IntegrationTests.csproj" />
+  </Folder>
+</Solution>

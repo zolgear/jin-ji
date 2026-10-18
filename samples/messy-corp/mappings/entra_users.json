@@ -1,0 +1,27 @@
+{
+  "$comment": "entra_users.json（Graph GET /users 応答）。外部 ID の対応付けと補完提案だけを作り、人の属性は取り込まない。全件の取込なので、アカウントの無い在籍者も検出する。",
+  "name": "messy-corp-entra",
+  "target": "directory_users",
+  "source": { "kind": "graph_json" },
+  "sourceSystem": "entra_id",
+  "fullSnapshot": true,
+  "legalEntityAliases": {
+    "P": ["株式会社サンプル商事", "(株)サンプル商事", "サンプル商事"],
+    "L": ["株式会社サンプル物流", "(株)サンプル物流", "サンプル物流"]
+  },
+  "employeeNumber": { "padLength": 5, "prefixedPadLength": 4 },
+  "fields": {
+    "external_id": ["id"],
+    "employee_number": ["employeeId"],
+    "work_email": ["mail", "userPrincipalName"],
+    "family_name": ["surname"],
+    "given_name": ["givenName"],
+    "display_name": ["displayName"],
+    "org_name": ["department"],
+    "position_title": ["jobTitle"],
+    "legal_entity_code": ["companyName"],
+    "account_enabled": ["accountEnabled"],
+    "site_name": ["officeLocation"]
+  },
+  "ignore": ["businessPhones", "mobilePhone"]
+}

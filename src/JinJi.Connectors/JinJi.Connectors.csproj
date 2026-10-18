@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- 取込コネクタ（CSV / Excel / Entra ID / 人事パッケージ）。ワーカーだけが参照する -->
+
+  <ItemGroup>
+    <!-- xlsx の読み込み。API / MCP には入れない（ADR-0001・ADR-0003。ProjectReferenceTests で確かめる） -->
+    <PackageReference Include="ClosedXML" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../JinJi.Ingest/JinJi.Ingest.csproj" />
+    <ProjectReference Include="../JinJi.Domain/JinJi.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

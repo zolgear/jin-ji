@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    LLM の呼び出し（OpenAI 公式 .NET SDK。接続先は OpenAI / Azure OpenAI / LiteLLM などの OpenAI 互換）。ワーカー（取込）だけが参照する。
+    API / MCP からは推移的にも参照しない（ADR-0005。ProjectReferenceTests で確かめる）。
+  -->
+
+  <ItemGroup>
+    <!-- 理由と推移的依存は docs/adr/0005-llm-dependency.md -->
+    <PackageReference Include="OpenAI" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../JinJi.Ingest/JinJi.Ingest.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,19 @@
+# pnpm の設定（ADR-0001 のサプライチェーン方針）。web/ は単一パッケージで、ワークスペースの packages は持たない。
+
+# 公開から 7 日（10080 分）未満の版は解決しない（乗っ取りによる悪性版は数時間〜数日で取り下げられることが多い）
+minimumReleaseAge: 10080
+
+# 以前の版より信頼の根拠（provenance・信頼された公開者）が弱い版を拒否する
+trustPolicy: no-downgrade
+
+# 依存のインストール時の lifecycle script（preinstall / install / postinstall）は既定で実行しない。
+# 実行を許すパッケージだけをここに列挙する（今は無し）。
+# ネイティブバイナリ（rolldown・lightningcss・@tailwindcss/oxide・typescript 7・oxlint）は
+# いずれも OS / CPU ごとの optionalDependencies として配られ、install script を必要としない。
+onlyBuiltDependencies: []
+
+# 許可していないパッケージがビルド（lifecycle script）を要求したらインストールを失敗させる（黙って無視しない）
+strictDepBuilds: true
+
+# Git や tarball の URL など、レジストリ以外から推移的依存を取らない
+blockExoticSubdeps: true

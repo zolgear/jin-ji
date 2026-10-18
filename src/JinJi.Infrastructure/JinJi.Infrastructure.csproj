@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- DB アクセス（Npgsql）・SQL マイグレーション。Host（合成ルート）とテストだけが参照する -->
+
+  <ItemGroup>
+    <PackageReference Include="Npgsql" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../JinJi.Application/JinJi.Application.csproj" />
+    <ProjectReference Include="../JinJi.Domain/JinJi.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- マイグレーションの SQL はアセンブリに埋め込む。実行環境でファイルの取り違えが起きないようにするため -->
+    <EmbeddedResource Include="../../db/migrations/*.sql"
+                      LogicalName="JinJi.Migrations.%(Filename)%(Extension)"
+                      Link="Migrations/Scripts/%(Filename)%(Extension)" />
+  </ItemGroup>
+
+</Project>

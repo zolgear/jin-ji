@@ -1,0 +1,2764 @@
+{
+  "$comment": "項目カタログ。DB の全テーブル・全列を ADR-0002 の分類に登録する。列を追加・変更したら必ずここも更新すること（tests/JinJi.IntegrationTests の FieldCatalogTests が DB と突き合わせる）。分類のうち「監査」「システム管理用」は ADR-0002 の表に無い、jin-ji の運用上の列のための分類。",
+  "categories": {
+    "識別": "jin-ji ID、社員番号、外部 ID の対応",
+    "氏名": "業務上の氏名、フリガナ、ローマ字表記、表示名、検索用の正規化表記",
+    "所属": "法人、組織、主務/兼務、役職、出向・出向受入の区別",
+    "在籍": "入社年月日、退職年月日、在籍状態、アカウント状態（一時停止）",
+    "業務連絡先": "社用メール、内線、社用携帯（自由記述の勤務地は 0017 で拠点に置き換え、廃止予定）",
+    "拠点": "拠点（コード・名称・種別・所在地〔事業所の住所。会社の情報〕・法人・有効期間）、組織の拠点、人の拠点の上書き、リモートワークの有無（有無だけ。理由・頻度・シフトは持たない）",
+    "その他": "雇用区分、職種、顔写真",
+    "組織": "組織名・略称・コード・段（階層の定義）・上位組織・組織長・有効期間",
+    "発令": "異動・役職の任免・入退社・兼務・出向・一時停止の発令",
+    "監査": "監査ログ（誰が・何を・どの経路で）。ADR-0002 の表には無い追加の分類",
+    "認可": "公開範囲のポリシーと、その起案・承認の記録。ADR-0002 の表には無い追加の分類",
+    "システム管理用": "行 ID・二つの時間軸・訂正の系譜・適用履歴など、業務情報を含まない管理用の列。ADR-0002 の表には無い追加の分類",
+    "取込作業領域": "取り込みの作業領域（取込単位・staging・正規化結果・名寄せ候補・変更提案・修正依頼）。公開されない作業領域（§7.1）で、閲覧は hr_admin とバッチの実行者だけ。staging の値は許可リストの項目に限る。ADR-0002 の表には無い追加の分類",
+    "同期作業領域": "Entra ID などへの同期計画・承認・実行結果（作業領域）。値は全社公開レベルの項目（氏名・部署・役職・会社名・勤務地・社員番号・上長・アカウントの有効/無効）だけで、閲覧は hr_admin だけ。ADR-0002 の表には無い追加の分類",
+    "認証": "人のログイン（ローカルアカウント・パスキー・外部 IdP の主体との紐付け・UI のセッション・Data Protection の鍵）と、API・MCP 向けのトークン発行（クライアント・鍵・認可コード・参照トークン・同意）。資格情報・トークンはハッシュか暗号化した値だけを持つ。ADR-0002 の表には無い追加の分類（ADR-0004）",
+    "配信": "社内システムへの Webhook（変更の通知）の登録・署名の鍵（暗号化した値）・送信の待ち行列と記録。本文は種別と ID だけで、氏名などの値は持たない（受け手は自分のトークンで取り直す）。閲覧は jin-ji 自身と hr_admin の人だけ。ADR-0002 の表には無い追加の分類"
+  },
+  "tables": {
+    "legal_entity": {
+      "description": "法人",
+      "columns": {
+        "id": {
+          "category": "識別",
+          "description": "法人 ID（UUIDv7）"
+        },
+        "code": {
+          "category": "所属",
+          "description": "法人コード"
+        },
+        "name": {
+          "category": "所属",
+          "description": "法人名"
+        }
+      }
+    },
+    "org_unit": {
+      "description": "組織の不変 ID",
+      "columns": {
+        "id": {
+          "category": "識別",
+          "description": "組織 ID（UUIDv7）"
+        },
+        "legal_entity_id": {
+          "category": "組織",
+          "description": "組織が属する法人"
+        }
+      }
+    },
+    "person": {
+      "description": "人の不変 ID",
+      "columns": {
+        "id": {
+          "category": "識別",
+          "description": "jin-ji ID（UUIDv7）"
+        },
+        "legal_entity_id": {
+          "category": "識別",
+          "description": "社員番号を採番した法人"
+        },
+        "employee_number": {
+          "category": "識別",
+          "description": "社員番号"
+        }
+      }
+    },
+    "org_unit_version": {
+      "description": "組織の版",
+      "columns": {
+        "id": {
+          "category": "システム管理用",
+          "description": "版の行 ID（UUIDv7）"
+        },
+        "org_unit_id": {
+          "category": "組織",
+          "description": "対象の組織"
+        },
+        "legal_entity_id": {
+          "category": "組織",
+          "description": "組織が属する法人（org_unit と同じ値。組織コードの一意性の検査に使う）"
+        },
+        "code": {
+          "category": "組織",
+          "description": "組織コード"
+        },
+        "name": {
+          "category": "組織",
+          "description": "組織名"
+        },
+        "short_name": {
+          "category": "組織",
+          "description": "組織の略称"
+        },
+        "level_key": {
+          "category": "組織",
+          "description": "段のキー（法人に効く段の定義で解決する。NULL は段を持たない組織）"
+        },
+        "parent_org_unit_id": {
+          "category": "組織",
+          "description": "上位組織"
+        },
+        "head_person_id": {
+          "category": "組織",
+          "description": "組織長"
+        },
+        "path": {
+          "category": "組織",
+          "description": "最上位からの組織パス（ltree）"
+        },
+        "valid_period": {
+          "category": "システム管理用",
+          "description": "有効時間（事実として有効な期間）"
+        },
+        "recorded_period": {
+          "category": "システム管理用",
+          "description": "記録時間（jin-ji がこの内容を記録していた期間）"
+        },
+        "site_id": {
+          "category": "拠点",
+          "description": "組織の拠点（NULL なら上位組織の拠点を使う）"
+        }
+      }
+    },
+    "person_version": {
+      "description": "人の属性の版",
+      "columns": {
+        "id": {
+          "category": "システム管理用",
+          "description": "版の行 ID（UUIDv7）"
+        },
+        "person_id": {
+          "category": "識別",
+          "description": "対象の人"
+        },
+        "family_name": {
+          "category": "氏名",
+          "description": "業務上の氏名（姓）。通称・旧姓使用を含む"
+        },
+        "given_name": {
+          "category": "氏名",
+          "description": "業務上の氏名（名）"
+        },
+        "family_name_kana": {
+          "category": "氏名",
+          "description": "フリガナ（姓）"
+        },
+        "given_name_kana": {
+          "category": "氏名",
+          "description": "フリガナ（名）"
+        },
+        "family_name_latin": {
+          "category": "氏名",
+          "description": "ローマ字表記（姓）"
+        },
+        "given_name_latin": {
+          "category": "氏名",
+          "description": "ローマ字表記（名）"
+        },
+        "display_name": {
+          "category": "氏名",
+          "description": "表示名"
+        },
+        "search_name": {
+          "category": "氏名",
+          "description": "検索用の正規化表記（異体字・全半角を正規化した氏名）"
+        },
+        "search_name_kana": {
+          "category": "氏名",
+          "description": "検索用の正規化表記（フリガナ）"
+        },
+        "work_email": {
+          "category": "業務連絡先",
+          "description": "社用メール"
+        },
+        "extension_number": {
+          "category": "業務連絡先",
+          "description": "内線番号"
+        },
+        "work_mobile_phone": {
+          "category": "業務連絡先",
+          "description": "社用携帯"
+        },
+        "work_location": {
+          "category": "拠点",
+          "description": "廃止予定（0017）。自由記述の勤務地。拠点に置き換え、アプリは読み書きしない（勤務地の照合の入力と過去の記録としてだけ残す）"
+        },
+        "employment_type": {
+          "category": "その他",
+          "description": "雇用区分（正社員・契約・嘱託・派遣・出向受入など）"
+        },
+        "job_type": {
+          "category": "その他",
+          "description": "職種"
+        },
+        "hire_date": {
+          "category": "在籍",
+          "description": "入社年月日"
+        },
+        "termination_date": {
+          "category": "在籍",
+          "description": "退職年月日"
+        },
+        "valid_period": {
+          "category": "システム管理用",
+          "description": "有効時間（事実として有効な期間）"
+        },
+        "recorded_period": {
+          "category": "システム管理用",
+          "description": "記録時間（jin-ji がこの内容を記録していた期間）"
+        },
+        "site_id": {
+          "category": "拠点",
+          "description": "人の拠点の上書き（主務の組織の拠点と異なる場合だけ。NULL なら主務の組織の拠点）"
+        },
+        "remote_work": {
+          "category": "拠点",
+          "description": "リモートワークの対象か（有無だけ）"
+        }
+      }
+    },
+    "site": {
+      "description": "拠点の不変 ID",
+      "columns": {
+        "id": {
+          "category": "識別",
+          "description": "拠点 ID（UUIDv7）"
+        },
+        "legal_entity_id": {
+          "category": "拠点",
+          "description": "拠点が属する法人"
+        }
+      }
+    },
+    "site_version": {
+      "description": "拠点の版",
+      "columns": {
+        "id": {
+          "category": "システム管理用",
+          "description": "版の行 ID（UUIDv7）"
+        },
+        "site_id": {
+          "category": "拠点",
+          "description": "対象の拠点"
+        },
+        "legal_entity_id": {
+          "category": "拠点",
+          "description": "拠点が属する法人（site と同じ値。拠点コードの一意性の検査に使う）"
+        },
+        "code": {
+          "category": "拠点",
+          "description": "拠点コード"
+        },
+        "name": {
+          "category": "拠点",
+          "description": "拠点名"
+        },
+        "site_type": {
+          "category": "拠点",
+          "description": "拠点の種別（本社・支社/支店・営業所・工場・研究所・物流拠点・店舗・その他）"
+        },
+        "prefecture_code": {
+          "category": "拠点",
+          "description": "所在の都道府県のコード（JIS X 0401。国外は NULL）"
+        },
+        "location": {
+          "category": "拠点",
+          "description": "所在地（都道府県より後の部分。事業所の住所 = 会社の情報で、個人の住所ではない）"
+        },
+        "valid_period": {
+          "category": "システム管理用",
+          "description": "有効時間（拠点が開設されている期間）"
+        },
+        "recorded_period": {
+          "category": "システム管理用",
+          "description": "記録時間（jin-ji がこの内容を記録していた期間）"
+        }
+      }
+    },
+    "personnel_action": {
+      "description": "発令",
+      "columns": {
+        "id": {
+          "category": "システム管理用",
+          "description": "発令の行 ID（UUIDv7）"
+        },
+        "person_id": {
+          "category": "発令",
+          "description": "発令の対象者"
+        },
+        "action_type": {
+          "category": "発令",
+          "description": "発令の種類（異動・役職の任免・入退社・兼務・出向・一時停止）"
+        },
+        "effective_date": {
+          "category": "発令",
+          "description": "発令日（効力発生日）。発令の有効時間"
+        },
+        "org_unit_id": {
+          "category": "発令",
+          "description": "発令先の組織"
+        },
+        "assignment_type": {
+          "category": "発令",
+          "description": "主務/兼務の別"
+        },
+        "position_title": {
+          "category": "発令",
+          "description": "発令された役職"
+        },
+        "document_number": {
+          "category": "発令",
+          "description": "辞令番号"
+        },
+        "supersedes_id": {
+          "category": "システム管理用",
+          "description": "この行が訂正した元の行"
+        },
+        "recorded_period": {
+          "category": "システム管理用",
+          "description": "記録時間（jin-ji がこの内容を記録していた期間）"
+        }
+      }
+    },
+    "assignment": {
+      "description": "所属・役職",
+      "columns": {
+        "id": {
+          "category": "システム管理用",
+          "description": "所属の行 ID（UUIDv7）"
+        },
+        "person_id": {
+          "category": "所属",
+          "description": "所属する人"
+        },
+        "org_unit_id": {
+          "category": "所属",
+          "description": "所属先の組織"
+        },
+        "assignment_type": {
+          "category": "所属",
+          "description": "主務/兼務の別"
+        },
+        "position_title": {
+          "category": "所属",
+          "description": "役職"
+        },
+        "secondment_type": {
+          "category": "所属",
+          "description": "出向の区別（なし・出向・出向受入）"
+        },
+        "personnel_action_id": {
+          "category": "所属",
+          "description": "導出元の発令"
+        },
+        "supersedes_id": {
+          "category": "システム管理用",
+          "description": "この行が訂正した元の行"
+        },
+        "valid_period": {
+          "category": "システム管理用",
+          "description": "有効時間（事実として有効な期間）"
+        },
+        "recorded_period": {
+          "category": "システム管理用",
+          "description": "記録時間（jin-ji がこの内容を記録していた期間）"
+        }
+      }
+    },
+    "account_suspension": {
+      "description": "アカウントの一時停止（理由は持たない）",
+      "columns": {
+        "id": {
+          "category": "システム管理用",
+          "description": "一時停止の行 ID（UUIDv7）"
+        },
+        "person_id": {
+          "category": "在籍",
+          "description": "一時停止の対象者"
+        },
+        "personnel_action_id": {
+          "category": "在籍",
+          "description": "根拠の発令"
+        },
+        "supersedes_id": {
+          "category": "システム管理用",
+          "description": "この行が訂正した元の行"
+        },
+        "valid_period": {
+          "category": "在籍",
+          "description": "一時停止の期間（開始日〜終了予定日）"
+        },
+        "recorded_period": {
+          "category": "システム管理用",
+          "description": "記録時間（jin-ji がこの内容を記録していた期間）"
+        }
+      }
+    },
+    "external_identity": {
+      "description": "外部 ID の対応",
+      "columns": {
+        "id": {
+          "category": "システム管理用",
+          "description": "対応の行 ID（UUIDv7）"
+        },
+        "person_id": {
+          "category": "識別",
+          "description": "対応する jin-ji の人"
+        },
+        "source_system": {
+          "category": "識別",
+          "description": "外部システムの識別子（人事パッケージ、Entra ID 等）"
+        },
+        "external_id": {
+          "category": "識別",
+          "description": "外部システム上の ID"
+        },
+        "recorded_at": {
+          "category": "システム管理用",
+          "description": "対応を記録した日時"
+        }
+      }
+    },
+    "audit_event": {
+      "description": "監査ログ（追記専用）",
+      "columns": {
+        "id": {
+          "category": "監査",
+          "description": "イベント ID（UUIDv7）"
+        },
+        "occurred_at": {
+          "category": "監査",
+          "description": "発生日時"
+        },
+        "actor_type": {
+          "category": "監査",
+          "description": "操作者の種別（人・サービス・AI エージェント・システム）"
+        },
+        "actor_person_id": {
+          "category": "監査",
+          "description": "操作した人"
+        },
+        "actor_client_id": {
+          "category": "監査",
+          "description": "操作したクライアント（社内システム・AI エージェント）"
+        },
+        "on_behalf_of_person_id": {
+          "category": "監査",
+          "description": "委任元のユーザー"
+        },
+        "channel": {
+          "category": "監査",
+          "description": "経路（UI・API・MCP・コネクタ・ワーカー・CLI）"
+        },
+        "action": {
+          "category": "監査",
+          "description": "操作の種類"
+        },
+        "target_type": {
+          "category": "監査",
+          "description": "対象の種類"
+        },
+        "target_id": {
+          "category": "監査",
+          "description": "対象の ID"
+        },
+        "subject_person_ids": {
+          "category": "監査",
+          "description": "参照・変更・配信の対象になった人の ID の集合"
+        },
+        "outcome": {
+          "category": "監査",
+          "description": "結果（成功・拒否・失敗）"
+        },
+        "request_id": {
+          "category": "監査",
+          "description": "リクエスト ID"
+        },
+        "actor_account_id": {
+          "category": "監査",
+          "description": "操作者のローカルアカウント（緊急用の管理者アカウントの操作・ローカルアカウントのログイン）"
+        }
+      }
+    },
+    "org_level_scheme": {
+      "description": "組織の階層の定義（段の集合）",
+      "columns": {
+        "id": {
+          "category": "システム管理用",
+          "description": "定義 ID（UUIDv7。初期の定義はマイグレーションで生成）"
+        },
+        "legal_entity_id": {
+          "category": "組織",
+          "description": "定義の対象の法人（NULL はグループ共通の既定）"
+        },
+        "status": {
+          "category": "認可",
+          "description": "状態（起案中・承認済み・却下・置き換え済み）"
+        },
+        "seeded": {
+          "category": "システム管理用",
+          "description": "マイグレーションで作った初期の定義か"
+        },
+        "proposed_by_person_id": {
+          "category": "認可",
+          "description": "起案者（AI エージェントの起案は委任元ユーザー）"
+        },
+        "proposed_via_client_id": {
+          "category": "認可",
+          "description": "起案に使われたクライアント（AI エージェント等）"
+        },
+        "proposed_at": {
+          "category": "認可",
+          "description": "起案日時"
+        },
+        "decided_by_person_id": {
+          "category": "認可",
+          "description": "承認・却下した人（起案者とは別人）"
+        },
+        "decided_at": {
+          "category": "認可",
+          "description": "承認・却下の日時"
+        },
+        "superseded_by_scheme_id": {
+          "category": "認可",
+          "description": "この定義を置き換えた定義"
+        },
+        "superseded_at": {
+          "category": "認可",
+          "description": "置き換えられた日時"
+        }
+      }
+    },
+    "org_level": {
+      "description": "組織の階層の段",
+      "columns": {
+        "id": {
+          "category": "システム管理用",
+          "description": "段の行 ID（UUIDv7）"
+        },
+        "scheme_id": {
+          "category": "組織",
+          "description": "段が属する定義"
+        },
+        "level_key": {
+          "category": "組織",
+          "description": "段のキー（ポリシーの same_level から参照する安定 ID）"
+        },
+        "name": {
+          "category": "組織",
+          "description": "段の表示名（例: 事業部・チーム）"
+        },
+        "rank": {
+          "category": "組織",
+          "description": "順位（上から 1, 2, ...）"
+        }
+      }
+    },
+    "policy_rule": {
+      "description": "公開範囲のポリシーの規則",
+      "columns": {
+        "id": {
+          "category": "認可",
+          "description": "規則 ID（UUIDv7）"
+        },
+        "target_kind": {
+          "category": "認可",
+          "description": "適用対象の種類（全員・組織単位・個人単位の例外）"
+        },
+        "org_unit_id": {
+          "category": "認可",
+          "description": "組織単位の規則の対象組織"
+        },
+        "include_descendants": {
+          "category": "認可",
+          "description": "組織単位の規則を配下の組織にも適用するか"
+        },
+        "person_id": {
+          "category": "認可",
+          "description": "個人単位の例外の対象者（人事管理者が起案し承認を経て設定する。対象者本人は起案・承認・廃止に関われない）"
+        },
+        "fields": {
+          "category": "認可",
+          "description": "対象の項目名（* は全項目）"
+        },
+        "allow_scope": {
+          "category": "認可",
+          "description": "公開範囲（関係スコープの種類。same_level は allow_level_key の段）"
+        },
+        "allow_level_key": {
+          "category": "認可",
+          "description": "same_level（同じ〈段〉内）の段のキー"
+        },
+        "status": {
+          "category": "認可",
+          "description": "状態（起案中・承認済み・却下・廃止）"
+        },
+        "proposed_by_person_id": {
+          "category": "認可",
+          "description": "起案者（AI エージェントの起案は委任元ユーザー）"
+        },
+        "proposed_via_client_id": {
+          "category": "認可",
+          "description": "起案に使われたクライアント（AI エージェント等）"
+        },
+        "proposed_at": {
+          "category": "認可",
+          "description": "起案日時"
+        },
+        "decided_by_person_id": {
+          "category": "認可",
+          "description": "承認・却下した人（起案者とは別人）"
+        },
+        "decided_at": {
+          "category": "認可",
+          "description": "承認・却下の日時"
+        },
+        "retired_by_person_id": {
+          "category": "認可",
+          "description": "廃止を承認した人（廃止の起案者とは別人）"
+        },
+        "retired_at": {
+          "category": "認可",
+          "description": "廃止の日時（廃止を承認した日時）"
+        },
+        "retirement_proposed_by_person_id": {
+          "category": "認可",
+          "description": "廃止の起案者（AI エージェントの起案は委任元ユーザー）。廃止が承認されるまで規則は有効"
+        },
+        "retirement_proposed_via_client_id": {
+          "category": "認可",
+          "description": "廃止の起案に使われたクライアント（AI エージェント等）"
+        },
+        "retirement_proposed_at": {
+          "category": "認可",
+          "description": "廃止の起案日時"
+        }
+      }
+    },
+    "schema_migration": {
+      "description": "マイグレーションの適用履歴",
+      "columns": {
+        "version": {
+          "category": "システム管理用",
+          "description": "版番号"
+        },
+        "file_name": {
+          "category": "システム管理用",
+          "description": "ファイル名"
+        },
+        "checksum": {
+          "category": "システム管理用",
+          "description": "SQL の SHA-256"
+        },
+        "applied_at": {
+          "category": "システム管理用",
+          "description": "適用日時"
+        },
+        "applied_by": {
+          "category": "システム管理用",
+          "description": "適用した DB ロール"
+        }
+      }
+    },
+    "import_batch": {
+      "description": "取込単位（作業領域）",
+      "columns": {
+        "id": {
+          "category": "システム管理用",
+          "description": "取込単位の ID（UUIDv7）"
+        },
+        "source_kind": {
+          "category": "取込作業領域",
+          "description": "取込元の種類（csv / xlsx）"
+        },
+        "target_kind": {
+          "category": "取込作業領域",
+          "description": "取り込む対象（people 人 / org_units 組織）"
+        },
+        "file_name": {
+          "category": "取込作業領域",
+          "description": "取込元のファイル名"
+        },
+        "file_sha256": {
+          "category": "取込作業領域",
+          "description": "取込元のファイルの SHA-256"
+        },
+        "mapping_name": {
+          "category": "取込作業領域",
+          "description": "使った項目マッピングの名前"
+        },
+        "mapping_sha256": {
+          "category": "取込作業領域",
+          "description": "使った項目マッピング（JSON）の SHA-256"
+        },
+        "legal_entity_id": {
+          "category": "取込作業領域",
+          "description": "取込の既定の法人"
+        },
+        "effective_date": {
+          "category": "取込作業領域",
+          "description": "変更の有効日（指定なしなら訂正として扱う）"
+        },
+        "executed_by_person_id": {
+          "category": "取込作業領域",
+          "description": "取込の実行者（AI エージェント・ワーカーは委任元・指定された人）。変更提案の起案者になる"
+        },
+        "executed_via_actor": {
+          "category": "取込作業領域",
+          "description": "実行した操作者の種別（user / agent / system）"
+        },
+        "executed_via_client_id": {
+          "category": "取込作業領域",
+          "description": "実行に使われたクライアント（AI エージェント等）"
+        },
+        "status": {
+          "category": "取込作業領域",
+          "description": "状態（running / completed / failed）"
+        },
+        "row_count": {
+          "category": "取込作業領域",
+          "description": "取込元の行数"
+        },
+        "dropped_columns": {
+          "category": "取込作業領域",
+          "description": "staging に保存する前に捨てた列の名前・値のあった件数・理由（値は持たない）"
+        },
+        "started_at": {
+          "category": "取込作業領域",
+          "description": "開始日時"
+        },
+        "finished_at": {
+          "category": "取込作業領域",
+          "description": "終了日時"
+        }
+      }
+    },
+    "staging_row": {
+      "description": "取込元の行（作業領域。許可リストの項目だけ）",
+      "columns": {
+        "id": {
+          "category": "システム管理用",
+          "description": "行 ID（UUIDv7）"
+        },
+        "import_batch_id": {
+          "category": "取込作業領域",
+          "description": "取込単位"
+        },
+        "source_row_number": {
+          "category": "取込作業領域",
+          "description": "取込元の行番号（根拠として提案・修正依頼から参照する）"
+        },
+        "row_sha256": {
+          "category": "取込作業領域",
+          "description": "元の行のハッシュ（保持する列の値だけから作る）"
+        },
+        "data": {
+          "category": "取込作業領域",
+          "description": "許可リストを通った取込項目（キーは jinji_ingest_field_keys()、値は文字列）"
+        },
+        "created_at": {
+          "category": "取込作業領域",
+          "description": "保存日時"
+        },
+        "expires_at": {
+          "category": "取込作業領域",
+          "description": "保持期限（過ぎたら削除する。§4.5）"
+        }
+      }
+    },
+    "normalized_row": {
+      "description": "正規化結果（作業領域）",
+      "columns": {
+        "staging_row_id": {
+          "category": "取込作業領域",
+          "description": "正規化した staging の行"
+        },
+        "import_batch_id": {
+          "category": "取込作業領域",
+          "description": "取込単位"
+        },
+        "data": {
+          "category": "取込作業領域",
+          "description": "正規化した取込項目（表示用の表記と検索用の正規化表記。キーは jinji_ingest_field_keys()）"
+        },
+        "issues": {
+          "category": "取込作業領域",
+          "description": "正規化で見つかった問題（項目と種別だけ。値は持たない）"
+        }
+      }
+    },
+    "match_candidate": {
+      "description": "名寄せ候補（作業領域）",
+      "columns": {
+        "id": {
+          "category": "システム管理用",
+          "description": "行 ID（UUIDv7）"
+        },
+        "import_batch_id": {
+          "category": "取込作業領域",
+          "description": "取込単位"
+        },
+        "staging_row_id": {
+          "category": "取込作業領域",
+          "description": "突合した staging の行"
+        },
+        "outcome": {
+          "category": "取込作業領域",
+          "description": "突合の結果（unique / ambiguous / none）"
+        },
+        "match_rule": {
+          "category": "取込作業領域",
+          "description": "一致した規則（employee_number / work_email / name_and_org）"
+        },
+        "candidate_person_id": {
+          "category": "取込作業領域",
+          "description": "候補の人"
+        },
+        "confidence": {
+          "category": "取込作業領域",
+          "description": "確信度（0〜1）"
+        }
+      }
+    },
+    "change_proposal": {
+      "description": "変更提案",
+      "columns": {
+        "id": {
+          "category": "システム管理用",
+          "description": "提案 ID（UUIDv7）"
+        },
+        "import_batch_id": {
+          "category": "取込作業領域",
+          "description": "根拠の取込単位"
+        },
+        "target_kind": {
+          "category": "取込作業領域",
+          "description": "対象の種別（person / person_version / org_unit / org_unit_version / assignment）"
+        },
+        "operation": {
+          "category": "取込作業領域",
+          "description": "操作（create / correct / change / review / supplement）"
+        },
+        "target_id": {
+          "category": "取込作業領域",
+          "description": "対象の人・組織の ID（新規は採番済みの ID）"
+        },
+        "effective_date": {
+          "category": "取込作業領域",
+          "description": "変更の有効日（訂正・新規では有効期間の開始日）"
+        },
+        "payload": {
+          "category": "取込作業領域",
+          "description": "反映する値（キーは反映先の列名。jinji_proposal_field_keys()）"
+        },
+        "diff": {
+          "category": "取込作業領域",
+          "description": "現在の値との差分（列名 → 旧値・新値）"
+        },
+        "basis": {
+          "category": "取込作業領域",
+          "description": "根拠（取込元の行番号・突合の規則・候補・確信度の内訳）"
+        },
+        "staging_row_ids": {
+          "category": "取込作業領域",
+          "description": "根拠の staging の行（保持期限で削除された後も行番号は basis に残る）"
+        },
+        "confidence": {
+          "category": "取込作業領域",
+          "description": "確信度（0〜1）"
+        },
+        "status": {
+          "category": "取込作業領域",
+          "description": "状態（proposed / needs_review / applied / rejected）"
+        },
+        "proposed_by_person_id": {
+          "category": "取込作業領域",
+          "description": "起案者（取込の実行者）"
+        },
+        "proposed_via_client_id": {
+          "category": "取込作業領域",
+          "description": "起案に使われたクライアント（AI エージェント等）"
+        },
+        "proposed_at": {
+          "category": "取込作業領域",
+          "description": "起案日時"
+        },
+        "decided_by_person_id": {
+          "category": "取込作業領域",
+          "description": "承認・却下した人（起案者とは別人）"
+        },
+        "decided_at": {
+          "category": "取込作業領域",
+          "description": "承認・却下の日時"
+        },
+        "applied_at": {
+          "category": "取込作業領域",
+          "description": "公開側へ反映した日時"
+        },
+        "resolved_from_proposal_id": {
+          "category": "取込作業領域",
+          "description": "解決の結果の提案なら、元の要確認の提案"
+        },
+        "resolved_by_person_id": {
+          "category": "取込作業領域",
+          "description": "解決の結果の提案なら、解決した人（取込の実行者・承認者とは別の hr_admin）"
+        },
+        "resolution": {
+          "category": "取込作業領域",
+          "description": "要確認の提案の解決の種別（selected_candidate / registered_new / referred_to_correction）"
+        }
+      }
+    },
+    "correction_request": {
+      "description": "修正依頼リスト（作業領域）。取込の自動検出と、人・AI エージェントによる値の誤りの報告（0015）",
+      "columns": {
+        "id": {
+          "category": "システム管理用",
+          "description": "行 ID（UUIDv7）"
+        },
+        "import_batch_id": {
+          "category": "取込作業領域",
+          "description": "取込単位（取込由来だけ。人・エージェントの報告は NULL）"
+        },
+        "staging_row_id": {
+          "category": "取込作業領域",
+          "description": "対象の staging の行（保持期限で削除されたら NULL）"
+        },
+        "source_row_number": {
+          "category": "取込作業領域",
+          "description": "取込元の行番号"
+        },
+        "field_key": {
+          "category": "取込作業領域",
+          "description": "対象の取込項目"
+        },
+        "issue": {
+          "category": "取込作業領域",
+          "description": "問題の種別（社員番号の欠落・日付が解釈できない・重複行など）"
+        },
+        "message": {
+          "category": "取込作業領域",
+          "description": "人事担当向けの説明（取込元の値は書かない）"
+        },
+        "status": {
+          "category": "取込作業領域",
+          "description": "状態（open / resolved / dismissed / auto_resolved / superseded）"
+        },
+        "created_at": {
+          "category": "取込作業領域",
+          "description": "作成日時"
+        },
+        "resolved_at": {
+          "category": "取込作業領域",
+          "description": "閉じた日時（対応済み・対応不要・解消・置き換え）"
+        },
+        "origin": {
+          "category": "取込作業領域",
+          "description": "起票の経路（ingest / user / agent）"
+        },
+        "person_id": {
+          "category": "取込作業領域",
+          "description": "対象の人（人・エージェントの報告は必須）"
+        },
+        "person_field": {
+          "category": "取込作業領域",
+          "description": "対象の人の項目（PersonFields の名前。jinji_correction_person_fields()）"
+        },
+        "explanation": {
+          "category": "取込作業領域",
+          "description": "現在の値が誤っている理由（起票者が書いた自由記述。500 文字まで・制御文字なし。保持しない情報の混入はアプリが検査して拒否する）"
+        },
+        "suggested_value": {
+          "category": "取込作業領域",
+          "description": "正しい値の提案（任意。保持する項目の値だけで、項目ごとの形と保持しない情報の混入をアプリが検査する）"
+        },
+        "value_fingerprint": {
+          "category": "取込作業領域",
+          "description": "起票時の値の指紋（依頼 ID を塩にした SHA-256。値そのものは持たない）"
+        },
+        "reported_by_person_id": {
+          "category": "取込作業領域",
+          "description": "起票者（AI エージェントは委任元）"
+        },
+        "reported_via_client_id": {
+          "category": "取込作業領域",
+          "description": "起票した AI エージェントのクライアント ID"
+        },
+        "closed_kind": {
+          "category": "取込作業領域",
+          "description": "閉じ方（person / auto）"
+        },
+        "closed_by_person_id": {
+          "category": "取込作業領域",
+          "description": "閉じた人（修正担当者・人事管理者。自動なら NULL）"
+        },
+        "closed_note": {
+          "category": "取込作業領域",
+          "description": "対応のメモ（閉じた人が書いた自由記述。500 文字まで・制御文字なし）"
+        }
+      }
+    },
+    "change_event": {
+      "description": "変更フィード（§9）の記録。種別と ID だけを持ち、値は持たない（追記専用）",
+      "columns": {
+        "id": {
+          "category": "システム管理用",
+          "description": "行 ID（連番）"
+        },
+        "txid": {
+          "category": "システム管理用",
+          "description": "行を書き込んだトランザクションの ID（読み出しの位置）"
+        },
+        "entity_type": {
+          "category": "システム管理用",
+          "description": "変わったものの種別（person / org_unit / site）"
+        },
+        "entity_id": {
+          "category": "識別",
+          "description": "変わった人・組織の jin-ji ID"
+        },
+        "effective_date": {
+          "category": "システム管理用",
+          "description": "人事管理者以外に変更として見せてよい日（将来の予定の秘匿）"
+        },
+        "recorded_at": {
+          "category": "システム管理用",
+          "description": "記録日時"
+        },
+        "withdrawn": {
+          "category": "システム管理用",
+          "description": "将来の予定の行の記録期間を閉じた（取り消し・訂正）記録か。先行提供の日数を持つ閲覧者と人事管理者にだけ見せる"
+        }
+      }
+    },
+    "llm_request_log": {
+      "description": "LLM への送信の記録（取込単位ごと。作業領域）",
+      "columns": {
+        "id": {
+          "category": "システム管理用",
+          "description": "記録 ID（UUIDv7）"
+        },
+        "import_batch_id": {
+          "category": "取込作業領域",
+          "description": "LLM を使った取込単位"
+        },
+        "endpoint_host": {
+          "category": "取込作業領域",
+          "description": "送信先（LLM の接続先のホスト名）"
+        },
+        "model": {
+          "category": "取込作業領域",
+          "description": "使ったモデル名"
+        },
+        "sent_fields": {
+          "category": "取込作業領域",
+          "description": "送った項目名と件数（値は持たない）"
+        },
+        "question_count": {
+          "category": "取込作業領域",
+          "description": "LLM に回した要確認の提案の数"
+        },
+        "call_count": {
+          "category": "取込作業領域",
+          "description": "LLM の呼び出し回数（リトライを含む）"
+        },
+        "discarded_id_count": {
+          "category": "取込作業領域",
+          "description": "候補に無い ID を返したため捨てた件数（幻覚対策）"
+        },
+        "schema_violation_count": {
+          "category": "取込作業領域",
+          "description": "スキーマに合わない応答の件数"
+        },
+        "failed_count": {
+          "category": "取込作業領域",
+          "description": "タイムアウト・エラーで推定できなかった件数"
+        },
+        "skipped_count": {
+          "category": "取込作業領域",
+          "description": "呼び出しの上限で LLM に回さなかった件数"
+        },
+        "input_tokens": {
+          "category": "取込作業領域",
+          "description": "入力トークン数"
+        },
+        "output_tokens": {
+          "category": "取込作業領域",
+          "description": "出力トークン数"
+        },
+        "estimated_cost_usd": {
+          "category": "取込作業領域",
+          "description": "料金の目安（設定の単価から計算。単価が未設定なら null）"
+        },
+        "created_at": {
+          "category": "取込作業領域",
+          "description": "記録日時"
+        }
+      }
+    },
+    "proposal_agent_suggestion": {
+      "description": "AI エージェント（MCP）による要確認の提案への推定（作業領域。追記専用）",
+      "columns": {
+        "id": {
+          "category": "システム管理用",
+          "description": "推定 ID（UUIDv7）"
+        },
+        "change_proposal_id": {
+          "category": "取込作業領域",
+          "description": "推定を添えた要確認の提案"
+        },
+        "import_batch_id": {
+          "category": "取込作業領域",
+          "description": "提案の取込単位（RLS の判定に使う。提案と複合外部キーで縛る）"
+        },
+        "resolution": {
+          "category": "取込作業領域",
+          "description": "推定した解決の種類（select_candidate / register_new / refer_to_correction / reject）"
+        },
+        "person_id": {
+          "category": "取込作業領域",
+          "description": "候補から選ぶ人（提案の人の候補にある人だけ。アプリで確かめる）"
+        },
+        "org_unit_id": {
+          "category": "取込作業領域",
+          "description": "候補から選ぶ組織（提案の組織の候補にある組織だけ。アプリで確かめる）"
+        },
+        "confidence": {
+          "category": "取込作業領域",
+          "description": "エージェントが付けた確信度（0〜1）"
+        },
+        "rationale": {
+          "category": "取込作業領域",
+          "description": "エージェントが書いた理由（500 文字まで・制御文字なし。データとして表示し、指示として扱わない）"
+        },
+        "suggested_by_person_id": {
+          "category": "取込作業領域",
+          "description": "推定を書いたエージェントの委任元（hr_admin かバッチの実行者本人）"
+        },
+        "suggested_via_client_id": {
+          "category": "取込作業領域",
+          "description": "推定を書いたエージェントのクライアント ID"
+        },
+        "created_at": {
+          "category": "取込作業領域",
+          "description": "記録日時"
+        }
+      }
+    },
+    "sync_plan": {
+      "description": "Entra ID への同期計画（作業領域）",
+      "columns": {
+        "id": {
+          "category": "システム管理用",
+          "description": "計画 ID（UUIDv7）"
+        },
+        "target_system": {
+          "category": "同期作業領域",
+          "description": "同期先（entra_id）"
+        },
+        "status": {
+          "category": "同期作業領域",
+          "description": "状態（起案中・承認済み・却下・置き換え済み・古い・実行済み）"
+        },
+        "settings": {
+          "category": "同期作業領域",
+          "description": "計画に使った同期の設定の全文（表示名の形式・部署名の段・対象の法人・除外するユーザーなど）"
+        },
+        "settings_sha256": {
+          "category": "同期作業領域",
+          "description": "設定の SHA-256"
+        },
+        "source_file_name": {
+          "category": "同期作業領域",
+          "description": "入力（Entra のユーザー一覧）のファイル名"
+        },
+        "source_sha256": {
+          "category": "同期作業領域",
+          "description": "入力の SHA-256"
+        },
+        "directory_user_count": {
+          "category": "同期作業領域",
+          "description": "入力のユーザー数"
+        },
+        "jinji_fingerprint": {
+          "category": "同期作業領域",
+          "description": "jin-ji 側のあるべき値の SHA-256（古い計画の検出に使う）"
+        },
+        "business_date": {
+          "category": "同期作業領域",
+          "description": "計画の業務日付"
+        },
+        "summary": {
+          "category": "同期作業領域",
+          "description": "種別ごとの件数"
+        },
+        "proposed_by_person_id": {
+          "category": "同期作業領域",
+          "description": "起案者（承認できない）"
+        },
+        "proposed_via_actor": {
+          "category": "同期作業領域",
+          "description": "起案した操作者の種別（user / agent / system）"
+        },
+        "proposed_via_client_id": {
+          "category": "同期作業領域",
+          "description": "起案したクライアント"
+        },
+        "proposed_at": {
+          "category": "同期作業領域",
+          "description": "起案日時"
+        },
+        "expires_at": {
+          "category": "同期作業領域",
+          "description": "計画の期限（過ぎたら古い計画）"
+        },
+        "decided_by_person_id": {
+          "category": "同期作業領域",
+          "description": "承認・却下した人（起案者とは別の hr_admin）"
+        },
+        "decided_at": {
+          "category": "同期作業領域",
+          "description": "承認・却下の日時"
+        },
+        "closed_at": {
+          "category": "同期作業領域",
+          "description": "置き換え済み・古い計画になった日時"
+        },
+        "applied_at": {
+          "category": "同期作業領域",
+          "description": "実行結果を初めて取り込んだ日時"
+        }
+      }
+    },
+    "sync_plan_item": {
+      "description": "同期計画の項目（作業領域）",
+      "columns": {
+        "id": {
+          "category": "システム管理用",
+          "description": "項目 ID（UUIDv7）"
+        },
+        "sync_plan_id": {
+          "category": "同期作業領域",
+          "description": "計画"
+        },
+        "sequence": {
+          "category": "同期作業領域",
+          "description": "計画の中の順序（優先度の高い順）"
+        },
+        "priority": {
+          "category": "同期作業領域",
+          "description": "優先度（critical: IT 全般統制 / high / normal / info）"
+        },
+        "action": {
+          "category": "同期作業領域",
+          "description": "操作（無効化・サインイン停止・再有効化・属性の更新・上長の設定・作成・対応付けなし・除外）"
+        },
+        "person_id": {
+          "category": "識別",
+          "description": "jin-ji の人"
+        },
+        "employee_number": {
+          "category": "識別",
+          "description": "表示用の社員番号"
+        },
+        "directory_object_id": {
+          "category": "識別",
+          "description": "Entra のオブジェクト ID"
+        },
+        "user_principal_name": {
+          "category": "業務連絡先",
+          "description": "表示用の UPN（作成の推奨では作るときの UPN）"
+        },
+        "in_script": {
+          "category": "同期作業領域",
+          "description": "スクリプト・直接反映で実行するか"
+        },
+        "changes": {
+          "category": "同期作業領域",
+          "description": "変える項目と Entra の現在値（事前条件）・jin-ji のあるべき値（全社公開レベルの項目だけ）"
+        },
+        "basis": {
+          "category": "同期作業領域",
+          "description": "根拠（jin-ji のどのデータか）"
+        },
+        "note": {
+          "category": "同期作業領域",
+          "description": "説明"
+        }
+      }
+    },
+    "sync_run": {
+      "description": "同期計画の実行の記録（スクリプトの実行ログの取込・直接反映）",
+      "columns": {
+        "id": {
+          "category": "システム管理用",
+          "description": "実行の記録 ID（UUIDv7）"
+        },
+        "sync_plan_id": {
+          "category": "同期作業領域",
+          "description": "計画"
+        },
+        "mode": {
+          "category": "同期作業領域",
+          "description": "方式（script / direct）"
+        },
+        "what_if": {
+          "category": "同期作業領域",
+          "description": "ドライランか"
+        },
+        "log_sha256": {
+          "category": "同期作業領域",
+          "description": "取り込んだ実行ログの SHA-256"
+        },
+        "data_sha256": {
+          "category": "同期作業領域",
+          "description": "スクリプトのデータの SHA-256（計画と照合済み）"
+        },
+        "started_at": {
+          "category": "同期作業領域",
+          "description": "実行の開始日時"
+        },
+        "finished_at": {
+          "category": "同期作業領域",
+          "description": "実行の終了日時"
+        },
+        "recorded_by_person_id": {
+          "category": "同期作業領域",
+          "description": "記録した人（jin-ji 自身なら null）"
+        },
+        "recorded_via_actor": {
+          "category": "同期作業領域",
+          "description": "記録した操作者の種別"
+        },
+        "recorded_at": {
+          "category": "同期作業領域",
+          "description": "記録日時"
+        },
+        "entry_count": {
+          "category": "同期作業領域",
+          "description": "取り込んだ項目の結果の数"
+        },
+        "unknown_entry_count": {
+          "category": "同期作業領域",
+          "description": "計画のスクリプトの項目に無かったため捨てた結果の数"
+        }
+      }
+    },
+    "sync_item_result": {
+      "description": "同期計画の項目ごとの実行結果",
+      "columns": {
+        "id": {
+          "category": "システム管理用",
+          "description": "結果 ID（UUIDv7）"
+        },
+        "sync_run_id": {
+          "category": "同期作業領域",
+          "description": "実行の記録"
+        },
+        "sync_plan_id": {
+          "category": "同期作業領域",
+          "description": "計画"
+        },
+        "sync_plan_item_id": {
+          "category": "同期作業領域",
+          "description": "計画の項目"
+        },
+        "outcome": {
+          "category": "同期作業領域",
+          "description": "結果（成功・既に反映済み・事前条件の不一致でスキップ・失敗・ドライラン）"
+        },
+        "observed": {
+          "category": "同期作業領域",
+          "description": "事前条件を確かめたときの Entra の値（全社公開レベルの項目だけ）"
+        },
+        "message": {
+          "category": "同期作業領域",
+          "description": "エラーなどのメッセージ"
+        },
+        "executed_at": {
+          "category": "同期作業領域",
+          "description": "実行日時"
+        }
+      }
+    },
+    "role_grant": {
+      "description": "ロールの付与（UI のセッションの閲覧者のロール）",
+      "columns": {
+        "id": {
+          "category": "システム管理用",
+          "description": "行 ID（UUIDv7）"
+        },
+        "person_id": {
+          "category": "識別",
+          "description": "ロールを持つ人"
+        },
+        "role": {
+          "category": "認可",
+          "description": "ロール名（hr_admin）"
+        },
+        "granted_by_kind": {
+          "category": "認可",
+          "description": "付与の主体（person: 人事管理者の人 / cli: 管理 CLI）"
+        },
+        "granted_by_person_id": {
+          "category": "認可",
+          "description": "付与した人事管理者（自分には付与できない）"
+        },
+        "granted_at": {
+          "category": "認可",
+          "description": "付与日時"
+        },
+        "revoked_by_kind": {
+          "category": "認可",
+          "description": "取り消しの主体（person / cli）"
+        },
+        "revoked_by_person_id": {
+          "category": "認可",
+          "description": "取り消した人事管理者"
+        },
+        "revoked_at": {
+          "category": "認可",
+          "description": "取り消し日時"
+        }
+      }
+    },
+    "local_account": {
+      "description": "ローカルアカウント（ASP.NET Core Identity のユーザー。緊急用の管理者アカウントを含む）",
+      "columns": {
+        "id": {
+          "category": "システム管理用",
+          "description": "アカウント ID（UUIDv7）"
+        },
+        "kind": {
+          "category": "認証",
+          "description": "種類（person: 人のアカウント / break_glass: 緊急用の管理者アカウント）"
+        },
+        "person_id": {
+          "category": "識別",
+          "description": "アカウントの人（緊急用アカウントは NULL）"
+        },
+        "user_name": {
+          "category": "認証",
+          "description": "ログインに使うユーザー名"
+        },
+        "normalized_user_name": {
+          "category": "認証",
+          "description": "照合用に正規化したユーザー名（Identity の既定の正規化）"
+        },
+        "password_hash": {
+          "category": "認証",
+          "description": "パスワードのハッシュ（Identity の PasswordHasher。平文は持たない）"
+        },
+        "security_stamp": {
+          "category": "認証",
+          "description": "資格情報を変えるたびに変わる値（Identity）"
+        },
+        "concurrency_stamp": {
+          "category": "システム管理用",
+          "description": "楽観的同時実行制御の値（Identity）"
+        },
+        "lockout_enabled": {
+          "category": "認証",
+          "description": "ロックアウトの有効（常に true）"
+        },
+        "lockout_end": {
+          "category": "認証",
+          "description": "ロックアウトの終了日時"
+        },
+        "access_failed_count": {
+          "category": "認証",
+          "description": "連続した認証の失敗の回数"
+        },
+        "two_factor_enabled": {
+          "category": "認証",
+          "description": "TOTP による二要素認証が有効か"
+        },
+        "authenticator_key_protected": {
+          "category": "認証",
+          "description": "TOTP の共有鍵（Data Protection で暗号化した値）"
+        },
+        "created_by_kind": {
+          "category": "認証",
+          "description": "作成の主体（cli: 管理 CLI）"
+        },
+        "created_at": {
+          "category": "システム管理用",
+          "description": "作成日時"
+        },
+        "disabled_at": {
+          "category": "認証",
+          "description": "無効にした日時"
+        },
+        "totp_last_step": {
+          "category": "認証",
+          "description": "最後に受け付けた TOTP の時間窓（Unix 時刻 / 30 秒）。符号の再利用の検知に使う"
+        }
+      }
+    },
+    "local_account_passkey": {
+      "description": "ローカルアカウントのパスキー（WebAuthn の公開鍵資格情報）",
+      "columns": {
+        "credential_id": {
+          "category": "認証",
+          "description": "資格情報 ID"
+        },
+        "local_account_id": {
+          "category": "識別",
+          "description": "アカウント"
+        },
+        "name": {
+          "category": "認証",
+          "description": "利用者が付けた名前"
+        },
+        "public_key": {
+          "category": "認証",
+          "description": "公開鍵（COSE）"
+        },
+        "sign_count": {
+          "category": "認証",
+          "description": "署名の回数"
+        },
+        "transports": {
+          "category": "認証",
+          "description": "認証器の通信手段"
+        },
+        "is_user_verified": {
+          "category": "認証",
+          "description": "利用者の検証（生体・PIN）を経たか"
+        },
+        "is_backup_eligible": {
+          "category": "認証",
+          "description": "バックアップ（同期）できる資格情報か"
+        },
+        "is_backed_up": {
+          "category": "認証",
+          "description": "バックアップされているか"
+        },
+        "attestation_object": {
+          "category": "認証",
+          "description": "登録時のアテステーション（検証はしない）"
+        },
+        "client_data_json": {
+          "category": "認証",
+          "description": "登録時のクライアントデータ（origin・challenge）"
+        },
+        "created_at": {
+          "category": "システム管理用",
+          "description": "登録日時"
+        }
+      }
+    },
+    "local_account_recovery_code": {
+      "description": "TOTP のリカバリコード",
+      "columns": {
+        "id": {
+          "category": "システム管理用",
+          "description": "行 ID（UUIDv7）"
+        },
+        "local_account_id": {
+          "category": "識別",
+          "description": "アカウント"
+        },
+        "code_sha256": {
+          "category": "認証",
+          "description": "リカバリコードの SHA-256（平文は持たない）"
+        },
+        "created_at": {
+          "category": "システム管理用",
+          "description": "作成日時"
+        },
+        "redeemed_at": {
+          "category": "認証",
+          "description": "使用日時"
+        }
+      }
+    },
+    "login_binding": {
+      "description": "外部 IdP の主体と person の紐付け",
+      "columns": {
+        "id": {
+          "category": "システム管理用",
+          "description": "行 ID（UUIDv7）"
+        },
+        "provider": {
+          "category": "認証",
+          "description": "ログイン方式の名前（設定の Providers の Name）"
+        },
+        "issuer": {
+          "category": "認証",
+          "description": "IdP の発行者（iss。Entra はテナント ID を含む）"
+        },
+        "subject": {
+          "category": "識別",
+          "description": "IdP の主体の識別子（Entra は oid、汎用 OIDC は sub）"
+        },
+        "person_id": {
+          "category": "識別",
+          "description": "紐付けた人"
+        },
+        "basis": {
+          "category": "認証",
+          "description": "紐付けの根拠（entra_object_id / employee_number / manual）"
+        },
+        "created_by_kind": {
+          "category": "認証",
+          "description": "作成の主体（login: 自動 / person / break_glass / cli）"
+        },
+        "created_by_person_id": {
+          "category": "認証",
+          "description": "手動で紐付けた人事管理者"
+        },
+        "created_by_account_id": {
+          "category": "認証",
+          "description": "手動で紐付けた緊急用アカウント"
+        },
+        "created_at": {
+          "category": "システム管理用",
+          "description": "作成日時"
+        },
+        "revoked_by_kind": {
+          "category": "認証",
+          "description": "取り消しの主体（person / break_glass / cli）"
+        },
+        "revoked_by_person_id": {
+          "category": "認証",
+          "description": "取り消した人事管理者"
+        },
+        "revoked_by_account_id": {
+          "category": "認証",
+          "description": "取り消した緊急用アカウント"
+        },
+        "revoked_at": {
+          "category": "認証",
+          "description": "取り消し日時"
+        }
+      }
+    },
+    "unbound_login": {
+      "description": "紐付けできずに拒否したログイン（人事管理者に示す）",
+      "columns": {
+        "id": {
+          "category": "システム管理用",
+          "description": "行 ID（UUIDv7）"
+        },
+        "provider": {
+          "category": "認証",
+          "description": "ログイン方式の名前"
+        },
+        "issuer": {
+          "category": "認証",
+          "description": "IdP の発行者"
+        },
+        "subject": {
+          "category": "識別",
+          "description": "IdP の主体の識別子"
+        },
+        "tenant_id": {
+          "category": "認証",
+          "description": "Entra のテナント ID（tid）"
+        },
+        "claimed_employee_number": {
+          "category": "識別",
+          "description": "IdP が示した社員番号（照合の材料。信頼しない設定でも表示のために持つ）"
+        },
+        "claimed_email": {
+          "category": "業務連絡先",
+          "description": "IdP が示したメールアドレス（候補の提示だけに使う）"
+        },
+        "claimed_display_name": {
+          "category": "氏名",
+          "description": "IdP が示した表示名"
+        },
+        "candidate_person_ids": {
+          "category": "識別",
+          "description": "メールアドレスが社用メールと一致した人（候補）"
+        },
+        "attempt_count": {
+          "category": "認証",
+          "description": "試行の回数"
+        },
+        "first_attempted_at": {
+          "category": "認証",
+          "description": "最初の試行日時"
+        },
+        "last_attempted_at": {
+          "category": "認証",
+          "description": "最後の試行日時"
+        },
+        "resolved_at": {
+          "category": "認証",
+          "description": "手動の紐付けで解決した日時"
+        },
+        "resolved_binding_id": {
+          "category": "認証",
+          "description": "解決に使った紐付け"
+        }
+      }
+    },
+    "account_reset_link": {
+      "description": "管理者が発行する 1 回限りのリンク（パスワードの設定・再設定、パスキーの登録）",
+      "columns": {
+        "id": {
+          "category": "システム管理用",
+          "description": "行 ID（UUIDv7）"
+        },
+        "local_account_id": {
+          "category": "識別",
+          "description": "対象のアカウント"
+        },
+        "purpose": {
+          "category": "認証",
+          "description": "用途（password / passkey）"
+        },
+        "token_sha256": {
+          "category": "認証",
+          "description": "リンクの鍵の SHA-256"
+        },
+        "issued_by_kind": {
+          "category": "認証",
+          "description": "発行の主体（cli / person / break_glass）"
+        },
+        "issued_by_person_id": {
+          "category": "認証",
+          "description": "発行した人事管理者"
+        },
+        "issued_by_account_id": {
+          "category": "認証",
+          "description": "発行した緊急用アカウント"
+        },
+        "issued_at": {
+          "category": "認証",
+          "description": "発行日時"
+        },
+        "expires_at": {
+          "category": "認証",
+          "description": "有効期限"
+        },
+        "used_at": {
+          "category": "認証",
+          "description": "使用日時"
+        },
+        "revoked_at": {
+          "category": "認証",
+          "description": "取り消し日時（新しいリンクの発行による）"
+        }
+      }
+    },
+    "ui_session": {
+      "description": "UI（BFF）のセッション",
+      "columns": {
+        "id": {
+          "category": "システム管理用",
+          "description": "セッション ID（UUIDv7）"
+        },
+        "key_sha256": {
+          "category": "認証",
+          "description": "Cookie の鍵の SHA-256"
+        },
+        "principal_kind": {
+          "category": "認証",
+          "description": "種類（person / break_glass）"
+        },
+        "person_id": {
+          "category": "識別",
+          "description": "ログインした人"
+        },
+        "local_account_id": {
+          "category": "認証",
+          "description": "ローカルアカウント（ローカルのログイン）"
+        },
+        "login_binding_id": {
+          "category": "認証",
+          "description": "紐付け（外部 IdP のログイン）"
+        },
+        "provider": {
+          "category": "認証",
+          "description": "ログイン方式（local か IdP の名前）"
+        },
+        "methods": {
+          "category": "認証",
+          "description": "認証の方法（pwd / otp / rc / hwk / fed）"
+        },
+        "created_at": {
+          "category": "認証",
+          "description": "ログイン日時"
+        },
+        "last_seen_at": {
+          "category": "認証",
+          "description": "最終利用日時（無操作の期限の判定）"
+        },
+        "expires_at": {
+          "category": "認証",
+          "description": "最長の期限"
+        },
+        "ended_at": {
+          "category": "認証",
+          "description": "終了日時"
+        },
+        "end_kind": {
+          "category": "認証",
+          "description": "終了の種類（logout / idle_timeout / expired / person_inactive / account_disabled / credential_changed / binding_revoked / replaced）"
+        }
+      }
+    },
+    "data_protection_key": {
+      "description": "ASP.NET Core Data Protection の鍵リング",
+      "columns": {
+        "id": {
+          "category": "システム管理用",
+          "description": "行 ID（UUIDv7）"
+        },
+        "friendly_name": {
+          "category": "認証",
+          "description": "鍵の名前（Data Protection が付ける）"
+        },
+        "xml": {
+          "category": "認証",
+          "description": "鍵の XML（証明書で暗号化した値）"
+        },
+        "created_at": {
+          "category": "システム管理用",
+          "description": "保存日時"
+        }
+      }
+    },
+    "api_client": {
+      "description": "jin-ji が発行するトークンのクライアント（既定で拒否の登録制。事前登録と CIMD）",
+      "columns": {
+        "id": {
+          "category": "システム管理用",
+          "description": "クライアントの行 ID（UUIDv7）"
+        },
+        "client_id": {
+          "category": "認証",
+          "description": "OAuth の client_id（事前登録の ID か CIMD の URL）"
+        },
+        "registration": {
+          "category": "認証",
+          "description": "種類（registered / cimd）"
+        },
+        "status": {
+          "category": "認証",
+          "description": "状態（active / pending_approval / suspended / rejected）"
+        },
+        "display_name": {
+          "category": "認証",
+          "description": "表示名（同意画面に出す。CIMD は文書の client_name）"
+        },
+        "auth_method": {
+          "category": "認証",
+          "description": "トークンエンドポイントの認証の方式（none / private_key_jwt）"
+        },
+        "grant_types": {
+          "category": "認証",
+          "description": "許す付与（authorization_code / refresh_token / client_credentials）"
+        },
+        "redirect_uris": {
+          "category": "認証",
+          "description": "登録した redirect_uri（完全一致で照合。ループバックはポートを問わない）"
+        },
+        "resources": {
+          "category": "認証",
+          "description": "発行してよい resource（api / mcp）"
+        },
+        "scopes": {
+          "category": "認証",
+          "description": "与えてよいスコープ（jinji.read / jinji.propose）"
+        },
+        "fields": {
+          "category": "認証",
+          "description": "渡してよい項目の上限（PersonFields の名前。* は上限なし）"
+        },
+        "mcp_tools": {
+          "category": "認証",
+          "description": "MCP ツールの許可リスト"
+        },
+        "rate_limit_per_client": {
+          "category": "認証",
+          "description": "クライアントの段のレート制限（null は設定の既定）"
+        },
+        "metadata_fetched_at": {
+          "category": "認証",
+          "description": "CIMD の文書を取得した日時"
+        },
+        "metadata_expires_at": {
+          "category": "認証",
+          "description": "CIMD の文書の HTTP キャッシュの期限"
+        },
+        "created_by_kind": {
+          "category": "認証",
+          "description": "作成の主体（cli / person / cimd）"
+        },
+        "created_by_person_id": {
+          "category": "認証",
+          "description": "作成した人事管理者の人"
+        },
+        "created_at": {
+          "category": "システム管理用",
+          "description": "作成日時"
+        },
+        "updated_by_kind": {
+          "category": "認証",
+          "description": "最後の変更の主体（cli / person / cimd）"
+        },
+        "updated_by_person_id": {
+          "category": "認証",
+          "description": "最後に変更した人事管理者の人"
+        },
+        "updated_at": {
+          "category": "システム管理用",
+          "description": "最後の変更の日時"
+        }
+      }
+    },
+    "api_client_key": {
+      "description": "クライアントの公開鍵（private_key_jwt）",
+      "columns": {
+        "id": {
+          "category": "システム管理用",
+          "description": "鍵の行 ID（UUIDv7）"
+        },
+        "client_ref": {
+          "category": "認証",
+          "description": "クライアント（api_client.id）"
+        },
+        "key_id": {
+          "category": "認証",
+          "description": "鍵 ID（JWT の kid）"
+        },
+        "public_key_pem": {
+          "category": "認証",
+          "description": "公開鍵の PEM（SubjectPublicKeyInfo）"
+        },
+        "created_by_kind": {
+          "category": "認証",
+          "description": "作成の主体（cli / person）"
+        },
+        "created_by_person_id": {
+          "category": "認証",
+          "description": "作成した人事管理者の人"
+        },
+        "created_at": {
+          "category": "システム管理用",
+          "description": "作成日時"
+        },
+        "revoked_by_kind": {
+          "category": "認証",
+          "description": "取り消しの主体（cli / person）"
+        },
+        "revoked_by_person_id": {
+          "category": "認証",
+          "description": "取り消した人事管理者の人"
+        },
+        "revoked_at": {
+          "category": "認証",
+          "description": "取り消し日時"
+        }
+      }
+    },
+    "api_client_secret": {
+      "description": "移行用の期限付き client_secret（SHA-256 だけ）",
+      "columns": {
+        "id": {
+          "category": "システム管理用",
+          "description": "シークレットの行 ID（UUIDv7）"
+        },
+        "client_ref": {
+          "category": "認証",
+          "description": "クライアント（api_client.id）"
+        },
+        "secret_sha256": {
+          "category": "認証",
+          "description": "client_secret の SHA-256"
+        },
+        "created_by_kind": {
+          "category": "認証",
+          "description": "発行の主体（cli / person）"
+        },
+        "created_by_person_id": {
+          "category": "認証",
+          "description": "発行した人事管理者の人"
+        },
+        "created_at": {
+          "category": "システム管理用",
+          "description": "発行日時"
+        },
+        "expires_at": {
+          "category": "認証",
+          "description": "有効期限（最長 1 年）"
+        },
+        "revoked_by_kind": {
+          "category": "認証",
+          "description": "取り消しの主体（cli / person）"
+        },
+        "revoked_by_person_id": {
+          "category": "認証",
+          "description": "取り消した人事管理者の人"
+        },
+        "revoked_at": {
+          "category": "認証",
+          "description": "取り消し日時"
+        }
+      }
+    },
+    "cimd_allowed_domain": {
+      "description": "CIMD の文書の取得を許すドメイン（設定の既定に足すもの）",
+      "columns": {
+        "id": {
+          "category": "システム管理用",
+          "description": "行 ID（UUIDv7）"
+        },
+        "domain": {
+          "category": "認証",
+          "description": "ホスト名（完全一致で照合）"
+        },
+        "created_by_kind": {
+          "category": "認証",
+          "description": "作成の主体（cli / person）"
+        },
+        "created_by_person_id": {
+          "category": "認証",
+          "description": "作成した人事管理者の人"
+        },
+        "created_at": {
+          "category": "システム管理用",
+          "description": "作成日時"
+        },
+        "revoked_by_kind": {
+          "category": "認証",
+          "description": "取り消しの主体（cli / person）"
+        },
+        "revoked_by_person_id": {
+          "category": "認証",
+          "description": "取り消した人事管理者の人"
+        },
+        "revoked_at": {
+          "category": "認証",
+          "description": "取り消し日時"
+        }
+      }
+    },
+    "oauth_authorization_request": {
+      "description": "/oauth/authorize の検査を通った認可の要求（同意画面・ログインへ短い ID で渡す）",
+      "columns": {
+        "id": {
+          "category": "システム管理用",
+          "description": "要求の行 ID（UUIDv7）"
+        },
+        "handle_sha256": {
+          "category": "認証",
+          "description": "要求 ID（URL に入れる乱数）の SHA-256"
+        },
+        "client_ref": {
+          "category": "認証",
+          "description": "クライアント（api_client.id）"
+        },
+        "redirect_uri": {
+          "category": "認証",
+          "description": "redirect_uri"
+        },
+        "resource": {
+          "category": "認証",
+          "description": "resource（api / mcp）"
+        },
+        "scopes": {
+          "category": "認証",
+          "description": "与えるスコープ"
+        },
+        "state": {
+          "category": "認証",
+          "description": "クライアントの state（そのまま返す）"
+        },
+        "code_challenge": {
+          "category": "認証",
+          "description": "PKCE の code_challenge（S256）"
+        },
+        "created_at": {
+          "category": "システム管理用",
+          "description": "作成日時"
+        },
+        "expires_at": {
+          "category": "認証",
+          "description": "期限"
+        },
+        "decided_at": {
+          "category": "認証",
+          "description": "同意・拒否の日時"
+        },
+        "decision": {
+          "category": "認証",
+          "description": "同意・拒否（approved / denied）"
+        },
+        "person_id": {
+          "category": "識別",
+          "description": "同意・拒否した人"
+        }
+      }
+    },
+    "oauth_authorization_code": {
+      "description": "認可コード（SHA-256 だけ。60 秒・単回）",
+      "columns": {
+        "id": {
+          "category": "システム管理用",
+          "description": "コードの行 ID（UUIDv7）"
+        },
+        "code_sha256": {
+          "category": "認証",
+          "description": "認可コードの SHA-256"
+        },
+        "request_id": {
+          "category": "認証",
+          "description": "認可の要求"
+        },
+        "client_ref": {
+          "category": "認証",
+          "description": "クライアント（api_client.id）"
+        },
+        "person_id": {
+          "category": "識別",
+          "description": "委任元の人"
+        },
+        "redirect_uri": {
+          "category": "認証",
+          "description": "束縛した redirect_uri"
+        },
+        "resource": {
+          "category": "認証",
+          "description": "束縛した resource（api / mcp）"
+        },
+        "scopes": {
+          "category": "認証",
+          "description": "束縛したスコープ"
+        },
+        "code_challenge": {
+          "category": "認証",
+          "description": "束縛した PKCE の code_challenge"
+        },
+        "created_at": {
+          "category": "システム管理用",
+          "description": "発行日時"
+        },
+        "expires_at": {
+          "category": "認証",
+          "description": "期限"
+        },
+        "used_at": {
+          "category": "認証",
+          "description": "使用日時"
+        },
+        "family_id": {
+          "category": "認証",
+          "description": "交換で作ったトークンの系列"
+        }
+      }
+    },
+    "oauth_token_family": {
+      "description": "トークンの系列（1 回の認可コードの付与から連なるトークン）",
+      "columns": {
+        "id": {
+          "category": "システム管理用",
+          "description": "系列 ID（UUIDv7）"
+        },
+        "client_ref": {
+          "category": "認証",
+          "description": "クライアント（api_client.id）"
+        },
+        "person_id": {
+          "category": "識別",
+          "description": "委任元の人"
+        },
+        "resource": {
+          "category": "認証",
+          "description": "resource（api / mcp）"
+        },
+        "scopes": {
+          "category": "認証",
+          "description": "スコープ"
+        },
+        "created_at": {
+          "category": "システム管理用",
+          "description": "作成日時"
+        },
+        "expires_at": {
+          "category": "認証",
+          "description": "系列の最長の期限"
+        },
+        "ended_at": {
+          "category": "認証",
+          "description": "系列を終えた日時"
+        },
+        "end_kind": {
+          "category": "認証",
+          "description": "終了の種類（revoked / reuse_detected / code_reuse / admin / user）"
+        }
+      }
+    },
+    "oauth_access_token": {
+      "description": "アクセストークン（参照トークン。SHA-256 だけ）",
+      "columns": {
+        "id": {
+          "category": "システム管理用",
+          "description": "トークンの行 ID（UUIDv7）"
+        },
+        "token_sha256": {
+          "category": "認証",
+          "description": "アクセストークンの SHA-256"
+        },
+        "family_id": {
+          "category": "認証",
+          "description": "系列（client credentials は null）"
+        },
+        "client_ref": {
+          "category": "認証",
+          "description": "クライアント（api_client.id）"
+        },
+        "person_id": {
+          "category": "識別",
+          "description": "委任元の人（client credentials は null）"
+        },
+        "resource": {
+          "category": "認証",
+          "description": "束縛した resource（api / mcp）"
+        },
+        "scopes": {
+          "category": "認証",
+          "description": "スコープ"
+        },
+        "issued_at": {
+          "category": "認証",
+          "description": "発行日時"
+        },
+        "expires_at": {
+          "category": "認証",
+          "description": "期限"
+        },
+        "revoked_at": {
+          "category": "認証",
+          "description": "失効日時"
+        }
+      }
+    },
+    "oauth_refresh_token": {
+      "description": "リフレッシュトークン（SHA-256 だけ。回転と再利用の検知）",
+      "columns": {
+        "id": {
+          "category": "システム管理用",
+          "description": "トークンの行 ID（UUIDv7）"
+        },
+        "token_sha256": {
+          "category": "認証",
+          "description": "リフレッシュトークンの SHA-256"
+        },
+        "family_id": {
+          "category": "認証",
+          "description": "系列"
+        },
+        "issued_at": {
+          "category": "認証",
+          "description": "発行日時"
+        },
+        "expires_at": {
+          "category": "認証",
+          "description": "無操作の期限"
+        },
+        "used_at": {
+          "category": "認証",
+          "description": "回転に使った日時"
+        }
+      }
+    },
+    "oauth_consent": {
+      "description": "利用者の同意の記録（追記だけ）",
+      "columns": {
+        "id": {
+          "category": "システム管理用",
+          "description": "行 ID（UUIDv7）"
+        },
+        "request_id": {
+          "category": "認証",
+          "description": "認可の要求"
+        },
+        "client_ref": {
+          "category": "認証",
+          "description": "クライアント（api_client.id）"
+        },
+        "person_id": {
+          "category": "識別",
+          "description": "同意した人"
+        },
+        "redirect_uri": {
+          "category": "認証",
+          "description": "redirect_uri"
+        },
+        "resource": {
+          "category": "認証",
+          "description": "resource（api / mcp）"
+        },
+        "scopes": {
+          "category": "認証",
+          "description": "同意したスコープ"
+        },
+        "granted_at": {
+          "category": "認証",
+          "description": "同意の日時"
+        }
+      }
+    },
+    "oauth_client_assertion": {
+      "description": "private_key_jwt の client assertion の jti（再利用の拒否）",
+      "columns": {
+        "client_ref": {
+          "category": "認証",
+          "description": "クライアント（api_client.id）"
+        },
+        "jti": {
+          "category": "認証",
+          "description": "client assertion の jti"
+        },
+        "expires_at": {
+          "category": "認証",
+          "description": "assertion の期限（過ぎたら消してよい）"
+        }
+      }
+    },
+    "retention_run": {
+      "description": "保持期限の消去の実行の記録（表ごとの削除件数。監査ログ retention.purge の対象）",
+      "columns": {
+        "id": {
+          "category": "システム管理用",
+          "description": "実行 ID（UUIDv7）"
+        },
+        "trigger": {
+          "category": "システム管理用",
+          "description": "実行の契機（worker: 定期実行 / cli: 管理 CLI）"
+        },
+        "outcome": {
+          "category": "システム管理用",
+          "description": "結果（success / failed。失敗でもそれまでの件数を残す）"
+        },
+        "started_at": {
+          "category": "システム管理用",
+          "description": "開始日時"
+        },
+        "finished_at": {
+          "category": "システム管理用",
+          "description": "終了日時"
+        },
+        "ui_session": {
+          "category": "システム管理用",
+          "description": "UI のセッションの削除件数"
+        },
+        "unbound_login": {
+          "category": "システム管理用",
+          "description": "未紐付けのログインの削除件数"
+        },
+        "account_reset_link": {
+          "category": "システム管理用",
+          "description": "リンクの削除件数"
+        },
+        "oauth_authorization_request": {
+          "category": "システム管理用",
+          "description": "認可の要求の削除件数"
+        },
+        "oauth_authorization_code": {
+          "category": "システム管理用",
+          "description": "認可コードの削除件数"
+        },
+        "oauth_access_token": {
+          "category": "システム管理用",
+          "description": "アクセストークンの削除件数"
+        },
+        "oauth_refresh_token": {
+          "category": "システム管理用",
+          "description": "リフレッシュトークンの削除件数"
+        },
+        "oauth_token_family": {
+          "category": "システム管理用",
+          "description": "トークンの系列の削除件数"
+        },
+        "oauth_consent": {
+          "category": "システム管理用",
+          "description": "同意の記録の削除件数"
+        },
+        "oauth_client_assertion": {
+          "category": "システム管理用",
+          "description": "client assertion の jti の削除件数"
+        },
+        "pending_client": {
+          "category": "システム管理用",
+          "description": "承認されないままの CIMD のクライアントの削除件数"
+        },
+        "staging_row": {
+          "category": "システム管理用",
+          "description": "取込の staging の行の削除件数（正規化結果・名寄せ候補は連鎖して消える）"
+        }
+      }
+    },
+    "correction_endorsement": {
+      "description": "修正依頼への賛同（同じ人・項目の未対応の依頼に重ねて起票された記録。追記だけ）",
+      "columns": {
+        "id": {
+          "category": "システム管理用",
+          "description": "賛同 ID（UUIDv7）"
+        },
+        "correction_request_id": {
+          "category": "取込作業領域",
+          "description": "賛同した修正依頼"
+        },
+        "endorsed_by_person_id": {
+          "category": "取込作業領域",
+          "description": "賛同した人（AI エージェントは委任元）"
+        },
+        "endorsed_via_actor": {
+          "category": "取込作業領域",
+          "description": "賛同の経路（user / agent）"
+        },
+        "endorsed_via_client_id": {
+          "category": "取込作業領域",
+          "description": "賛同した AI エージェントのクライアント ID"
+        },
+        "created_at": {
+          "category": "取込作業領域",
+          "description": "記録日時"
+        }
+      }
+    },
+    "correction_notice_run": {
+      "description": "修正依頼の通知の実行の記録（件数・送信先のホスト・結果だけ。人事データの値と Webhook の URL は持たない。監査ログ correction.notify の対象）",
+      "columns": {
+        "id": {
+          "category": "システム管理用",
+          "description": "実行 ID（UUIDv7）"
+        },
+        "trigger": {
+          "category": "システム管理用",
+          "description": "実行の契機（worker / cli）"
+        },
+        "outcome": {
+          "category": "システム管理用",
+          "description": "結果（sent / nothing_to_send / disabled / failed）"
+        },
+        "started_at": {
+          "category": "システム管理用",
+          "description": "開始日時"
+        },
+        "finished_at": {
+          "category": "システム管理用",
+          "description": "終了日時"
+        },
+        "open_count": {
+          "category": "システム管理用",
+          "description": "未対応の修正依頼の件数"
+        },
+        "new_count": {
+          "category": "システム管理用",
+          "description": "前回送ってからの新しい依頼の件数"
+        },
+        "stale_count": {
+          "category": "システム管理用",
+          "description": "長く放置された依頼の件数"
+        },
+        "auto_resolved_count": {
+          "category": "システム管理用",
+          "description": "この実行で自動で解消にした件数"
+        },
+        "destination_host": {
+          "category": "システム管理用",
+          "description": "Webhook の送信先のホスト（URL の全体は残さない）"
+        },
+        "http_status": {
+          "category": "システム管理用",
+          "description": "Webhook の応答の状態コード"
+        }
+      }
+    },
+    "api_client_disclosure_lead": {
+      "description": "社内システムのクライアントごとの先行提供の日数（有効日の N 日前から将来の予定を見せる）の起案と承認",
+      "columns": {
+        "id": {
+          "category": "システム管理用",
+          "description": "起案の行 ID（UUIDv7）"
+        },
+        "api_client_id": {
+          "category": "認可",
+          "description": "対象のクライアント（client credentials の社内システム）"
+        },
+        "lead_days": {
+          "category": "認可",
+          "description": "有効日の何日前から将来の予定を見せるか（0〜90）"
+        },
+        "status": {
+          "category": "認可",
+          "description": "状態（起案中・承認済み・却下・置き換え済み）"
+        },
+        "note": {
+          "category": "認可",
+          "description": "起案の理由・用途のメモ（任意。人事データの値を書かない）"
+        },
+        "proposed_by_kind": {
+          "category": "認可",
+          "description": "起案の経路（person = UI の人事管理者 / cli = 管理 CLI）"
+        },
+        "proposed_by_person_id": {
+          "category": "認可",
+          "description": "起案者（人事管理者）"
+        },
+        "proposed_at": {
+          "category": "認可",
+          "description": "起案日時"
+        },
+        "decided_by_person_id": {
+          "category": "認可",
+          "description": "承認・却下した人（起案者とは別人）"
+        },
+        "decided_at": {
+          "category": "認可",
+          "description": "承認・却下の日時"
+        },
+        "superseded_at": {
+          "category": "認可",
+          "description": "同じクライアントの次の承認で置き換えられた日時"
+        }
+      }
+    },
+    "webhook_subscription": {
+      "description": "社内システム（api_client）への Webhook の登録（クライアントごとに 1 つ）と、受け手ごとの変更フィードの位置",
+      "columns": {
+        "id": {
+          "category": "システム管理用",
+          "description": "登録の行 ID（UUIDv7）"
+        },
+        "api_client_id": {
+          "category": "配信",
+          "description": "受け手のクライアント"
+        },
+        "url": {
+          "category": "配信",
+          "description": "送信先（https だけ。公開のアドレスかは送信の直前に確かめる）"
+        },
+        "status": {
+          "category": "配信",
+          "description": "状態（active / disabled）"
+        },
+        "max_events_per_delivery": {
+          "category": "配信",
+          "description": "1 回の POST に載せる変更の件数の上限"
+        },
+        "summary_threshold": {
+          "category": "配信",
+          "description": "1 回の収集の変更がこれを超えたら要約に切り替える件数"
+        },
+        "min_interval_seconds": {
+          "category": "配信",
+          "description": "同じ受け手への POST の最小の間隔（秒）"
+        },
+        "position_xid": {
+          "category": "システム管理用",
+          "description": "変更フィードの読み進めた位置（トランザクション ID）"
+        },
+        "position_id": {
+          "category": "システム管理用",
+          "description": "変更フィードの読み進めた位置（行 ID）"
+        },
+        "activated_through": {
+          "category": "システム管理用",
+          "description": "見せてよい日が来た行をこの日まで配った（受け手の先行提供の上限まで進む）"
+        },
+        "deferred_target": {
+          "category": "システム管理用",
+          "description": "拾い直しの途中の目標の日"
+        },
+        "deferred_xid": {
+          "category": "システム管理用",
+          "description": "拾い直しの途中の位置（トランザクション ID）"
+        },
+        "deferred_id": {
+          "category": "システム管理用",
+          "description": "拾い直しの途中の位置（行 ID）"
+        },
+        "next_collect_at": {
+          "category": "システム管理用",
+          "description": "次に変更を収集する日時"
+        },
+        "next_send_at": {
+          "category": "システム管理用",
+          "description": "次に送ってよい日時（送信の間隔）"
+        },
+        "lease_owner": {
+          "category": "システム管理用",
+          "description": "収集中のワーカー（貸し出し）"
+        },
+        "lease_until": {
+          "category": "システム管理用",
+          "description": "収集の貸し出しの期限"
+        },
+        "last_success_at": {
+          "category": "配信",
+          "description": "最後に送信に成功した日時"
+        },
+        "last_failure_at": {
+          "category": "配信",
+          "description": "最後に送信に失敗した日時"
+        },
+        "last_failure": {
+          "category": "配信",
+          "description": "最後の失敗の理由（状態コード・接続できない等。URL・本文・応答の本文は含めない）"
+        },
+        "created_by_kind": {
+          "category": "システム管理用",
+          "description": "登録した主体の種類（person / cli）"
+        },
+        "created_by_person_id": {
+          "category": "システム管理用",
+          "description": "登録した人事管理者"
+        },
+        "created_at": {
+          "category": "システム管理用",
+          "description": "登録した日時"
+        },
+        "updated_by_kind": {
+          "category": "システム管理用",
+          "description": "最後に変更した主体の種類（person / cli）"
+        },
+        "updated_by_person_id": {
+          "category": "システム管理用",
+          "description": "最後に変更した人事管理者"
+        },
+        "updated_at": {
+          "category": "システム管理用",
+          "description": "最後に変更した日時"
+        }
+      }
+    },
+    "webhook_secret": {
+      "description": "Webhook の署名の鍵（HMAC-SHA256）。Data Protection で暗号化した値だけを持ち、平文は作成・ローテーションの応答で 1 回だけ返す",
+      "columns": {
+        "id": {
+          "category": "システム管理用",
+          "description": "鍵の行 ID（UUIDv7）"
+        },
+        "subscription_id": {
+          "category": "システム管理用",
+          "description": "Webhook の登録"
+        },
+        "protected_secret": {
+          "category": "認証",
+          "description": "Data Protection で暗号化した署名の鍵"
+        },
+        "created_by_kind": {
+          "category": "システム管理用",
+          "description": "作成した主体の種類（person / cli）"
+        },
+        "created_by_person_id": {
+          "category": "システム管理用",
+          "description": "作成した人事管理者"
+        },
+        "created_at": {
+          "category": "システム管理用",
+          "description": "作成した日時"
+        },
+        "expires_at": {
+          "category": "システム管理用",
+          "description": "ローテーションで置き換えた旧鍵の期限（期限までは新旧両方で署名する）"
+        }
+      }
+    },
+    "webhook_delivery": {
+      "description": "Webhook の送信の待ち行列と記録（1 行 = 1 回の POST。id がイベント ID = 冪等キー）",
+      "columns": {
+        "id": {
+          "category": "システム管理用",
+          "description": "イベント ID（UUIDv7。冪等キー・nonce）"
+        },
+        "subscription_id": {
+          "category": "システム管理用",
+          "description": "Webhook の登録"
+        },
+        "kind": {
+          "category": "配信",
+          "description": "種類（changes / summary / ping）"
+        },
+        "body": {
+          "category": "識別",
+          "description": "送る JSON（変更の種別・人・組織・拠点の jin-ji ID・見せてよい日・取り消しか・変更フィードの位置。氏名などの値は持たない）"
+        },
+        "event_count": {
+          "category": "配信",
+          "description": "本文の変更の件数"
+        },
+        "status": {
+          "category": "配信",
+          "description": "状態（pending / sending / succeeded / dead）"
+        },
+        "attempts": {
+          "category": "配信",
+          "description": "試行回数"
+        },
+        "next_attempt_at": {
+          "category": "配信",
+          "description": "次の試行の日時（指数バックオフ）"
+        },
+        "lease_until": {
+          "category": "システム管理用",
+          "description": "送信中の貸し出しの期限"
+        },
+        "last_attempt_at": {
+          "category": "配信",
+          "description": "最後に試行した日時"
+        },
+        "last_http_status": {
+          "category": "配信",
+          "description": "最後の試行の状態コード"
+        },
+        "last_error": {
+          "category": "配信",
+          "description": "最後の失敗の理由（URL・応答の本文は含めない）"
+        },
+        "created_at": {
+          "category": "システム管理用",
+          "description": "積んだ日時"
+        },
+        "succeeded_at": {
+          "category": "配信",
+          "description": "送信に成功した日時"
+        },
+        "dead_at": {
+          "category": "配信",
+          "description": "上限回数まで失敗した日時"
+        },
+        "redelivered_by_person_id": {
+          "category": "システム管理用",
+          "description": "dead からの再送を指示した人事管理者"
+        },
+        "redelivered_at": {
+          "category": "システム管理用",
+          "description": "dead からの再送を指示した日時"
+        }
+      }
+    },
+    "webhook_notified_entity": {
+      "description": "受け手ごとに変更として通知した人・組織・拠点の ID（取り消しの宛先の判定に使う）",
+      "columns": {
+        "subscription_id": {
+          "category": "システム管理用",
+          "description": "Webhook の登録"
+        },
+        "entity_type": {
+          "category": "配信",
+          "description": "種別（person / org_unit / site）"
+        },
+        "entity_id": {
+          "category": "識別",
+          "description": "通知した人・組織・拠点の jin-ji ID"
+        },
+        "notified_at": {
+          "category": "システム管理用",
+          "description": "最後に通知した日時"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "name": "jinji-web",
+  "private": true,
+  "version": "0.0.0",
+  "license": "Apache-2.0",
+  "type": "module",
+  "description": "jin-ji の Web UI（React SPA）。成果物は静的ファイルで、サーバーに Node.js は置かない（ADR-0001）",
+  "packageManager": "pnpm@10.34.6+sha512.7e1ae66a83a9143c118cc1944f37cc4f2b8acddeda4b001cfa78908f6e46e45e15292739ca6c9d026426cc757e9318cc98c5551d6a16c165097b0028ba87b4e6",
+  "engines": {
+    "node": ">=24.20.0 <25"
+  },
+  "scripts": {
+    "dev": "vite --mode demo --host 0.0.0.0 --port ${JINJI_DEV_PORT:-28000} --strictPort",
+    "dev:api": "vite --mode development --host 0.0.0.0 --port ${JINJI_DEV_PORT:-28000} --strictPort",
+    "build": "vite build && node scripts/check-no-demo.mjs dist",
+    "build:demo": "vite build --mode demo --outDir dist-demo",
+    "preview:demo": "vite preview --mode demo --outDir dist-demo --host 0.0.0.0 --port ${JINJI_DEV_PORT:-28000} --strictPort",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.node.json --noEmit",
+    "lint": "oxlint --deny-warnings src scripts",
+    "test": "vitest run",
+    "gen:api": "node scripts/gen-api-types.mjs openapi/v1.json src/api/schema.gen.ts",
+    "gen:demo": "node scripts/build-demo-data.mjs ../samples/messy-corp src/demo/demo-data.json",
+    "screenshots": "node scripts/screenshots.mjs"
+  },
+  "dependencies": {
+    "@fontsource/biz-udpgothic": "5.3.0",
+    "@react-three/fiber": "9.8.1",
+    "@xyflow/react": "12.12.0",
+    "d3-hierarchy": "3.1.2",
+    "motion": "14.0.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "three": "0.186.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "4.3.3",
+    "@types/d3-hierarchy": "3.1.7",
+    "@types/node": "24.19.0",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@types/three": "0.186.0",
+    "@vitejs/plugin-react": "6.1.1",
+    "oxlint": "1.86.0",
+    "playwright-core": "1.63.0",
+    "tailwindcss": "4.3.3",
+    "typescript": "7.0.2",
+    "vite": "8.3.2",
+    "vitest": "5.0.3"
+  }
+}

@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- MCP サーバー。Host から別ポートで登録されるクラスライブラリ。取込系（Ingest / Connectors）は参照しない -->
+
+  <ItemGroup>
+    <!-- ASP.NET Core 共有フレームワーク。NuGet 依存を増やさずにホスティング・DI・ロギングを使うため -->
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- MCP の公式 C# SDK（Streamable HTTP・JSON-RPC）。ツールの判定・監査・認可は jin-ji 側で持つ（ADR-0006） -->
+    <PackageReference Include="ModelContextProtocol.AspNetCore" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../JinJi.Application/JinJi.Application.csproj" />
+    <ProjectReference Include="../JinJi.Policy/JinJi.Policy.csproj" />
+  </ItemGroup>
+
+</Project>

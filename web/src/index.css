@@ -1,0 +1,315 @@
+@import "tailwindcss";
+
+/* ダークは data-theme="dark"、または OS の設定（data-theme が無いとき） */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/*
+ * 色は意味で名付けたトークンにする。UI の文字はコントラスト 4.5:1 以上（WCAG AA）。
+ *
+ * データの色（所属の種類 = categorical の 3 枠）: 主務（青）・兼務（橙）・出向（緑）。
+ * - dataviz の参照パレットの 1〜3 枠を順に使い、validate_palette.js でライト・ダークとも --pairs all を通している
+ *   （ライトの面では出向・兼務の線が 3:1 を下回るため、線には必ず文字のラベルか表を添える）
+ * - 色は印（線・丸・円柱）にだけ使い、文字には使わない。文字の横に線種の見本（LineKey）を置いて対応を示す
+ * - 色だけに頼らない: 兼務は破線、出向は点線、主務は実線
+ * 状態（一時停止中など）は warn のトークンで、必ずアイコンと文字を付ける。データの色とは兼用しない。
+ *
+ * アクセントの黄（--signal。3D 俯瞰の選択・ホバー・表示灯・段の目印、ラベル・凡例の縁）:
+ * - データ・状態の色には使わない。レモン寄りの黄にして、兼務・拠点 2 の橙と離す
+ *   （validate_palette.js --pairs all で categorical の 3 枠と並べ、通常の色覚 ΔE 24 以上・CVD 9.2 以上〔既存の組の値〕を確認）
+ * - 白地では 3:1 に届かない（1.3:1）ので、文字には使わず、必ず --signal-ink（黒鉛色）と組にする（縞・縁取り）
+ *
+ * 拠点で色分け（組織図・3D。lib/siteColors.ts）: 同じ categorical の 1〜3 枠を順に使い、4 つ目以降の拠点は灰色の「その他」。
+ * - 組織図・3D はどの 2 つの組織も隣り合い得る（all-pairs）ので、validate_palette.js --pairs all を通る先頭の 3 枠までにする
+ *   （4 枠目を足すと黄と橙が通常の色覚でも ΔE 13.7 で区別しにくい）
+ * - 所属の種類と同じ色なので、色分けの間は兼務・出向の線・弧を出さない（1 つの画面で色の意味を 1 つにする）
+ * - 札には拠点名を文字で出す（色だけに頼らない）
+ */
+:root {
+  --bg: #f4f6f8;
+  --surface: #ffffff;
+  --surface-2: #eef1f5;
+  --fg: #18212c;
+  --muted: #556274;
+  --border: #d3d9e1;
+  --accent: #1f4e8c;
+  --accent-fg: #ffffff;
+  --accent-weak: #e5edf8;
+  --series-primary: #2a78d6;
+  --concurrent: #eb6834;
+  --secondment: #1baf7a;
+  --deemph: #c3c9d1;
+  --danger: #b42318;
+  --warn-bg: #fff3e0;
+  --warn-fg: #7a4100;
+  --private-bg: #eef0f3;
+  --private-fg: #4a5565;
+  --focus: #2563eb;
+  --edge: #8a96a6;
+  --site-1: #2a78d6;
+  --site-2: #eb6834;
+  --site-3: #1baf7a;
+  --site-other: #8a96a6;
+  --signal: #ffd400;
+  --signal-ink: #1d232a;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f141a;
+    --surface: #161d26;
+    --surface-2: #1f2833;
+    --fg: #e5eaf0;
+    --muted: #a0acba;
+    --border: #2d3947;
+    --accent: #8db8f2;
+    --accent-fg: #0b1a2e;
+    --accent-weak: #1b2a3f;
+    --series-primary: #3987e5;
+    --concurrent: #d95926;
+    --secondment: #199e70;
+    --deemph: #3a4553;
+    --danger: #ff8b80;
+    --warn-bg: #3a2a12;
+    --warn-fg: #ffd59e;
+    --private-bg: #252e39;
+    --private-fg: #b9c3cf;
+    --focus: #93c5fd;
+    --edge: #6b7889;
+    --site-1: #3987e5;
+    --site-2: #d95926;
+    --site-3: #199e70;
+    --site-other: #6b7889;
+    --signal: #ffd400;
+    --signal-ink: #11161c;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #0f141a;
+  --surface: #161d26;
+  --surface-2: #1f2833;
+  --fg: #e5eaf0;
+  --muted: #a0acba;
+  --border: #2d3947;
+  --accent: #8db8f2;
+  --accent-fg: #0b1a2e;
+  --accent-weak: #1b2a3f;
+  --series-primary: #3987e5;
+  --concurrent: #d95926;
+  --secondment: #199e70;
+  --deemph: #3a4553;
+  --danger: #ff8b80;
+  --warn-bg: #3a2a12;
+  --warn-fg: #ffd59e;
+  --private-bg: #252e39;
+  --private-fg: #b9c3cf;
+  --focus: #93c5fd;
+  --edge: #6b7889;
+  --site-1: #3987e5;
+  --site-2: #d95926;
+  --site-3: #199e70;
+  --site-other: #6b7889;
+  --signal: #ffd400;
+  --signal-ink: #11161c;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-accent-fg: var(--accent-fg);
+  --color-accent-weak: var(--accent-weak);
+  --color-series-primary: var(--series-primary);
+  --color-concurrent: var(--concurrent);
+  --color-secondment: var(--secondment);
+  --color-deemph: var(--deemph);
+  --color-danger: var(--danger);
+  --color-warn-bg: var(--warn-bg);
+  --color-warn-fg: var(--warn-fg);
+  --color-private-bg: var(--private-bg);
+  --color-private-fg: var(--private-fg);
+  --color-signal: var(--signal);
+  --color-signal-ink: var(--signal-ink);
+  --font-sans: "BIZ UDPGothic", "Noto Sans JP", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic UI", "Meiryo", system-ui, sans-serif;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.6;
+  /* 日本語の行頭・行末の約物を詰め、長い語は途中で折り返す */
+  line-break: strict;
+  overflow-wrap: anywhere;
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: "palt" 0;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* スクリーンリーダーだけに読ませる */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* React Flow のテーマを合わせる */
+.react-flow {
+  --xy-background-color: var(--bg);
+  --xy-node-background-color: var(--surface);
+  --xy-node-border: 1px solid var(--border);
+  --xy-node-color: var(--fg);
+  --xy-edge-stroke: var(--edge);
+  --xy-minimap-background-color: var(--surface);
+  --xy-controls-button-background-color: var(--surface);
+  --xy-controls-button-background-color-hover: var(--surface-2);
+  --xy-controls-button-color: var(--fg);
+  --xy-controls-button-border-color: var(--border);
+  --xy-attribution-background-color: transparent;
+  /* 「拠点で分ける」の区画の面（地の点が透ける程度に薄く） */
+  --site-group-bg: color-mix(in srgb, var(--surface-2) 55%, transparent);
+}
+
+.react-flow__node-siteGroup {
+  padding: 0;
+  border: none;
+  background: transparent;
+  /* 区画の枠は操作を受けない（図の移動・札の選択を妨げない） */
+  pointer-events: none !important;
+}
+
+.site-group {
+  border-color: var(--border);
+  background: var(--site-group-bg);
+}
+
+.react-flow__node-org {
+  padding: 0;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+}
+
+.react-flow__node-org.selected .org-card,
+.react-flow__node-org:focus-visible .org-card {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.react-flow__edge.edge-concurrent path {
+  stroke: var(--concurrent);
+  stroke-dasharray: 7 4;
+  stroke-width: 2;
+}
+
+.react-flow__edge.edge-secondment path {
+  stroke: var(--secondment);
+  stroke-dasharray: 0.5 4;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+}
+
+/* 「拠点で分ける」の、拠点をまたぐ親子（指した・選んだ組織の分だけ）。組織の上下の線より細く、破線にする */
+.react-flow__edge.edge-upper path {
+  stroke: var(--edge);
+  stroke-dasharray: 3 4;
+  stroke-width: 1.25;
+}
+
+/* 線の種類の見本（凡例・数の横に置く。色だけに頼らない） */
+.line-key {
+  display: inline-block;
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+
+/* 3D 俯瞰の HTML ラベル（位置は毎フレーム transform で動かす） */
+.label3d {
+  position: absolute;
+  left: 0;
+  top: 0;
+  white-space: nowrap;
+  pointer-events: none;
+  will-change: transform;
+}
+
+/*
+ * 3D 俯瞰の走査線（WebGL の上に重ねる CSS。描き直しを起こさない）:
+ * 細い横線の網目と、ゆっくり上から下へ流れる淡い帯。動きを減らす設定では帯を出さない
+ */
+.scan3d {
+  background-image: repeating-linear-gradient(to bottom, transparent 0 3px, color-mix(in srgb, var(--fg) 3%, transparent) 3px 4px);
+  overflow: hidden;
+}
+
+.scan3d::after {
+  content: "";
+  position: absolute;
+  inset: -30% 0 auto 0;
+  height: 30%;
+  background: linear-gradient(to bottom, transparent, color-mix(in srgb, var(--fg) 2.5%, transparent) 80%, transparent);
+  animation: scan3d-sweep 9s linear infinite;
+}
+
+@keyframes scan3d-sweep {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(433%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scan3d::after {
+    animation: none;
+    display: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .react-flow__edge.edge-concurrent path,
+  .react-flow__edge.edge-secondment path {
+    stroke: CanvasText;
+  }
+}

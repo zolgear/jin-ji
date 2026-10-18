@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- ユースケース（API・MCP・ワーカーが共有する） -->
+
+  <ItemGroup>
+    <ProjectReference Include="../JinJi.Domain/JinJi.Domain.csproj" />
+    <ProjectReference Include="../JinJi.Policy/JinJi.Policy.csproj" />
+  </ItemGroup>
+
+</Project>

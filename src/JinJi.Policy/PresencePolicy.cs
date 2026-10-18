@@ -4,6 +4,7 @@ namespace JinJi.Policy;
 /// 当日の所在（項目 presence）の組み込みの公開範囲の規則。外部の提供（IPresenceProvider）の所在は、全社公開レベルを超える行動の情報に近いので、
 /// 「全社公開を既定にポリシーで狭める」（ADR-0008）の上で最初から狭い規則を置く。既定は本人と同じ部（<c>same_level(department)</c>）で、
 /// 設定 <c>JinJi:Directory:PresenceVisibilityScope</c> で変えられる。ポリシー（policy_rule）でさらに狭められる（合成は積）。
+/// 人事管理者の全項目の閲覧はこの項目には効かない（<see cref="PolicyEvaluator.VisibleFields"/>）。
 /// </summary>
 public static class PresencePolicy
 {

@@ -537,7 +537,7 @@ web/scripts/screenshots.sh                  # 最後に「CSP 違反: 0 件」�
       services.Replace(ServiceDescriptor.Singleton<IPresenceProvider, MyPresenceProvider>()));
   ```
 
-- jin-ji は返った所在に必ず自分の認可を適用する: 項目 `presence` の公開範囲（既定は本人と同じ部。`JinJi:Directory:PresenceVisibilityScope`）・ポリシー・個人単位の例外・クライアントの項目の上限（`*` は `presence` を含まないので、使うクライアントは `--fields '*,presence'` のように明示する）。席番号は項目 `seat` も見えるときだけ
+- jin-ji は返った所在に必ず自分の認可を適用する（人事管理者も例外にしない。所在だけは全員を一覧できる立場を作らない）: 項目 `presence` の公開範囲（既定は本人と同じ部。`JinJi:Directory:PresenceVisibilityScope`）・ポリシー・個人単位の例外・クライアントの項目の上限（`*` は `presence` を含まないので、使うクライアントは `--fields '*,presence'` のように明示する）。席番号は項目 `seat` も見えるときだけ
 - 今日だけ問い合わせ、`as_of`（過去・将来）では呼ばない。キャッシュ・永続化せず、変更フィード・Webhook・同期・監査ログに記録しない。応答は `Cache-Control: no-store`。所在は `GET /people/{id}`・MCP の `get_person`（1 人の参照）と `GET /floors/{id}/presence` だけに出し、人の一覧・検索には出さない
 
 ## 取り込み

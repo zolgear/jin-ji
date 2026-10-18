@@ -2,8 +2,8 @@
 // 画面が少ないので TanStack Router / React Router は入れない。ハッシュなので配信側に SPA の振り分け設定が要らない。
 import { useCallback, useSyncExternalStore } from "react";
 
-export type View = "org-chart" | "overview-3d" | "search" | "corrections";
-export const VIEWS: View[] = ["org-chart", "overview-3d", "search", "corrections"];
+export type View = "org-chart" | "overview-3d" | "search" | "corrections" | "floor-booking";
+export const VIEWS: View[] = ["org-chart", "overview-3d", "search", "corrections", "floor-booking"];
 
 export interface Route {
   view: View;

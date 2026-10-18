@@ -10,13 +10,17 @@ import { summaryLabel, useCorrectionSummary } from "../features/corrections/shar
 import { SEARCH_PARAM_KEYS } from "../features/search/searchState";
 import { useFormatDate } from "../lib/dateStyle";
 import { formatHash, parseHash, useRoute, type View } from "../lib/router";
+import { usePresenceSettings } from "../features/floor/floorHooks";
 import { useNav } from "./nav";
 
-export const VIEW_LABEL: Record<View, string> = { "org-chart": "組織図", "overview-3d": "3D 表示", search: "検索", corrections: "修正依頼" };
+export const VIEW_LABEL: Record<View, string> = { "org-chart": "組織図", "overview-3d": "3D 表示", search: "検索", corrections: "修正依頼", "floor-booking": "今日の席" };
 
 /** 画面を切り替えるときに引き継ぐ引数（修正依頼の画面は日付・選択を持たず、他の画面は修正依頼の絞り込みを、検索の画面以外は検索の条件を持たない）。 */
 function paramsFor(view: View, current: URLSearchParams): URLSearchParams {
   const params = new URLSearchParams(current);
+  // 今日の席（予約の画面）は日付（as_of）・選択を持たず、予約の日と階だけを持つ
+  if (view === "floor-booking") return sourceOnly(current);
+  for (const k of ["date"]) params.delete(k);
   if (view === "corrections") {
     for (const k of ["org", "person", "as_of", ...SEARCH_PARAM_KEYS]) params.delete(k);
     return params;
@@ -64,6 +68,14 @@ const VIEW_ICON: Record<View, ReactNode> = {
     <Svg>
       <circle cx="10.5" cy="10.5" r="6.2" />
       <path d="m15.2 15.2 5.3 5.3" />
+    </Svg>
+  ),
+  // 机と椅子（今日の席の予約）
+  "floor-booking": (
+    <Svg>
+      <path d="M3.5 9.5h17M5.5 9.5V20M18.5 9.5V20" />
+      <path d="M9 14.5h6v5.5M9 20v-5.5" />
+      <circle cx="12" cy="5" r="2" />
     </Svg>
   ),
   // 受け箱（届いた依頼）
@@ -202,6 +214,9 @@ export function NavRail() {
   const { view } = useNav();
   const { route } = useRoute();
   const corrections = useCorrectionsNav();
+  // 今日の席（当日の所在）は、機能が有効な導入先だけに出す
+  const presence = usePresenceSettings();
+  const views = (Object.keys(VIEW_LABEL) as View[]).filter((v) => v !== "floor-booking" || Boolean(presence.data));
   return (
     <div data-popover-edge className="order-last z-10 flex shrink-0 items-stretch border-t border-border bg-surface pb-[env(safe-area-inset-bottom)] md:order-none md:z-30 md:w-[68px] md:flex-col md:items-center md:gap-2 md:border-t-0 md:border-r md:py-3 md:pb-3">
       {/* 名前（トップへのリンク）。スマホでは上の帯の画面名で足りるので出さない */}
@@ -218,7 +233,7 @@ export function NavRail() {
       <DemoBadge className="hidden md:block" />
       <nav aria-label="画面" className="flex min-w-0 flex-[4] md:mt-3 md:flex-none">
         <ul className="m-0 flex w-full list-none gap-0.5 p-1 md:flex-col md:gap-2 md:p-0">
-          {(Object.keys(VIEW_LABEL) as View[]).map((v) => {
+          {views.map((v) => {
             const current = view === v;
             const label = (v === "corrections" ? corrections.label : undefined) ?? VIEW_LABEL[v];
             return (

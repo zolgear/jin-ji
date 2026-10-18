@@ -6,20 +6,24 @@ import { SessionGate } from "./auth/session";
 import { Spinner } from "./components/ui";
 import { AdapterProvider, DEMO_AVAILABLE, useAdapter, type AdapterChoice } from "./data/adapterContext";
 import { CorrectionsView } from "./features/corrections/CorrectionsView";
+import { BookingView } from "./features/floor/BookingView";
 import { OrgOutline } from "./features/org/OrgOutline";
 import { OrgPanel } from "./features/org/OrgPanel";
 import { OrgChartView } from "./features/orgchart/OrgChartView";
 import { PersonPanel } from "./features/person/PersonPanel";
 import { SearchView } from "./features/search/SearchView";
 import { parseHash } from "./lib/router";
+import { useFloorRoute } from "./features/floor/floorHooks";
 
 // three.js は大きいので 3D の画面を開いたときに読む
 const Overview3D = lazy(() => import("./features/overview3d/Overview3D").then((m) => ({ default: m.Overview3D })));
 
 function SidePanel() {
   const { view, orgId, personId, openPerson, selectOrg } = useNav();
+  const { floorMode } = useFloorRoute();
   const panelRef = useRef<HTMLElement>(null);
-  const open = Boolean(personId || orgId || view === "overview-3d");
+  // 3D の組織モードで何も選んでいないときは組織の一覧を出す（建物・フロアモードでは階の一覧が図の中にある）
+  const open = Boolean(personId || orgId || (view === "overview-3d" && !floorMode));
   const close = () => {
     if (personId) openPerson(null);
     else selectOrg(null);
@@ -59,7 +63,8 @@ function SidePanel() {
  *  タイムマシンは過去を見るためのまれな機能なので、主役の画面名から離して右端に置く。 */
 function TopBar() {
   const { view } = useNav();
-  const dated = view !== "corrections";
+  // 修正依頼と今日の席（予約の日を自分の引数で持つ）は、タイムマシンの日付を持たない
+  const dated = view !== "corrections" && view !== "floor-booking";
   return (
     <header className="flex min-h-14 shrink-0 items-center gap-x-4 gap-y-2 border-b border-border bg-surface px-4 py-2 md:px-5">
       {/* スマホでは下のタブが現在地を示すので、日付のある画面では名前を読み上げだけにして幅を空ける */}
@@ -91,6 +96,7 @@ function Shell() {
             )}
             {view === "search" && <SearchView />}
             {view === "corrections" && <CorrectionsView />}
+            {view === "floor-booking" && <BookingView />}
           </section>
           <SidePanel />
         </main>

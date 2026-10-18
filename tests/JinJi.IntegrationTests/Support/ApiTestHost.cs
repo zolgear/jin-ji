@@ -1,11 +1,9 @@
 using System.Net;
 using System.Net.Http.Headers;
-using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text.Json;
 using JinJi.Host;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Connections;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
@@ -86,7 +84,7 @@ internal sealed class TestIssuer : IDisposable
 }
 
 /// <summary>
-/// テスト用に Kestrel で API を立てる（実 DB はフィクスチャの一時データベース）。ポートは空いているものを選ぶ。
+/// テスト用に Kestrel で API を立てる（実 DB はフィクスチャの一時データベース）。ポートは OS に割り当てさせる。
 /// </summary>
 internal sealed class ApiTestHost : IAsyncDisposable
 {
@@ -135,7 +133,8 @@ internal sealed class ApiTestHost : IAsyncDisposable
 
     /// <summary>
     /// API・MCP・メトリクスを別ポートで立てる（役割 all からワーカーを除いたもの）。
-    /// 空いているポートを選んでから待ち受けるまでの間に他のテストが同じポートを取ることがあるので、そのときはポートを選び直す。
+    /// ポートは 0 を指定して OS に割り当てさせ、待ち受けを始めた後に実際のポートを読む（空いているポートを先に選んで閉じると、
+    /// 待ち受けるまでの間に他のテストや外向きの接続が同じポートを取り得る）。
     /// </summary>
     public static async Task<ApiTestHost> StartAsync(
         string appConnectionString,
@@ -143,36 +142,29 @@ internal sealed class ApiTestHost : IAsyncDisposable
         IEnumerable<string>? extraArgs = null,
         Action<IServiceCollection>? configureServices = null)
     {
-        var extra = extraArgs?.ToList() ?? [];
-        for (var attempt = 1; ; attempt++)
-        {
-            var (apiPort, mcpPort, metricsPort) = (FreePort(), FreePort(), FreePort());
-            string[] args =
-            [
-                "--JinJi:Listen:Address=127.0.0.1",
-                $"--JinJi:Listen:ApiPort={apiPort}",
-                $"--JinJi:Listen:McpPort={mcpPort}",
-                $"--JinJi:Listen:MetricsPort={metricsPort}",
-                $"--ConnectionStrings:App={appConnectionString}",
-                "--Logging:LogLevel:Default=Warning",
-                // テストは証明書なしの Data Protection の鍵で動かす（明示した設定でだけ許す）
-                "--JinJi:DataProtection:AllowUnprotectedKeys=true",
-                .. issuer.ConfigArgs(),
-                .. DefaultClients,
-                .. extra,
-            ];
-            var app = ServerHost.BuildWeb(HostRole.Api | HostRole.Mcp, args, configureServices);
-            try
-            {
-                await app.StartAsync(TestContext.Current.CancellationToken);
-                return new ApiTestHost(app, apiPort, mcpPort, metricsPort);
-            }
-            catch (IOException ex) when (attempt < 5 && ex.InnerException is AddressInUseException)
-            {
-                await app.DisposeAsync();
-            }
-        }
+        string[] args =
+        [
+            "--JinJi:Listen:Address=127.0.0.1",
+            "--JinJi:Listen:ApiPort=0",
+            "--JinJi:Listen:McpPort=0",
+            "--JinJi:Listen:MetricsPort=0",
+            $"--ConnectionStrings:App={appConnectionString}",
+            "--Logging:LogLevel:Default=Warning",
+            // テストは証明書なしの Data Protection の鍵で動かす（明示した設定でだけ許す）
+            "--JinJi:DataProtection:AllowUnprotectedKeys=true",
+            .. issuer.ConfigArgs(),
+            .. DefaultClients,
+            .. extraArgs ?? [],
+        ];
+        var app = ServerHost.BuildWeb(HostRole.Api | HostRole.Mcp, args, configureServices);
+        await app.StartAsync(TestContext.Current.CancellationToken);
+        var ports = app.Services.GetRequiredService<SurfacePortMap>();
+        return new ApiTestHost(app, BoundPort(ports, Surface.Api), BoundPort(ports, Surface.Mcp), BoundPort(ports, Surface.Metrics));
     }
+
+    /// <summary>待ち受けを始めたホストの公開面のポート。</summary>
+    public static int BoundPort(SurfacePortMap ports, Surface surface) =>
+        ports.PortOf(surface) ?? throw new InvalidOperationException($"{surface} のポートで待ち受けていません。");
 
     /// <summary>トークンを付けて GET する。</summary>
     public async Task<HttpResponseMessage> GetAsync(string path, string? token)
@@ -212,12 +204,5 @@ internal sealed class ApiTestHost : IAsyncDisposable
         Http.Dispose();
         await App.StopAsync(CancellationToken.None);
         await App.DisposeAsync();
-    }
-
-    public static int FreePort()
-    {
-        using var listener = new TcpListener(IPAddress.Loopback, 0);
-        listener.Start();
-        return ((IPEndPoint)listener.LocalEndpoint).Port;
     }
 }

@@ -62,8 +62,8 @@ public sealed class OAuthHostTests(AuthFixtureDatabase db) : IClassFixture<AuthF
         string[] args =
         [
             $"--ConnectionStrings:App={db.Database.AppConnectionString}",
-            $"--JinJi:Listen:ApiPort={ApiTestHost.FreePort()}",
-            $"--JinJi:Listen:MetricsPort={ApiTestHost.FreePort()}",
+            "--JinJi:Listen:ApiPort=0",
+            "--JinJi:Listen:MetricsPort=0",
             "--JinJi:DataProtection:AllowUnprotectedKeys=true",
             $"--JinJi:Auth:Login:PublicOrigin={AuthTestHost.Origin}",
             "--JinJi:Auth:Server:Issuer=https://other.jinji.test",

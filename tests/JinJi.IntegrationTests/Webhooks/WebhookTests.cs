@@ -504,8 +504,33 @@ public sealed class WebhookTests(RouteFixtureDatabase db) : IClassFixture<RouteF
         return client.Id;
     }
 
-    private Task<WebhookSecretIssued> RegisterAsync(Guid clientRef, string path, WebhookSettings? settings = null) =>
-        Admin().RegisterAsync(HrAdmin(F), clientRef, WebhookReceiver.Url(path), settings ?? new WebhookSettings(MinIntervalSeconds: 1), null, Ct);
+    private async Task<WebhookSecretIssued> RegisterAsync(Guid clientRef, string path, WebhookSettings? settings = null)
+    {
+        await WaitUntilPriorChangesPassedAsync();
+        return await Admin().RegisterAsync(HrAdmin(F), clientRef, WebhookReceiver.Url(path), settings ?? new WebhookSettings(MinIntervalSeconds: 1), null, Ct);
+    }
+
+    /// <summary>
+    /// それまでにコミットした変更（フィクスチャの登録・前のテストの変更）が、変更フィードの今の位置より前になるまで待つ。
+    /// </summary>
+    /// <remarks>
+    /// 登録の読み始めの位置は「実行中のどのトランザクションよりも前」（pg_snapshot_xmin）で、同じ PostgreSQL の他のデータベースの
+    /// トランザクションでも遅れる。並行して動く他のテストのトランザクションが残っていると、登録より前にコミットした変更
+    /// （例: フィクスチャの s2_member の 10 年前からの所属）も受け手に届く（少なくとも 1 回届ける規則のとおりで、取りこぼしはしない）。
+    /// このクラスのテストは「登録の後の変更だけが届く」ことを前提に件数や有効日を確かめるので、登録の前に位置が追い付くのを待つ。
+    /// </remarks>
+    private async Task WaitUntilPriorChangesPassedAsync()
+    {
+        // 今のトランザクション ID（これより前に始まったトランザクションが終われば、位置はこれ以上になる）
+        var marker = Assert.Single(await db.QueryAsAppAsync<long>(null, "SELECT pg_current_xact_id()::text::bigint", Ct));
+        var store = new NpgsqlChangeFeedStore(db.AppDataSource);
+        var deadline = DateTime.UtcNow + PollTimeout;
+        while (await store.GetWatermarkAsync(ViewerContext.ForSystem(Channel.Worker), Ct) < marker)
+        {
+            Assert.True(DateTime.UtcNow < deadline, "変更フィードの位置が進みませんでした。");
+            await Task.Delay(100, Ct);
+        }
+    }
 
     /// <summary>受け手が受け取った変更（要約・ping を除く）。</summary>
     private List<ReceivedEvent> Events(string path) =>

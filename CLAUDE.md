@@ -1,12 +1,12 @@
 # jin-ji
 
-日本向けの人事情報基盤（プロジェクト名は仮）。人事情報を MCP / AI エージェントから安全に扱える「AI Ready」にすることが目的。ERP ではない。
+日本向けの人事情報基盤。人事情報を MCP / AI エージェントから安全に扱える「AI Ready」にすることが目的。ERP ではない。
 
 ## 技術スタック
 
 - バックエンド: C# / .NET 10 LTS（ASP.NET Core）。フロントエンド: TypeScript（React）。決定の経緯は `docs/adr/0001-language-and-runtime.md`
 - DB は PostgreSQL のみ
-- 設計: `docs/architecture/overview.md`
+- 設計: `docs/architecture/overview.md`。ドキュメントの目次（ADR の一覧を含む）は `docs/README.md`、API の仕様は `docs/api.md`（正は `web/openapi/v1.json`）
 - 依存の追加は ADR-0001 のサプライチェーン方針に従う。標準機能で済むものは入れない
 
 ## コミュニケーション

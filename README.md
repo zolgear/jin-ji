@@ -20,7 +20,7 @@
 
 | だれが | 何をする |
 | --- | --- |
-| 社員 | Web UI で組織図・3D 俯瞰・人の検索を見る。値の誤りに気づいたら修正依頼を出す |
+| 社員 | Web UI で組織図・3D 表示・人の検索を見る。値の誤りに気づいたら修正依頼を出す |
 | 人事管理者 | 人事パッケージなどのデータを取り込み、変更提案と要確認を確かめて承認する。公開範囲のポリシーを決める |
 | AI エージェント | MCP サーバーを通して、委任元の社員と同じ権限で人事情報を参照する。修正依頼の起票や要確認への推定はできるが、公開される情報は変えない |
 | 社内システム | 勤怠・承認ワークフローなどが REST API・変更フィード・Webhook で組織・所属・上長・承認ルートを引く |
@@ -32,7 +32,7 @@
 | --- | --- |
 | サーバー（REST API・MCP・ワーカー・管理 CLI） | C# / .NET 10（ASP.NET Core）。1 つの実行ファイルを役割（`all` / `api` / `mcp` / `worker`）で切り替える |
 | DB | PostgreSQL 17 以上 |
-| Web UI | React + Vite + TypeScript の SPA（組織図・3D 俯瞰・検索・修正依頼・認証の画面） |
+| Web UI | React + Vite + TypeScript の SPA（組織図・3D 表示・検索・修正依頼・認証の画面） |
 | サンプルデータ | 架空の「整っていない」会社の人事データと正解データ（`samples/messy-corp/`） |
 
 ビルド・テスト・依存のインストールはすべて Docker のコンテナ内で行い、ホストに .NET SDK や Node.js は要らない。
@@ -44,7 +44,7 @@
 ```sh
 scripts/pnpm.sh install --frozen-lockfile
 JINJI_PNPM_PORT=28000 JINJI_PNPM_NAME=jinji-pnpm-dev scripts/pnpm.sh dev
-# → http://127.0.0.1:28000/ （組織図・3D 俯瞰・検索・修正依頼。ログインの画面のデモは demo / 任意 / 123456）
+# → http://127.0.0.1:28000/ （組織図・3D 表示・検索・修正依頼。ログインの画面のデモは demo / 任意 / 123456）
 docker stop jinji-pnpm-dev   # 終わったら止める
 ```
 

@@ -2,6 +2,10 @@
 // 型の元は OpenAPI から生成した schema.gen.ts。UI 側で値を足したり、見えない項目を推測したりしない。
 import type { Schemas } from "../api/schema.gen";
 import type { CorrectionAdapter } from "./corrections";
+import type { WorkplaceAdapter } from "./workplace";
+
+// 建物・階・席・当日の所在の型（data/workplace.ts）
+export type * from "./workplace";
 
 /** 人（API の PersonResponse）。見えない項目・値の無い項目は null か省略で来る。 */
 export type Person = Schemas["PersonResponse"];
@@ -166,6 +170,8 @@ export interface DirectoryAdapter {
   getSite(id: string, asOf: string): Promise<Site>;
   /** 修正依頼（起票しても公開データは変わらない。data/corrections.ts）。 */
   readonly corrections: CorrectionAdapter;
+  /** 建物・階・席と当日の所在（data/workplace.ts）。 */
+  readonly workplace: WorkplaceAdapter;
 }
 
 /** API の Problem Details を伴うエラー。 */

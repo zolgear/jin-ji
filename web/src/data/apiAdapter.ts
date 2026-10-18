@@ -4,6 +4,7 @@
 import { buildUrl, createApiClient, createCsrfSender, type ApiClient, type ApiClientOptions } from "../api/client";
 import type { Schemas } from "../api/schema.gen";
 import { businessDateJst } from "../lib/date";
+import { createApiWorkplace } from "./apiWorkplace";
 import type { CorrectionAdapter } from "./corrections";
 import type { DirectoryAdapter, Milestone, OrgStats, Person, PersonPage } from "./types";
 
@@ -55,6 +56,7 @@ export function createApiAdapter(options: ApiAdapterOptions = {}): DirectoryAdap
     milestones: meta ? toMilestones(meta) : [],
     canViewFuture: meta?.can_view_future ?? false,
     corrections: createApiCorrections(client, options.baseUrl ?? ""),
+    workplace: createApiWorkplace(client, options, asOfParam),
     async getOrgTree(asOf) {
       return client.get("/api/v1/orgs/tree", { query: { as_of: asOfParam(asOf) } });
     },

@@ -84,11 +84,12 @@ export class DemoWorkplaceService {
 
   private summary(floor: DemoFloor, asOf: string): FloorSummary {
     const states = this.states(floor.id, asOf);
-    let assigned = 0;
+    const layout = this.wp.layouts.get(floor.id);
+    let occupied = 0;
     let vacant = 0;
     let unavailable = 0;
     for (const s of states.values()) {
-      if (s.status === "occupied") assigned++;
+      if (s.status === "occupied") occupied++;
       else if (s.status === "vacant") vacant++;
       else unavailable++;
     }
@@ -98,8 +99,10 @@ export class DemoWorkplaceService {
       label: floor.label,
       level_order: floor.level_order,
       kind: floor.kind,
+      layout_id: layout?.layout_id ?? null,
+      layout_valid_from: layout?.valid_from ?? null,
       seat_count: states.size,
-      assigned_count: assigned,
+      occupied_count: occupied,
       vacant_count: vacant,
       unavailable_count: unavailable,
     };
@@ -112,7 +115,8 @@ export class DemoWorkplaceService {
       .filter((f) => f.building_id === id)
       .sort((x, y) => x.level_order - y.level_order)
       .map((f) => this.summary(f, asOf));
-    return { id: b.id, site_id: b.site_id, code: b.code, name: b.name, sort_order: b.sort_order, floors };
+    const site = this.dir.siteAt(b.site_id, asOf);
+    return { id: b.id, site_id: b.site_id, site_code: site?.code ?? null, site_name: site?.name ?? null, code: b.code, name: b.name, sort_order: b.sort_order, floors };
   }
 
   listBuildings(siteId: string, asOf: string): Building[] {
@@ -238,13 +242,29 @@ export class DemoWorkplaceService {
       workplace = {
         site_id: b.site_id,
         building_id: b.id,
+        building_code: b.code,
+        building_name: b.name,
+        floor_id: info.floor.id,
+        floor_label: info.floor.label,
+        level_order: info.floor.level_order,
+        zone_key: info.zone?.zone_key ?? null,
+        zone_name: info.zone?.name ?? null,
+        source: "seat",
+      };
+      seat = {
+        seat_id: info.seat.seat_id,
+        code: info.seat.code,
+        building_id: b.id,
         building_name: b.name,
         floor_id: info.floor.id,
         floor_label: info.floor.label,
         zone_key: info.zone?.zone_key ?? null,
         zone_name: info.zone?.name ?? null,
+        x_mm: info.seat.x_mm,
+        y_mm: info.seat.y_mm,
+        rotation_deg: info.seat.rotation_deg,
+        kind: info.seat.seat_kind,
       };
-      seat = { seat_id: info.seat.seat_id, code: info.seat.code, floor_id: info.floor.id, x_mm: info.seat.x_mm, y_mm: info.seat.y_mm };
     }
     let presence: PersonPresence | null = null;
     // 今日の所在は今日の時点だけ（タイムマシンの対象外）

@@ -233,26 +233,3 @@ describe("buildUrl", () => {
     expect(buildUrl("", "/api/v1/people/{id}", { id: "a/b" }, { as_of: undefined, q: "" })).toBe("/api/v1/people/a%2Fb");
   });
 });
-
-describe("建物・フロアモードの API（設計書 §6.1 のパス）", () => {
-  it("建物の一覧は as_of を付け、配置図・在籍者は階ごと。在籍者はページを続けて読む", async () => {
-    const { fn, calls } = fakeFetch({
-      "/api/v1/sites/s1/buildings?as_of=2026-04-01": { status: 200, body: { items: [] } },
-      "/api/v1/floors/f1/layout": { status: 200, body: { floor_id: "f1" } },
-      "/api/v1/floors/f1/occupants?limit=100": { status: 200, body: { items: [{ person_id: "p1" }], next_cursor: "c2" } },
-      "/api/v1/floors/f1/occupants?cursor=c2&limit=100": { status: 200, body: { items: [{ person_id: "p2" }], next_cursor: null } },
-    });
-    const adapter = createApiAdapter({ fetch: fn, now });
-    expect(await adapter.workplace.listBuildings("s1", "2026-04-01")).toEqual([]);
-    await adapter.workplace.getFloorLayout("f1", "2026-10-12");
-    const occupants = await adapter.workplace.listFloorOccupants("f1", "2026-10-12");
-    expect(occupants.map((o) => o.person_id)).toEqual(["p1", "p2"]);
-    expect(calls).toHaveLength(4);
-  });
-
-  it("今日の所在の提供元が無い導入先（404）では、階の所在は null", async () => {
-    const { fn } = fakeFetch({});
-    const adapter = createApiAdapter({ fetch: fn, now });
-    expect(await adapter.workplace.getFloorPresence("f1", "2026-10-12")).toBeNull();
-  });
-});

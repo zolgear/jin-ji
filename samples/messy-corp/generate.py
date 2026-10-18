@@ -1399,6 +1399,134 @@ with open(os.path.join(OUT, "ground_truth.json"), "w", encoding="utf-8") as f:
     json.dump(truth, f, ensure_ascii=False, indent=2)
     f.write("\n")
 
+
+# ================================================================ 建物・階・席（建物・フロアモード。0019）
+# 乱数は別の固定シード（他のファイルの乱数の並びを変えない）。座標は階ごとのローカル座標（整数のミリメートル。原点は左下）
+wrng = random.Random(20261018)
+
+
+def rect(x0, y0, x1, y1):
+    return [[x0, y0], [x1, y0], [x1, y1], [x0, y1]]
+
+
+WP_ANOM = collections.Counter()
+
+
+def office_layout(label, prefix, fixed_rows, restricted=False, valid_from="2025-04-01"):
+    """事務所の階: 西は固定席（島ごとに向かい合わせ）、東は横向きの固定席、中央にコア。会議室は図形だけ（予約は扱わない）。"""
+    zones = [{"name": f"{label} 西", "kind": "office", "polygon": rect(0, 0, 24000, 24000)},
+             {"name": f"{label} 東", "kind": "office", "polygon": rect(24000, 0, 48000, 24000)}]
+    if restricted:
+        zones.append({"name": f"{label} 書庫", "kind": "restricted", "polygon": rect(42000, 19000, 48000, 24000)})
+    fixtures = [{"kind": "core", "name": "コア", "polygon": rect(21000, 10000, 27000, 14000)},
+                {"kind": "room", "name": "会議室", "polygon": rect(0, 19000, 7000, 24000)}]
+    seats = []
+    n = 0
+    for r in range(fixed_rows):
+        for c in range(8):
+            n += 1
+            seats.append({"code": f"{prefix}-A{n:02d}", "x_mm": 2000 + c * 1600, "y_mm": 2000 + r * 2400,
+                          "rotation_deg": 0 if r % 2 == 0 else 180, "desk_type": "desk_1200", "kind": "fixed", "zone": f"{label} 西"})
+    m = 0
+    for r in range(3):
+        for c in range(6):
+            m += 1
+            seats.append({"code": f"{prefix}-B{m:02d}", "x_mm": 27000 + c * 1800, "y_mm": 2000 + r * 3000, "rotation_deg": 90,
+                          "desk_type": "desk_1400", "kind": "fixed", "zone": f"{label} 東",
+                          "features": ["dual_monitor"] if m % 3 == 0 else ["monitor"]})
+    if restricted:
+        seats.append({"code": f"{prefix}-R01", "x_mm": 45000, "y_mm": 21500, "desk_type": "desk_1200", "kind": "fixed", "zone": f"{label} 書庫"})
+    return {"valid_from": valid_from, "grid_mm": 100, "outline": rect(0, 0, 48000, 24000), "fixtures": fixtures, "zones": zones, "seats": seats}
+
+
+def station_layout(lines, prefix, capacity, width, kind):
+    """製造フロア・倉庫: ライン（ゾーン）ごとに持ち場（定員 2 以上）を並べる。シフト・勤務帯は持たない"""
+    zones, seats = [], []
+    for i, name in enumerate(lines):
+        y0 = i * 12000
+        zones.append({"name": name, "kind": kind, "polygon": rect(0, y0, width, y0 + 12000)})
+        for j in range(6):
+            seats.append({"code": f"{prefix}{i + 1}-S{j + 1:02d}", "x_mm": 4000 + j * 8000, "y_mm": y0 + 6000, "desk_type": "station",
+                          "kind": "station", "capacity": capacity, "zone": name})
+    return {"valid_from": "2024-10-01", "grid_mm": 500, "outline": rect(0, 0, width, 12000 * len(lines)), "fixtures": [],
+            "zones": zones, "seats": seats}
+
+
+TOKYO_FLOORS = [("2F", 20, 4, False), ("3F", 30, 6, False), ("4F", 40, 6, True), ("5F", 50, 5, False), ("6F", 60, 3, False)]
+tokyo_main = {"code": "MAIN", "name": "本館", "sort_order": 0,
+              "floors": [{"label": "1F", "level_order": 10, "kind": "lobby"}]
+              + [{"label": lb, "level_order": lo, "kind": "office", "layout": office_layout(lb, lb, rows, restricted)}
+                 for lb, lo, rows, restricted in TOKYO_FLOORS]}
+# 汚れ: 席番号の全角・ハイフンの揺れ（3F-A05 → ３Ｆ－Ａ０５）と、健康に関わる設備のタグ（jin-ji は持たない。修正依頼）
+_f3 = tokyo_main["floors"][2]["layout"]["seats"]
+_f3[4]["code"] = "３Ｆ－Ａ０５"
+WP_ANOM["SEAT_CODE_WIDTH"] += 1
+_f3[-1]["features"] = ["wheelchair"]
+WP_ANOM["SEAT_HEALTH_TAG"] += 1
+yokohama = [
+    {"code": "F1", "name": "第一工場棟", "sort_order": 0,
+     "floors": [{"label": "1F", "level_order": 10, "kind": "factory", "layout": station_layout(["ライン1", "ライン2"], "L", 3, 52000, "production_line")},
+                {"label": "2F", "level_order": 20, "kind": "office", "layout": office_layout("2F", "F1-2F", 2, valid_from="2024-10-01")}]},
+    {"code": "F2", "name": "第二工場棟", "sort_order": 1, "floors": [{"label": "1F", "level_order": 10, "kind": "factory"}]},
+]
+chiba = [{"code": "W1", "name": "倉庫棟", "sort_order": 0,
+          "floors": [{"label": "1F", "level_order": 10, "kind": "warehouse", "layout": station_layout(["入荷", "出荷"], "W", 4, 52000, "storage")}]}]
+layout_doc = {"format": "jinji-floor-layout/v1", "buildings": []}
+for site_code, buildings in (("S010", [tokyo_main]), ("S020", yokohama), ("LS10", chiba)):
+    for b in buildings:
+        layout_doc["buildings"].append({"site_code": site_code, **b})
+with open(os.path.join(OUT, "floor_layouts.json"), "w", encoding="utf-8") as f:
+    json.dump(layout_doc, f, ensure_ascii=False, indent=2)
+    f.write("\n")
+layout_rows = sum(1 + len(fl["layout"]["fixtures"]) + len(fl["layout"]["zones"]) + len(fl["layout"]["seats"]) if "layout" in fl else 1
+                  for b in layout_doc["buildings"] for fl in b["floors"])
+
+# 席の割り当て（総務部が管理する座席表の書き出し）。最上位の組織ごとに階を決め、空いている固定席（西の島 → 東）を順に割り当てる。
+# 座席表に載らない人（席の割り当てが無い人）もいる。組織単位のエリアは持たない
+TOP_FLOOR = {"営業本部": "3F", "商品本部": "4F", "管理本部": "5F", "経営企画室": "6F", "内部監査部": "6F"}
+seat_cols = ["社員番号", "建物", "階", "席番号", "エリア", "開始日", "最終日"]
+seat_rows = []
+free_seats = {lb: [x["code"] for x in fl["layout"]["seats"] if x["kind"] == "fixed" and ("-A" in x["code"] or "-B" in x["code"]) and x["code"].isascii()
+                   and not x.get("features") == ["wheelchair"]]
+              for fl in tokyo_main["floors"] if "layout" in fl for lb in [fl["label"]]}
+mismatch_seat = free_seats["3F"].pop()  # 拠点の違う人の席（汚れ）に取っておく
+active_people = [p for p in persons if p["status"] != "retired"]
+for p in active_people:
+    top = top_of(ORG[p["org"]])["name"]
+    if p["office"] == "東京本社" and p["company"] == "P":
+        lb = TOP_FLOOR.get(top, "2F")
+        pool = free_seats.get(lb) or []
+        if not pool or wrng.random() < .25:
+            continue  # 座席表に載らない（席の割り当てが無い）
+        empno = p["empno"]
+        if wrng.random() < .05:
+            empno = str(int(empno))  # 汚れ: ゼロ埋めの無い社員番号
+            WP_ANOM["EMPNO_PAD"] += 1
+        code = pool.pop(0)
+        if wrng.random() < .04:
+            code = code.translate(FULL_DIGIT).replace("-", "－")  # 汚れ: 全角の数字・ハイフン
+            WP_ANOM["SEAT_CODE_WIDTH"] += 1
+        seat_rows.append([empno, "MAIN", lb, code, "", "2025-04-01", ""])
+    elif p["office"] == "横浜工場":
+        line = 1 + int(p["person_id"][-4:]) % 2
+        seat_rows.append([p["empno"], "F1", "1F", f"L{line}-S{1 + int(p['person_id'][-4:]) % 6:02d}", "", "2024-10-01", ""])
+    elif p["office"] == "千葉物流センター":
+        line = 1 + int(p["person_id"][-4:]) % 2
+        seat_rows.append([p["empno"], "W1", "1F", "", "入荷" if line == 1 else "出荷", "2024-10-01", ""])
+# 汚れ: 配置図に無い席番号・拠点の違う人（大阪支社勤務）への東京本社の席・席の解放（最終日だけの行）
+_osaka = next(p for p in active_people if p["office"] == "大阪支社")
+seat_rows.append([_osaka["empno"], "MAIN", "3F", mismatch_seat, "", "2025-04-01", ""])
+WP_ANOM["SEAT_SITE_MISMATCH"] += 1
+seat_rows.append([next(p for p in active_people if p["office"] == "東京本社")["empno"], "MAIN", "3F", "3F-Z99", "", "2025-04-01", ""])
+WP_ANOM["SEAT_UNKNOWN"] += 1
+_release = next(r for r in seat_rows if r[0] and r[3].startswith("5F-"))
+seat_rows.append([_release[0], "", "", "", "", "", "2026-09-30"])
+WP_ANOM["SEAT_RELEASE"] += 1
+with open(os.path.join(OUT, "seat_assignments.csv"), "w", encoding="utf-8-sig", newline="") as f:
+    w = csv.writer(f, lineterminator="\r\n")
+    w.writerow(seat_cols)
+    w.writerows(seat_rows)
+
 # ================================================================ README.md
 cat_rows = "\n".join(f"| `{c}` | {CATS[c][0]} | {CATS[c][1]} | {cnt[c]} |" for c in CATS if cnt[c])
 forb_desc = {
@@ -1433,6 +1561,8 @@ jin-ji の取り込み・名寄せ機能の検証用。人物・企業・メー�
 | `jirei_2026.csv` | Shift_JIS（cp932）, CRLF | {len(jirei_rows)} | 辞令一覧（自由記述）。2026-04-01 の一斉異動と未来日付の内示を含む |
 | `entra_users.json` | UTF-8 | {len(entra_rows)} | Microsoft Graph `GET /users` 応答形式（`value` 配列） |
 | `sites.csv` | Shift_JIS（cp932）, CRLF | {len(site_rows)} | 拠点マスタ（事業所の一覧。コード・名称・種別・所在地〔事業所の住所〕・開設日・閉鎖日） |
+| `floor_layouts.json` | UTF-8 | {layout_rows} | 建物・階・簡易フロアマップ（jin-ji の配置図の形式 v1。外形・コア・ゾーン・席。要素ごとの行に読む） |
+| `seat_assignments.csv` | UTF-8 BOM, CRLF | {len(seat_rows)} | 座席表の書き出し（人の席・持ち場・エリア、席の解放） |
 | `ground_truth.json` | UTF-8 | - | 正解データ。人・組織・各行の対応・汚れの一覧 |
 | `generate.py` | - | - | 生成スクリプト＋自己検証 |
 
@@ -1477,6 +1607,13 @@ Shift_JIS は Windows-31J（cp932）。髙・﨑 など機種依存文字を含�
 - Entra の `department` / `companyName` は出向者では出向先を指す。
 - 人事パッケージの一部の所属は 4/1 発令を反映していない（辞令側が正）。
 - 人事パッケージの「勤務地」は自由記述の拠点名（表記ゆれ・拠点マスタに無い値を含む）。jin-ji は拠点マスタに照合し、当たらなければ修正依頼にする。
+
+## 建物・階・席（建物・フロアモード）
+
+- 東京本社（S010）の本館は 1F（ロビー）〜6F。2F〜6F は西・東とも固定席（会議室は図形だけ）、4F には立入制限の書庫。横浜工場（S020）は第一工場棟（1F は製造ライン 2 本の持ち場。定員 3）と第二工場棟、千葉物流センター（LS10）は倉庫棟（入荷・出荷の持ち場。定員 4）
+- 座席表は最上位の組織ごとに階を決め、固定席を順に割り当てる。座席表に載らない人（席の割り当てが無い人）もいる。工場は持ち場、物流センターはエリアの割り当て（シフト・勤務帯は持たない）
+- 扱うのは人事が持つ決まった席・持ち場だけ。当日の所在・座席予約・フリーアドレスはサンプルに含めない（人事の範疇を超える施設管理で、連携先の範疇）
+- 汚れ（件数）: {", ".join(f"{k} {v}" for k, v in sorted(WP_ANOM.items()))}。席番号の全角・ハイフンの揺れ（そろえる）、健康に関わる設備のタグ（持たない。修正依頼）、ゼロ埋めの無い社員番号、配置図に無い席番号（修正依頼）、拠点の違う人の席（拠点の食い違いの修正依頼）、最終日だけの行（席の解放）
 """
 with open(os.path.join(OUT, "README.md"), "w", encoding="utf-8") as f:
     f.write(readme)
@@ -1503,6 +1640,13 @@ def verify():
               "employeeId", "accountEnabled", "companyName", "officeLocation", "businessPhones", "mobilePhone"):
         assert all(k in v for v in ent["value"]), k
     assert {p["site_code"] for p in gt["persons"]} <= {x["code"] for x in gt["sites"]}
+    # 建物・階・席
+    lay = json.load(open(os.path.join(OUT, "floor_layouts.json"), encoding="utf-8"))
+    assert lay["format"] == "jinji-floor-layout/v1" and {b["site_code"] for b in lay["buildings"]} <= {x["code"] for x in gt["sites"]}
+    raw = open(os.path.join(OUT, "seat_assignments.csv"), "rb").read()
+    assert raw.startswith(b"\xef\xbb\xbf") and b"\r\n" in raw
+    rows = list(csv.reader(io.StringIO(raw.decode("utf-8-sig"), newline="")))
+    assert rows[0] == seat_cols and len(rows) - 1 == len(seat_rows) and len({len(r) for r in rows}) == 1
     c = gt["meta"]["counts"]
     assert c["persons"] == 350 and c["retired"] == 20 and c["active_incl_leave"] == 330 and c["leave"] == 5
     assert c["concurrent"] == 10 and c["secondment_P_to_L"] == 3 and c["secondment_L_to_P"] == 3

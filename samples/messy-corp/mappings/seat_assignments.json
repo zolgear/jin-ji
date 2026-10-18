@@ -1,0 +1,16 @@
+{
+  "$comment": "seat_assignments.csv（UTF-8 BOM）。総務部の座席表。1 行 1 人の席・持ち場・エリア（席番号の全角・ハイフンの揺れはそろえる）。最終日だけの行は席の解放。",
+  "name": "messy-corp-seat-assignments",
+  "target": "workplace_assignments",
+  "source": { "kind": "csv", "encoding": "auto" },
+  "employeeNumber": { "padLength": 5, "prefixedPadLength": 4 },
+  "fields": {
+    "employee_number": ["社員番号"],
+    "building_code": ["建物"],
+    "floor_label": ["階"],
+    "seat_code": ["席番号"],
+    "zone_name": ["エリア"],
+    "workplace_valid_from": ["開始日"],
+    "workplace_end_date": ["最終日"]
+  }
+}

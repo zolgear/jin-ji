@@ -17,6 +17,7 @@ export const VIEW_LABEL: Record<View, string> = { "org-chart": "組織図", "ove
 /** 画面を切り替えるときに引き継ぐ引数（修正依頼の画面は日付・選択を持たず、他の画面は修正依頼の絞り込みを、検索の画面以外は検索の条件を持たない）。 */
 function paramsFor(view: View, current: URLSearchParams): URLSearchParams {
   const params = new URLSearchParams(current);
+  for (const k of ["date"]) params.delete(k);
   if (view === "corrections") {
     for (const k of ["org", "person", "as_of", ...SEARCH_PARAM_KEYS]) params.delete(k);
     return params;
@@ -202,6 +203,7 @@ export function NavRail() {
   const { view } = useNav();
   const { route } = useRoute();
   const corrections = useCorrectionsNav();
+  const views = Object.keys(VIEW_LABEL) as View[];
   return (
     <div data-popover-edge className="order-last z-10 flex shrink-0 items-stretch border-t border-border bg-surface pb-[env(safe-area-inset-bottom)] md:order-none md:z-30 md:w-[68px] md:flex-col md:items-center md:gap-2 md:border-t-0 md:border-r md:py-3 md:pb-3">
       {/* 名前（トップへのリンク）。スマホでは上の帯の画面名で足りるので出さない */}
@@ -218,7 +220,7 @@ export function NavRail() {
       <DemoBadge className="hidden md:block" />
       <nav aria-label="画面" className="flex min-w-0 flex-[4] md:mt-3 md:flex-none">
         <ul className="m-0 flex w-full list-none gap-0.5 p-1 md:flex-col md:gap-2 md:p-0">
-          {(Object.keys(VIEW_LABEL) as View[]).map((v) => {
+          {views.map((v) => {
             const current = view === v;
             const label = (v === "corrections" ? corrections.label : undefined) ?? VIEW_LABEL[v];
             return (

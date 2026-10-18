@@ -3,15 +3,37 @@
 import type { DirectoryAdapter } from "../data/types";
 import demoData from "./demo-data.json";
 import { createDemoCorrections } from "./demoCorrections";
+import { demoMe } from "./demoViewer";
+import { createDemoWorkplaceAdapter, DemoWorkplaceService } from "./demoWorkplace";
 import { DemoDirectory } from "./directory";
 import { generateLargeDataset } from "./largeDataset";
 import { findPeople } from "./search";
 import type { DemoDataset } from "./model";
+import { deptResolver, generateWorkplace } from "./workplace";
 
 export const DEMO_LABEL = "デモアダプタ（架空データ）";
 
 export function createDemoAdapterFrom(data: DemoDataset, label = DEMO_LABEL): DirectoryAdapter {
   const dir = new DemoDirectory(data);
+  // 建物・階・席・当日の所在（デモでは当日の所在の機能を有効にする。公開範囲は本人と同じ部）
+  const viewer = demoMe(data);
+  const orgs = new Map(data.org_units.map((o) => [o.id, o]));
+  const deptOf = deptResolver(orgs);
+  const people = new Map(data.people.map((p) => [p.id, p]));
+  const deptToday = (id: string) => {
+    const p = people.get(id);
+    const a = p ? dir.assignmentsAt(p, dir.businessDate).find((x) => x.type === "primary") : undefined;
+    return a ? (deptOf(a.org_unit_id)?.id ?? null) : null;
+  };
+  const viewerDept = deptToday(viewer.id);
+  const deptCache = new Map<string, string | null>();
+  dir.setPresenceVisibility((p) => {
+    if (p.id === viewer.id) return true;
+    if (!deptCache.has(p.id)) deptCache.set(p.id, deptToday(p.id));
+    return viewerDept !== null && deptCache.get(p.id) === viewerDept;
+  });
+  const workplace = new DemoWorkplaceService(dir, generateWorkplace(data));
+  dir.workplaceProjection = (person, asOf, visible) => workplace.project(person, asOf, visible);
   // API と同じく非同期で返す（呼び出し側の作りを揃えるため）
   const later = <T,>(fn: () => T): Promise<T> =>
     new Promise((resolve, reject) => {
@@ -30,6 +52,7 @@ export function createDemoAdapterFrom(data: DemoDataset, label = DEMO_LABEL): Di
     milestones: data.meta.milestones,
     canViewFuture: false,
     corrections: createDemoCorrections(dir),
+    workplace: createDemoWorkplaceAdapter(workplace, later),
     getOrgTree: (asOf) => later(() => dir.orgTree(asOf)),
     getOrgStats: (asOf) => later(() => dir.stats(asOf)),
     listOrgMembers: (orgId, q) =>

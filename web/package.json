@@ -1,7 +1,7 @@
 {
   "name": "jinji-web",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "license": "Apache-2.0",
   "type": "module",
   "description": "jin-ji の Web UI（React SPA）。成果物は静的ファイルで、サーバーに Node.js は置かない（ADR-0001）",

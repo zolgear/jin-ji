@@ -1,6 +1,22 @@
 import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { licensesPlugin } from "./scripts/licenses.mjs";
+
+const projectDir = fileURLToPath(new URL(".", import.meta.url));
+/** 画面の「jin-ji について」に出す版（web/package.json の version。リポジトリに他の版の定義は無い）。 */
+const version: string = JSON.parse(readFileSync(new URL("./package.json", import.meta.url), "utf8")).version;
+
+/** パッケージではない同梱物（同梱しているライブラリのライセンスの一覧の後ろに載せる）。 */
+const LICENSE_EXTRAS = [
+  {
+    name: "3D 表示のテクスチャ",
+    license: "Apache-2.0",
+    note: "画像生成 AI で生成した jin-ji の自前の素材です（src/features/overview3d/textures/）。jin-ji と同じ Apache License 2.0 で配布します。",
+  },
+];
 
 /**
  * 本番の SPA に付ける CSP（ADR-0001: connect-src 'self'、外部 CDN 不使用）。
@@ -62,9 +78,10 @@ export default defineConfig(({ mode, command }) => {
   // 本番ビルド（mode=production）では __JINJI_DEMO__ が false の定数になり、動的 import ごと取り除かれる。
   const demo = mode === "demo" || (command === "serve" && mode !== "production");
   return {
-    plugins: [woff2Only(), react(), tailwindcss(), contentSecurityPolicy()],
+    plugins: [woff2Only(), react(), tailwindcss(), contentSecurityPolicy(), licensesPlugin({ projectDir, extras: LICENSE_EXTRAS })],
     define: {
       __JINJI_DEMO__: JSON.stringify(demo),
+      __JINJI_VERSION__: JSON.stringify(version),
     },
     build: {
       target: "es2023",

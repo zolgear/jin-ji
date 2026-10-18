@@ -136,3 +136,14 @@ export const WEBHOOK_DELIVERY_KIND_LABELS: Record<string, string> = {
   summary: "要約",
   ping: "送信の確かめ",
 };
+
+/** 認証の管理（/admin?tab=）のタブ。設定の画面の「管理者設定」からも入口として並べる。 */
+export type AdminTab = "unbound" | "accounts" | "clients" | "webhooks" | "domains";
+
+export const ADMIN_TAB_LABELS: Record<AdminTab, string> = {
+  unbound: "未紐付けのログイン",
+  accounts: "ローカルアカウント",
+  clients: "API クライアント",
+  webhooks: "Webhook",
+  domains: "CIMD の許可ドメイン",
+};

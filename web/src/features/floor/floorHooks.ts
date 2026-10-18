@@ -1,10 +1,12 @@
 // 建物・フロアモードの URL の状態と取得のフック。
 // URL: #/overview-3d?mode=floor&site=&building=&floor=&plan=1&person=&color=none&presence=0（as_of はタイムマシンと共有。仕様 §5.5）
+// color は「組織で色分け」の明示（org / none）。書かなければ設定画面の既定（lib/settings.ts。既定はオン）に従う
 import { useCallback, useEffect, useState } from "react";
 import { useAdapter } from "../../data/adapterContext";
 import { fetchCached, useQuery } from "../../data/query";
 import type { Building, FloorLayout } from "../../data/types";
 import { useRoute } from "../../lib/router";
+import { floorOrgColorParam, resolveFloorOrgColor, useSettings } from "../../lib/settings";
 
 export interface FloorRoute {
   floorMode: boolean;
@@ -13,7 +15,7 @@ export interface FloorRoute {
   floorId: string | null;
   plan: boolean;
   personId: string | null;
-  /** 組織で色分け（既定）か単色か。 */
+  /** 組織で色分けをしない（単色）か。URL の color が設定の既定より優先する。 */
   monochrome: boolean;
   /** URL の presence（"0" なら今日の所在を重ねない）。 */
   presenceParam: string | null;
@@ -27,6 +29,7 @@ export const FLOOR_MODE_KEYS = ["mode", "site", "building", "floor", "plan", "co
 export function useFloorRoute() {
   const { route, navigate } = useRoute();
   const p = route.params;
+  const { floorOrgColor } = useSettings();
   const state: FloorRoute = {
     floorMode: p.get("mode") === "floor",
     siteId: p.get("site"),
@@ -34,7 +37,7 @@ export function useFloorRoute() {
     floorId: p.get("floor"),
     plan: p.get("plan") === "1",
     personId: p.get("person"),
-    monochrome: p.get("color") === "none",
+    monochrome: !resolveFloorOrgColor(p.get("color"), floorOrgColor),
     presenceParam: p.get("presence"),
   };
   const set = useCallback((change: Record<string, string | null>, replace = true) => navigate({ params: change }, replace), [navigate]);
@@ -48,7 +51,9 @@ export function useFloorRoute() {
     },
     [navigate],
   );
-  return { ...state, set, setMode };
+  /** 組織で色分けの切り替え（設定の既定と同じ値なら URL に書かない）。 */
+  const setOrgColor = useCallback((on: boolean) => navigate({ params: { color: floorOrgColorParam(on, floorOrgColor) } }, true), [navigate, floorOrgColor]);
+  return { ...state, set, setMode, setOrgColor };
 }
 
 export function useBuildings(siteId: string | null, asOf: string) {

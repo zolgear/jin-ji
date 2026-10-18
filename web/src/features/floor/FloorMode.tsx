@@ -320,7 +320,7 @@ export function FloorMode() {
           <button
             type="button"
             aria-pressed={!route.monochrome}
-            onClick={() => route.set({ color: route.monochrome ? null : "none" })}
+            onClick={() => route.setOrgColor(route.monochrome)}
             className={`inline-flex h-8 items-center gap-1 rounded-md border px-3 ${!route.monochrome ? "border-accent bg-accent text-accent-fg" : "border-border hover:bg-surface-2"}`}
           >
             組織で色分け

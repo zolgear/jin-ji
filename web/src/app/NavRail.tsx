@@ -1,21 +1,24 @@
 // 画面の切り替えと設定のレール。幅が md 以上では左にアイコンだけを縦に並べ（名前はツールチップと aria-label）、
 // それより狭いとき（スマホ）は下のタブバーにして、アイコンの下に短い名前を出す（指で触る画面にはホバーが無いため）。
-// 下の段（スマホでは右端）に、データの取得元・配色の設定と利用者メニューを置く。
+// 下の段（スマホでは右端）に、設定の画面（#/settings）へのリンクと利用者メニューを置く。
 import type { ReactNode } from "react";
 import { UserMenu } from "../auth/session";
-import { HelpTip, Popover } from "../components/popover";
-import { ThemeSwitch } from "../components/ThemeSwitch";
-import { DEMO_AVAILABLE, useAdapter, type AdapterChoice } from "../data/adapterContext";
+import { HelpTip } from "../components/popover";
+import { useAdapter } from "../data/adapterContext";
 import { summaryLabel, useCorrectionSummary } from "../features/corrections/shared";
 import { SEARCH_PARAM_KEYS } from "../features/search/searchState";
 import { useFormatDate } from "../lib/dateStyle";
-import { formatHash, parseHash, useRoute, type View } from "../lib/router";
+import { formatHash, useRoute, type View } from "../lib/router";
 import { useNav } from "./nav";
 
-export const VIEW_LABEL: Record<View, string> = { "org-chart": "組織図", "overview-3d": "3D 表示", search: "検索", corrections: "修正依頼" };
+export const VIEW_LABEL: Record<View, string> = { "org-chart": "組織図", "overview-3d": "3D 表示", search: "検索", corrections: "修正依頼", settings: "設定" };
+/** レールの上の段に並べる画面（設定は下の段）。 */
+const RAIL_VIEWS: Array<Exclude<View, "settings">> = ["org-chart", "overview-3d", "search", "corrections"];
 
 /** 画面を切り替えるときに引き継ぐ引数（修正依頼の画面は日付・選択を持たず、他の画面は修正依頼の絞り込みを、検索の画面以外は検索の条件を持たない）。 */
 function paramsFor(view: View, current: URLSearchParams): URLSearchParams {
+  // 設定の画面は取得元だけを持つ
+  if (view === "settings") return sourceOnly(current);
   const params = new URLSearchParams(current);
   for (const k of ["date"]) params.delete(k);
   if (view === "corrections") {
@@ -44,7 +47,7 @@ function Svg({ children }: { children: ReactNode }) {
   );
 }
 
-const VIEW_ICON: Record<View, ReactNode> = {
+const VIEW_ICON: Record<Exclude<View, "settings">, ReactNode> = {
   // 組織の上下（上に 1 つ、下に 2 つの箱）
   "org-chart": (
     <Svg>
@@ -129,57 +132,27 @@ function useCorrectionsNav(): { badge: ReactNode; label: string | undefined } {
   };
 }
 
-/** データの取得元（デモ 350 人・デモ 1 万人・API）。 */
-function SourceSwitch() {
-  const { choice, setChoice, adapter } = useAdapter();
-  if (!DEMO_AVAILABLE) return <p className="m-0 text-sm">{adapter.label}</p>;
+/** 設定の画面へのリンク（レールの下の段・スマホのタブ）。 */
+function SettingsLink({ current, params }: { current: boolean; params: URLSearchParams }) {
   return (
-    <select
-      aria-label="データ"
-      value={choice}
-      onChange={(e) => {
-        const next = e.target.value as AdapterChoice;
-        // 取得元を変えたら選択と日付を戻す
-        window.history.replaceState(null, "", formatHash({ view: parseHash(window.location.hash).view, params: new URLSearchParams({ source: next }) }));
-        window.dispatchEvent(new HashChangeEvent("hashchange"));
-        setChoice(next);
-      }}
-      className="h-8 w-full rounded-md border border-border bg-surface px-2 text-sm"
+    <a
+      href={formatHash({ view: "settings", params: paramsFor("settings", params) })}
+      aria-current={current ? "page" : undefined}
+      aria-label="設定"
+      className={`group ${ITEM} ${current ? "bg-accent-weak text-accent" : "text-muted hover:bg-surface-2 hover:text-fg"}`}
     >
-      <option value="demo">デモ 350 人</option>
-      <option value="demo-large">デモ 1 万人</option>
-      <option value="api">jin-ji API</option>
-    </select>
+      {current && <CurrentMark />}
+      <SettingsIcon />
+      <TabLabel>設定</TabLabel>
+      <RailTooltip>設定</RailTooltip>
+    </a>
   );
 }
 
-function Settings() {
+/** 現在地の印（md 以上は左端の縦線、スマホは上端の横線）。 */
+function CurrentMark() {
   return (
-    <Popover
-      label="設定"
-      side="right"
-      width={260}
-      trigger={
-        <>
-          <SettingsIcon />
-          <TabLabel>設定</TabLabel>
-        </>
-      }
-      tooltip={<RailTooltip>設定</RailTooltip>}
-      triggerClassName={`${ITEM} text-muted hover:bg-surface-2 hover:text-fg`}
-    >
-      <div className="flex flex-col gap-4 p-4">
-        <p className="m-0 text-sm font-bold">設定</p>
-        <div className="flex flex-col gap-1.5">
-          <span className="text-xs font-bold text-muted">データ</span>
-          <SourceSwitch />
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <span className="text-xs font-bold text-muted">配色</span>
-          <ThemeSwitch size="md" />
-        </div>
-      </div>
-    </Popover>
+    <span aria-hidden="true" className="absolute top-0 left-1/2 h-[3px] w-6 -translate-x-1/2 rounded-b-full bg-accent md:top-1/2 md:-left-3 md:h-6 md:w-[3px] md:translate-x-0 md:-translate-y-1/2 md:rounded-r-full md:rounded-bl-none" />
   );
 }
 
@@ -203,7 +176,6 @@ export function NavRail() {
   const { view } = useNav();
   const { route } = useRoute();
   const corrections = useCorrectionsNav();
-  const views = Object.keys(VIEW_LABEL) as View[];
   return (
     <div data-popover-edge className="order-last z-10 flex shrink-0 items-stretch border-t border-border bg-surface pb-[env(safe-area-inset-bottom)] md:order-none md:z-30 md:w-[68px] md:flex-col md:items-center md:gap-2 md:border-t-0 md:border-r md:py-3 md:pb-3">
       {/* 名前（トップへのリンク）。スマホでは上の帯の画面名で足りるので出さない */}
@@ -220,7 +192,7 @@ export function NavRail() {
       <DemoBadge className="hidden md:block" />
       <nav aria-label="画面" className="flex min-w-0 flex-[4] md:mt-3 md:flex-none">
         <ul className="m-0 flex w-full list-none gap-0.5 p-1 md:flex-col md:gap-2 md:p-0">
-          {views.map((v) => {
+          {RAIL_VIEWS.map((v) => {
             const current = view === v;
             const label = (v === "corrections" ? corrections.label : undefined) ?? VIEW_LABEL[v];
             return (
@@ -231,10 +203,7 @@ export function NavRail() {
                   aria-label={label}
                   className={`group ${ITEM} ${current ? "bg-accent-weak text-accent" : "text-muted hover:bg-surface-2 hover:text-fg"}`}
                 >
-                  {/* 現在地の印（md 以上は左端の縦線、スマホは上端の横線） */}
-                  {current && (
-                    <span aria-hidden="true" className="absolute top-0 left-1/2 h-[3px] w-6 -translate-x-1/2 rounded-b-full bg-accent md:top-1/2 md:-left-3 md:h-6 md:w-[3px] md:translate-x-0 md:-translate-y-1/2 md:rounded-r-full md:rounded-bl-none" />
-                  )}
+                  {current && <CurrentMark />}
                   {VIEW_ICON[v]}
                   <TabLabel>{VIEW_LABEL[v]}</TabLabel>
                   {v === "corrections" && corrections.badge}
@@ -246,7 +215,7 @@ export function NavRail() {
         </ul>
       </nav>
       <div className="flex flex-[2] gap-0.5 p-1 md:mt-auto md:flex-none md:flex-col md:items-center md:gap-2 md:p-0">
-        <Settings />
+        <SettingsLink current={view === "settings"} params={route.params} />
         <UserMenu
           side="right"
           triggerClassName={`${ITEM} text-muted hover:bg-surface-2 hover:text-fg`}

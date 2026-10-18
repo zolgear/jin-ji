@@ -75,6 +75,10 @@ const shots = [
   { name: "floor-presence", hash: `#/overview-3d?mode=floor&floor=${mainFloor("3F")}`, wait: "canvas", settle: 3500, only: "desktop" },
   { name: "floor-past", hash: `#/overview-3d?mode=floor&floor=${mainFloor("3F")}&as_of=2026-04-01`, wait: "canvas", settle: 3500, only: "desktop" },
   { name: "floor-plan", hash: `#/overview-3d?mode=floor&floor=${mainFloor("3F")}&plan=1`, wait: "svg[aria-labelledby]" },
+  // 組織で色分け（既定はオン）を設定でオフにしたときと、URL の color=org で明示したとき（URL が設定より優先）
+  { name: "floor-detail-no-org-color", hash: `#/overview-3d?mode=floor&floor=${mainFloor("4F")}`, wait: "canvas", settle: 3500, only: "desktop", storage: { "jinji.floorOrgColor": "off" } },
+  { name: "floor-plan-no-org-color", hash: `#/overview-3d?mode=floor&floor=${mainFloor("3F")}&plan=1`, wait: "svg[aria-labelledby]", only: "desktop", storage: { "jinji.floorOrgColor": "off" } },
+  { name: "floor-plan-org-color-url", hash: `#/overview-3d?mode=floor&floor=${mainFloor("3F")}&plan=1&color=org`, wait: "svg[aria-labelledby]", only: "desktop", storage: { "jinji.floorOrgColor": "off" } },
   { name: "floor-site", hash: `#/overview-3d?mode=floor&site=${siteId("横浜工場")}`, wait: "canvas", settle: 3500, only: "desktop" },
   { name: "floor-person", hash: `#/org-chart?person=${seatedPerson.id}`, wait: "text=建物・フロアで席を開く", action: async (page) => {
     await page.click("text=建物・フロアで席を開く");
@@ -159,7 +163,13 @@ const shots = [
   } },
   // 認証まわりの画面（パスで開く。デモの認証の架空のデータ）
   { name: "user-menu", hash: "#/org-chart", wait: ".react-flow__node", action: (page) => page.click("button[aria-controls='user-menu']") },
-  { name: "settings", hash: "#/org-chart", wait: ".react-flow__node", action: (page) => page.click("button[aria-label='設定']") },
+  // 設定の画面（スマホ幅の #/settings は目次だけ）・jin-ji について・同梱しているライブラリのライセンス（1 件を開いた状態）
+  { name: "settings", hash: "#/settings", wait: "nav[aria-label='設定の項目']" },
+  { name: "settings-display", hash: "#/settings/display", wait: "text=組織図の向き" },
+  { name: "settings-data", hash: "#/settings/data", wait: "select[aria-label='データ']", only: "desktop" },
+  { name: "settings-admin", hash: "#/settings/admin", wait: "text=未紐付けのログイン", only: "desktop" },
+  { name: "settings-about", hash: "#/settings/about", wait: "text=Copyright 2026 Toru Suzuki" },
+  { name: "settings-licenses", hash: "#/settings/licenses", wait: "summary", action: (page) => page.click("summary:has-text('react-dom')") },
   { name: "login", path: `/login?return_url=${encodeURIComponent("/#/search")}`, wait: "text=jin-ji のアカウント" },
   { name: "login-unbound", path: "/login?error=unbound", wait: "text=jin-ji のアカウント", only: "mobile" },
   {

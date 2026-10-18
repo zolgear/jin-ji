@@ -1,5 +1,5 @@
 // 各画面のスクリーンショットを撮る（ライト / ダーク × デスクトップ幅 / スマホ幅）。
-// ホストにブラウザを入れず、公式イメージ mcr.microsoft.com/playwright のコンテナ内で実行する（README の「Web UI」）。
+// ホストにブラウザを入れず、公式イメージ mcr.microsoft.com/playwright のコンテナ内で実行する（docs/getting-started.md の「Web UI の開発」）。
 //
 //   node scripts/screenshots.mjs <開発サーバーの URL> [出力ディレクトリ]
 //

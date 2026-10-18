@@ -180,7 +180,7 @@ describe("3D の積み方（分解・圧縮）", () => {
   });
 
   it("建物は横に並べ、重ならない", () => {
-    const b = (id: string) => ({ id, site_id: "s", code: id, name: id, sort_order: 0, floors: [] });
+    const b = (id: string) => ({ id, site_id: "s", site_code: null, site_name: null, code: id, name: id, sort_order: 0, floors: [] });
     const placed = placeBuildings([b("a"), b("b")], new Map([["a", { width: 60, depth: 30 }], ["b", { width: 30, depth: 20 }]]));
     expect(placed[1]!.x).toBeGreaterThan(placed[0]!.x + placed[0]!.width);
   });

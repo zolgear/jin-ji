@@ -47,7 +47,7 @@ const selectClass = "h-8 max-w-[11em] rounded-md border border-border bg-surface
 
 /** 階の数字（割り当て / 席数）。 */
 function floorNumbers(f: FloorSummary): string {
-  return f.seat_count === 0 ? "—" : `${f.assigned_count}/${f.seat_count}`;
+  return f.seat_count === 0 ? "—" : `${f.occupied_count}/${f.seat_count}`;
 }
 
 /** 左上の階の一覧（3D と同じことを違う粒度で示す。押すとその階を選ぶ）。 */
@@ -62,7 +62,7 @@ function FloorList({ building, selectedId, onSelect }: { building: Building; sel
       <ul className="m-0 max-h-[55dvh] list-none overflow-y-auto p-0">
         {floors.map((f) => {
           const current = f.id === selectedId;
-          const ratio = f.seat_count > 0 ? f.assigned_count / f.seat_count : 0;
+          const ratio = f.seat_count > 0 ? f.occupied_count / f.seat_count : 0;
           return (
             <li key={f.id}>
               <button
@@ -310,7 +310,7 @@ export function FloorMode() {
               {[...building.floors].reverse().map((f) => (
                 <option key={f.id} value={f.id}>
                   {f.label}
-                  {f.seat_count > 0 ? `（${f.assigned_count}/${f.seat_count}）` : ""}
+                  {f.seat_count > 0 ? `（${f.occupied_count}/${f.seat_count}）` : ""}
                 </option>
               ))}
             </select>

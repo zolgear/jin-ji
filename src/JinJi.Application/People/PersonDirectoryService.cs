@@ -1,4 +1,5 @@
 using JinJi.Application.Audit;
+using JinJi.Application.Presence;
 using JinJi.Domain;
 using JinJi.Domain.Organization;
 using JinJi.Domain.Text;
@@ -33,13 +34,16 @@ public sealed class PersonDirectoryService
     private readonly AuditWriter _audit;
     private readonly TimeProvider _timeProvider;
     private readonly PersonDirectoryOptions _options;
+    private readonly PresenceService? _presence;
 
+    /// <param name="presence">当日の所在の表示（外部の提供。1 人の参照の項目 presence）。</param>
     public PersonDirectoryService(
         IOrgSnapshotProvider snapshots,
         IPolicyRuleStore policies,
         AuditWriter audit,
         TimeProvider timeProvider,
-        PersonDirectoryOptions? options = null)
+        PersonDirectoryOptions? options = null,
+        PresenceService? presence = null)
     {
         ArgumentNullException.ThrowIfNull(snapshots);
         ArgumentNullException.ThrowIfNull(policies);
@@ -51,14 +55,20 @@ public sealed class PersonDirectoryService
         _policies = policies;
         _audit = audit;
         _timeProvider = timeProvider;
+        _presence = presence;
     }
 
     /// <summary>指定した人を参照する。居ない人・何も見えない人は結果に含めない（存在の有無を区別させない）。</summary>
+    /// <param name="includePresence">
+    /// 当日の所在（項目 presence。外部の提供）を投影するか。1 人の参照（REST の <c>GET /people/{id}</c>・MCP の get_person）だけが true にする
+    /// （一覧・検索・一括取得には出さない）。今日を表示しているときだけ効く。
+    /// </param>
     public Task<IReadOnlyList<PersonView>> GetPeopleAsync(
         ViewerContext viewer,
         IReadOnlyCollection<Guid> personIds,
         DateOnly? asOf,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        bool includePresence = false)
     {
         ArgumentNullException.ThrowIfNull(personIds);
         return RunAsync<IReadOnlyList<PersonView>>(
@@ -66,7 +76,8 @@ public sealed class PersonDirectoryService
             new Request(ReadAction, personIds, asOf),
             (_, projector) => [.. personIds.Distinct().Select(id => projector.Project(viewer, id)).OfType<PersonView>()],
             views => views.Select(v => v.PersonId),
-            cancellationToken);
+            cancellationToken,
+            includePresence && personIds.Count == 1);
     }
 
     /// <summary>その時点の在籍者（スナップショットの全員。人事管理者以外には退職後の公開期間を過ぎた人を除く）を参照する。</summary>
@@ -164,7 +175,8 @@ public sealed class PersonDirectoryService
         Request request,
         Func<OrgSnapshot, PersonProjector, T> run,
         Func<T, IEnumerable<Guid>> subjects,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        bool includePresence = false)
     {
         ArgumentNullException.ThrowIfNull(viewer);
         var today = BusinessDate.Today(_timeProvider);
@@ -182,7 +194,16 @@ public sealed class PersonDirectoryService
             var (data, relations, projectionDate) = await LoadAsync(_snapshots, viewer, date, today, cancellationToken);
             var policies = await _policies.LoadActiveAsync(viewer, cancellationToken);
 
-            var projector = new PersonProjector(new PolicyEvaluator(policies, new RelationEvaluator(relations)), data, projectionDate, _options.RetiredPublicDays);
+            // 当日の所在（外部の提供。今日の 1 人の参照だけ）。組み込みの公開範囲の規則を足して判定する
+            var presence = includePresence && _presence is not null
+                ? await _presence.ForPeopleAsync(viewer, request.Requested, date, data, cancellationToken)
+                : null;
+            if (presence is not null)
+            {
+                policies = _presence!.WithPresenceRule(policies);
+            }
+
+            var projector = new PersonProjector(new PolicyEvaluator(policies, new RelationEvaluator(relations)), data, projectionDate, _options.RetiredPublicDays, presence);
             result = run(data, projector);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)

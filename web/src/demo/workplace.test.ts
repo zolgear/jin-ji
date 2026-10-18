@@ -112,7 +112,21 @@ describe("デモの WorkplaceAdapter（API と同じ規則）", () => {
   it("階の一覧の数は席の状態の合計と合う", async () => {
     const [main] = await adapter.workplace.listBuildings(tokyo.id, today);
     for (const f of main!.floors) {
-      expect(f.assigned_count + f.vacant_count + f.unavailable_count).toBe(f.seat_count);
+      expect(f.occupied_count + f.vacant_count + f.unavailable_count).toBe(f.seat_count);
+    }
+  });
+
+  it("人の項目 workplace・seat・presence は API の応答と同じ形（建物コード・階の順・席の位置と種類）", async () => {
+    const wp = generateWorkplace(data);
+    const a = wp.assignments.find((x) => x.seat_id && x.role === "primary" && inPeriod(today, x.valid_from, x.valid_until))!;
+    const view = workplaceOf((await adapter.getPerson(a.person_id, today)) as Person);
+    if (view.seat) {
+      expect(view.seat).toMatchObject({ seat_id: a.seat_id });
+      expect(["fixed", "station"]).toContain(view.seat.kind);
+      expect(view.seat.building_name).toBe(view.workplace!.building_name);
+      expect(view.workplace).toMatchObject({ source: "seat", floor_id: view.seat.floor_id });
+      expect(typeof view.workplace!.building_code).toBe("string");
+      expect(typeof view.workplace!.level_order).toBe("number");
     }
   });
 

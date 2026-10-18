@@ -6,50 +6,30 @@
 // - 扱うのは人の決まった席・持ち場（有効期間付きの割り当て）だけ。タイムマシンで見た日の割り当てがその日の所在
 // - 今日の所在は、連携しているシステムから届いたものを重ねるだけ（今日だけ。提供元が無い導入先では無効）。無いことに意味を持たせない
 //
-// OpenAPI（schema.gen.ts）の再生成の前に、設計書の §6 のパスとフィールドで先に型を置いている。
-// バックエンドの最終形が決まったら、schema.gen.ts の型に置き換える。
+// API の応答の型は生成型（schema.gen.ts）から導く。画面が使う内部モデル（配置図・在籍者・今日の所在）は、
+// API の応答を apiWorkplace.ts のアダプターで変換して作る（デモも同じ内部モデルを返す）。
+import type { Schemas } from "../api/schema.gen";
 import type { Person } from "./types";
 
 /** 階の種類（表示とまとめ方だけに使う固定の少数。§2.2）。 */
-export type FloorKind = "office" | "factory" | "warehouse" | "lobby" | "service" | "other";
+export type FloorKind = Schemas["FloorSummaryResponse"]["kind"];
 /** エリア（ゾーン）の種類（§2.3）。 */
-export type ZoneKind = "office" | "production_line" | "storage" | "common" | "restricted";
+export type ZoneKind = Schemas["ZoneResponse"]["kind"];
 /** 固定の部分（コア・壁で囲った部屋・吹き抜け）。 */
-export type FixtureKind = "core" | "room" | "void";
+export type FixtureKind = Schemas["FixtureResponse"]["kind"];
 /** 席の種類（固定席・持ち場）。 */
-export type SeatKind = "fixed" | "station";
+export type SeatKind = Schemas["LayoutSeatResponse"]["kind"];
 /** 閲覧者から見た席の状態（§3.2 の 3 つ。occupied = 閲覧者に見える人の席）。 */
-export type SeatStatus = "occupied" | "vacant" | "unavailable";
+export type SeatStatus = Schemas["LayoutSeatResponse"]["status"];
 
 /** [x_mm, y_mm] の点。 */
 export type PointMm = [number, number];
 
-/** 階の一覧の 1 行（席数・割り当て数・空席数は閲覧者に見える人だけで数える）。 */
-export interface FloorSummary {
-  id: string;
-  building_id: string;
-  /** 表示名（B1・1F・M2F など）。 */
-  label: string;
-  /** 並び順（地上 n 階 = n × 10、地下 = 負、中二階は間の値）。 */
-  level_order: number;
-  kind: FloorKind;
-  seat_count: number;
-  /** 人がいる席の数（閲覧者に見える人の割り当て）。 */
-  assigned_count: number;
-  vacant_count: number;
-  unavailable_count: number;
-}
+/** 階の一覧の 1 行（席数・人がいる席・空席・使えない席は閲覧者に見える人だけで数える）。 */
+export type FloorSummary = Schemas["FloorSummaryResponse"];
 
-/** 建物と階の一覧（GET /sites/{id}/buildings の items、GET /buildings/{id}）。 */
-export interface Building {
-  id: string;
-  site_id: string;
-  code: string;
-  name: string;
-  sort_order: number;
-  /** 階（level_order の昇順）。 */
-  floors: FloorSummary[];
-}
+/** 建物と階の一覧（GET /sites/{id}/buildings の items、GET /buildings/{id} の building）。 */
+export type Building = Schemas["BuildingResponse"];
 
 export interface LayoutFixture {
   kind: FixtureKind;
@@ -74,14 +54,15 @@ export interface LayoutSeat {
   x_mm: number;
   y_mm: number;
   rotation_deg: number;
-  desk_type: string;
+  desk_type: Schemas["LayoutSeatResponse"]["desk_type"];
+  /** API の kind（固定席・持ち場）。 */
   seat_kind: SeatKind;
   capacity: number;
-  features: string[];
+  features: Schemas["LayoutSeatResponse"]["features"];
   status: SeatStatus;
 }
 
-/** その日の配置図（GET /floors/{id}/layout）。人は含まない。 */
+/** その日の配置図（GET /floors/{id}/layout の floor・layout を平らにしたもの）。人は含まない。配置図が無い階は空の配置図（layout_id が空）。 */
 export interface FloorLayout {
   floor_id: string;
   as_of: string;
@@ -109,49 +90,16 @@ export interface FloorOccupant {
 }
 
 /** 人の所在の階・エリア（人の項目 workplace）。 */
-export interface PersonWorkplace {
-  site_id: string;
-  building_id: string;
-  building_name: string;
-  floor_id: string;
-  floor_label: string;
-  zone_key: string | null;
-  zone_name: string | null;
-}
+export type PersonWorkplace = Schemas["WorkplaceRefResponse"];
 
 /** 人の席（人の項目 seat）。 */
-export interface PersonSeat {
-  seat_id: string;
-  code: string;
-  floor_id: string;
-  x_mm: number;
-  y_mm: number;
-}
+export type PersonSeat = Schemas["SeatRefResponse"];
 
-/** 人の今日の所在（人の項目 presence。外部から届いたもの。無い・見えないときは項目ごと省かれる）。 */
-export interface PersonPresence {
-  date: string;
-  building_id: string;
-  building_name: string;
-  floor_id: string;
-  floor_label: string;
-  zone_key: string | null;
-  zone_name: string | null;
-  /** 席番号は項目 seat も見えるときだけ。 */
-  seat_id: string | null;
-  seat_code: string | null;
-}
-
-/** 席・階・今日の所在の項目を持つ人（OpenAPI の再生成までの拡張）。 */
-export type PersonWithWorkplace = Person & {
-  workplace?: PersonWorkplace | null;
-  seat?: PersonSeat | null;
-  presence?: PersonPresence | null;
-};
+/** 人の今日の所在（人の項目 presence。外部から届いたもの。GET /people/{id} だけに出る。無い・見えないときは null）。 */
+export type PersonPresence = Schemas["PresenceRefResponse"];
 
 export function workplaceOf(person: Person): { workplace: PersonWorkplace | null; seat: PersonSeat | null; presence: PersonPresence | null } {
-  const p = person as PersonWithWorkplace;
-  return { workplace: p.workplace ?? null, seat: p.seat ?? null, presence: p.presence ?? null };
+  return { workplace: person.workplace ?? null, seat: person.seat ?? null, presence: person.presence ?? null };
 }
 
 /** 階の今日の所在 1 件（閲覧者に presence が見える人の分だけ）。 */
@@ -169,7 +117,7 @@ export interface FloorPresenceItem {
 export interface FloorPresence {
   floor_id: string;
   date: string;
-  /** 見えない人の所在で埋まった席（使えない席として表示する）。 */
+  /** 見えない人の所在で埋まった席（応答の seats のうち status が unavailable の席。使えない席として表示する）。 */
   unavailable_seat_ids: string[];
   /** 閲覧者に見える人の所在。 */
   items: FloorPresenceItem[];

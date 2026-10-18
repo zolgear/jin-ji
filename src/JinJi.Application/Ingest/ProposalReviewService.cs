@@ -112,9 +112,11 @@ public sealed class ProposalReviewService
             return;
         }
 
-        // 組織・拠点の提案は、所属者の上長・拠点が変わり得るのですべての人を判定する
+        // 組織・拠点・建物・階・配置図・組織のエリアの提案は、所属者の上長・拠点・階・席が変わり得るのですべての人を判定する
         var organizational = proposal.TargetKind is ProposalTargetKind.OrgUnit or ProposalTargetKind.OrgUnitVersion
-            or ProposalTargetKind.Site or ProposalTargetKind.SiteVersion;
+            or ProposalTargetKind.Site or ProposalTargetKind.SiteVersion
+            or ProposalTargetKind.Building or ProposalTargetKind.BuildingVersion or ProposalTargetKind.Floor or ProposalTargetKind.FloorVersion
+            or ProposalTargetKind.FloorLayout;
         try
         {
             await _corrections.ReconcileAsync(viewer, organizational ? null : subjects, cancellationToken);
@@ -230,6 +232,7 @@ public sealed class ProposalReviewService
     internal static IReadOnlyList<Guid> Subjects(ChangeProposalRecord proposal) =>
         proposal.TargetKind is ProposalTargetKind.Person or ProposalTargetKind.PersonVersion or ProposalTargetKind.Assignment
             or ProposalTargetKind.PersonnelAction or ProposalTargetKind.AccountSuspension or ProposalTargetKind.ExternalIdentity
+            or ProposalTargetKind.WorkplaceAssignment
             && proposal.TargetId is { } id
             ? [id]
             : [];

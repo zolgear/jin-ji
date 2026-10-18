@@ -13,6 +13,9 @@ public enum ImportSourceKind
 
     /// <summary>取込済みの自由記述の勤務地（0017 で廃止した person_version.work_location）。拠点マスタへの照合（<c>WorkLocationReconciler</c>）。</summary>
     WorkLocation,
+
+    /// <summary>jin-ji の配置図の形式 v1（JSON。建物・階・外形・固定の部分・ゾーン・席を要素ごとの行にして読む。0019）。</summary>
+    LayoutJson,
 }
 
 /// <summary>取り込む対象（import_batch.target_kind）。</summary>
@@ -32,6 +35,12 @@ public enum ImportTargetKind
 
     /// <summary>拠点マスタ（拠点の一覧。拠点の版）。</summary>
     Sites,
+
+    /// <summary>建物・階・配置図の改訂（配置図の JSON・席の CSV。0019）。</summary>
+    FloorLayouts,
+
+    /// <summary>人の席・持ち場と組織のエリア（割り当ての CSV。0019）。</summary>
+    WorkplaceAssignments,
 }
 
 /// <summary>staging に保存する前に捨てた列の理由。</summary>
@@ -161,6 +170,24 @@ public enum ProposalTargetKind
 
     /// <summary>拠点の版（訂正・変更・閉鎖）。</summary>
     SiteVersion,
+
+    /// <summary>建物（新規: 不変 ID と最初の版）。</summary>
+    Building,
+
+    /// <summary>建物の版（訂正・変更）。</summary>
+    BuildingVersion,
+
+    /// <summary>階（新規: 不変 ID と最初の版）。</summary>
+    Floor,
+
+    /// <summary>階の版（訂正・変更）。</summary>
+    FloorVersion,
+
+    /// <summary>配置図の改訂（改訂 1 つ分を payload の layout に持つ。承認で floor_layout・ゾーン・席の置き場所になる）。</summary>
+    FloorLayout,
+
+    /// <summary>人の席・持ち場（新規・変更・終了）。</summary>
+    WorkplaceAssignment,
 }
 
 /// <summary>変更提案の操作。</summary>
@@ -403,6 +430,21 @@ public enum CorrectionIssue
 
     /// <summary>拠点コード・拠点名（勤務地の照合を含む）が拠点マスタに無い、または一つに決まらない。</summary>
     UnknownSite,
+
+    /// <summary>建物が jin-ji に無い、または一つに決まらない。</summary>
+    UnknownBuilding,
+
+    /// <summary>階が jin-ji に無い、または一つに決まらない。</summary>
+    UnknownFloor,
+
+    /// <summary>席番号がその階の配置図に無い、または一つに決まらない。</summary>
+    UnknownSeat,
+
+    /// <summary>ゾーン（エリア）がその階の配置図に無い。</summary>
+    UnknownZone,
+
+    /// <summary>席の拠点（建物の拠点）と人の拠点が食い違う（承認は止めない。席か拠点のどちらを直すかは人が判断する）。</summary>
+    SiteMismatch,
 }
 
 /// <summary>修正依頼（人事パッケージ側で直すべき項目）。メッセージに取込元の値は書かない。</summary>
@@ -525,6 +567,39 @@ public static class ProposalFields
     /// <summary>拠点の所在地（都道府県より後）。</summary>
     public const string Location = "location";
 
+    /// <summary>建物（building.id）。</summary>
+    public const string BuildingId = "building_id";
+
+    /// <summary>建物の並び順。</summary>
+    public const string SortOrder = "sort_order";
+
+    /// <summary>階（floor.id）。</summary>
+    public const string FloorId = "floor_id";
+
+    /// <summary>階の表示名。</summary>
+    public const string Label = "label";
+
+    /// <summary>階の並び順。</summary>
+    public const string LevelOrder = "level_order";
+
+    /// <summary>階の種類のコード値。</summary>
+    public const string FloorKind = "floor_kind";
+
+    /// <summary>配置図の改訂 1 つ分（<c>LayoutJson.WriteDraft</c> の JSON）。</summary>
+    public const string Layout = "layout";
+
+    /// <summary>席（seat.id）。</summary>
+    public const string SeatId = "seat_id";
+
+    /// <summary>ゾーン（改訂をまたぐゾーンの ID）。</summary>
+    public const string ZoneKey = "zone_key";
+
+    /// <summary>席の役割（primary / secondary）。</summary>
+    public const string Role = "role";
+
+    /// <summary>定員 1 の席か（"true" / "false"）。</summary>
+    public const string Exclusive = "exclusive";
+
     /// <summary>人の属性の版（person_version）の列のうち、提案で変えられるもの。</summary>
     public static readonly IReadOnlyList<string> PersonVersionColumns =
     [
@@ -534,6 +609,15 @@ public static class ProposalFields
 
     /// <summary>拠点の版（site_version）の列のうち、提案で変えられるもの。</summary>
     public static readonly IReadOnlyList<string> SiteVersionColumns = [Code, Name, SiteType, PrefectureCode, Location];
+
+    /// <summary>建物の版（building_version）の列のうち、提案で変えられるもの。</summary>
+    public static readonly IReadOnlyList<string> BuildingVersionColumns = [Name, SortOrder];
+
+    /// <summary>階の版（floor_version）の列のうち、提案で変えられるもの。</summary>
+    public static readonly IReadOnlyList<string> FloorVersionColumns = [Label, LevelOrder, FloorKind];
+
+    /// <summary>人の席（workplace_assignment）の列のうち、提案で変えられるもの。</summary>
+    public static readonly IReadOnlyList<string> WorkplaceAssignmentColumns = [FloorId, SeatId, ZoneKey, Exclusive];
 
     /// <summary>検索用の正規化表記。旧値を DB と照合しない（ドメインの版に持たないため、差分の旧値は null で記録する）。</summary>
     public static readonly IReadOnlySet<string> Derived = new HashSet<string>(StringComparer.Ordinal) { SearchName, SearchNameKana };
@@ -547,5 +631,6 @@ public static class ProposalFields
         ParentOrgUnitId, HeadPersonId, ValidFrom,
         ActionType, ConcurrentOrgUnitId, ConcurrentPositionTitle, SecondmentOrgUnitId, SecondmentStartDate, SuspensionStartDate,
         SourceSystem, ExternalId, SiteId, RemoteWork, SiteType, PrefectureCode, Location,
+        BuildingId, SortOrder, FloorId, Label, LevelOrder, FloorKind, Layout, SeatId, ZoneKey, Role, Exclusive,
     };
 }

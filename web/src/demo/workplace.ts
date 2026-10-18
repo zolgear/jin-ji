@@ -10,7 +10,7 @@
 // - 今日の所在は、外部のシステムから届く想定のサンプル（固定シード、デモの「今日」だけ）。席にいる人の一部と、空いている席に座る少数
 import { addDays, inPeriod } from "../lib/date";
 import type { DemoDataset, DemoOrgUnit, DemoPerson } from "./model";
-import type { FixtureKind, FloorKind, PointMm, SeatKind, ZoneKind } from "../data/workplace";
+import type { FixtureKind, FloorKind, LayoutSeat, PointMm, SeatKind, ZoneKind } from "../data/workplace";
 
 // ---- 型（API の応答ではなく、時点で引くための元データ） ----
 
@@ -44,10 +44,10 @@ export interface DemoSeat {
   x_mm: number;
   y_mm: number;
   rotation_deg: number;
-  desk_type: string;
+  desk_type: LayoutSeat["desk_type"];
   seat_kind: SeatKind;
   capacity: number;
-  features: string[];
+  features: LayoutSeat["features"];
   out_of_service: boolean;
 }
 

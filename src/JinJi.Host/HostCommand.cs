@@ -38,7 +38,8 @@ internal static class HostCommand
           JinJi__DataProtection__Certificate__Path    Data Protection の鍵を暗号化する証明書（または __Base64 で PKCS#12 を渡す）
         """;
 
-    public static async Task<int> RunAsync(string[] args)
+    /// <param name="configureServices">配備側の拡張点（<see cref="JinJiHost"/>）: Web の役割のサービスの登録の後に差し替える。</param>
+    public static async Task<int> RunAsync(string[] args, Action<IServiceCollection>? configureServices = null)
     {
         if (args.Length > 0 && args[0] is "-h" or "--help" or "help")
         {
@@ -117,7 +118,7 @@ internal static class HostCommand
             return 0;
         }
 
-        await using var app = ServerHost.BuildWeb(role, args);
+        await using var app = ServerHost.BuildWeb(role, args, configureServices);
         await app.RunAsync();
         return 0;
     }

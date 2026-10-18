@@ -139,7 +139,9 @@ public sealed class ConnectorMapping
             "personnel_actions" => ImportTargetKind.PersonnelActions,
             "directory_users" => ImportTargetKind.DirectoryUsers,
             "sites" => ImportTargetKind.Sites,
-            var other => throw new FormatException($"target は people / org_units / personnel_actions / directory_users / sites のいずれかです: {other}"),
+            "floor_layouts" => ImportTargetKind.FloorLayouts,
+            "workplace_assignments" => ImportTargetKind.WorkplaceAssignments,
+            var other => throw new FormatException($"target は people / org_units / personnel_actions / directory_users / sites / floor_layouts / workplace_assignments のいずれかです: {other}"),
         };
 
         var fields = new Dictionary<string, IReadOnlyList<string>>(StringComparer.Ordinal);
@@ -167,6 +169,23 @@ public sealed class ConnectorMapping
             if (target == ImportTargetKind.Sites && !IngestFields.SiteMaster.Contains(property.Name))
             {
                 throw new FormatException($"拠点マスタの取込（target: sites）に書けない取込項目です: {property.Name}");
+            }
+
+            // 配置図・割り当ての取込は、それぞれの項目だけ（人の属性を配置図の取込で書かせない・席の座標を人の取込で書かせない）
+            var workplaceFields = target switch
+            {
+                ImportTargetKind.FloorLayouts => IngestFields.FloorLayout,
+                ImportTargetKind.WorkplaceAssignments => IngestFields.WorkplaceAssignment,
+                _ => null,
+            };
+            if (workplaceFields is not null && !workplaceFields.Contains(property.Name))
+            {
+                throw new FormatException($"この取込の対象に書けない取込項目です: {property.Name}");
+            }
+
+            if (workplaceFields is null && IngestFields.WorkplaceOnly.Contains(property.Name))
+            {
+                throw new FormatException($"取込項目 {property.Name} は配置図・割り当ての取込（target: floor_layouts / workplace_assignments）にだけ書けます。");
             }
 
             var candidates = StringArray(property.Value, $"fields.{property.Name}");
@@ -280,7 +299,8 @@ public sealed class ConnectorMapping
             "csv" => ImportSourceKind.Csv,
             "xlsx" => ImportSourceKind.Xlsx,
             "graph_json" => ImportSourceKind.GraphJson,
-            var other => throw new FormatException($"source.kind は csv / xlsx / graph_json のいずれかです: {other}"),
+            "layout_json" => ImportSourceKind.LayoutJson,
+            var other => throw new FormatException($"source.kind は csv / xlsx / graph_json / layout_json のいずれかです: {other}"),
         };
         var encoding = OptionalString(source, "encoding") ?? "auto";
         if (encoding is not ("auto" or "utf-8" or "shift_jis"))

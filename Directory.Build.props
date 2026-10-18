@@ -8,6 +8,8 @@
     <AnalysisLevel>latest</AnalysisLevel>
     <Deterministic>true</Deterministic>
     <IsPackable>false</IsPackable>
+    <!-- リリースの版。web/package.json の version と揃える -->
+    <Version>0.1.0</Version>
     <!-- CI では環境変数 CI=true で決定的ビルドと lock ファイルの厳格モードを有効にする -->
     <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
   </PropertyGroup>

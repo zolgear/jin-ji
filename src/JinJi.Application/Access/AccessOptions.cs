@@ -187,7 +187,7 @@ public sealed class ApiClientOptions
 
     /// <summary>項目の上限。未知の項目名なら例外。</summary>
     public FieldLimit FieldLimit() =>
-        Fields is [PersonFields.Wildcard] ? Policy.FieldLimit.Unrestricted : Policy.FieldLimit.Of(Fields);
+        Policy.FieldLimit.ForClient(Fields);
 }
 
 /// <summary>設定・トークンのコード値。</summary>

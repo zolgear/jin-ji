@@ -303,6 +303,7 @@ public enum CorrectionValueKind
 /// </summary>
 /// <remarks>
 /// 名前は人の投影（<see cref="PersonFields"/>）と同じ。氏名の履歴は人事管理者だけの項目なので対象にしない。
+/// 当日の所在（<see cref="PersonFields.Presence"/>）も対象にしない（jin-ji は保存せず、外部の提供を表示するだけなので、直す先は連携先）。
 /// 値の提案を受け付けるのは値が 1 つの項目だけで、項目ごとの形を確かめ、自由記述は保持しない情報（生年月日・住所・電話番号）の混入を検査する。
 /// </remarks>
 public static partial class CorrectionFields
@@ -329,6 +330,8 @@ public static partial class CorrectionFields
         [PersonFields.WorkMobilePhone] = ("社用携帯", CorrectionValueKind.Phone),
         [PersonFields.Site] = ("拠点", CorrectionValueKind.Text),
         [PersonFields.RemoteWork] = ("リモートワーク", CorrectionValueKind.None),
+        [PersonFields.Workplace] = ("階・エリア", CorrectionValueKind.Text),
+        [PersonFields.Seat] = ("席", CorrectionValueKind.Text),
         [PersonFields.EmploymentType] = ("雇用区分", CorrectionValueKind.Text),
         [PersonFields.JobType] = ("職種", CorrectionValueKind.Text),
         [PersonFields.HireDate] = ("入社年月日", CorrectionValueKind.Date),

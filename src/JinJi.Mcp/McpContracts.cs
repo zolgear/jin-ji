@@ -5,6 +5,7 @@ using JinJi.Application.Changes;
 using JinJi.Application.Ingest;
 using JinJi.Application.Organization;
 using JinJi.Domain.Organization;
+using JinJi.Domain.Workplace;
 using JinJi.Policy;
 
 namespace JinJi.Mcp;
@@ -68,6 +69,12 @@ internal sealed record McpPerson
 
     public bool? RemoteWork { get; init; }
 
+    public McpWorkplaceRef? Workplace { get; init; }
+
+    public McpSeatRef? Seat { get; init; }
+
+    public McpPresenceRef? Presence { get; init; }
+
     public string? EmploymentType { get; init; }
 
     public string? JobType { get; init; }
@@ -111,6 +118,9 @@ internal sealed record McpPerson
             WorkMobilePhone = view.WorkMobilePhone,
             Site = McpSiteRef.From(view.Site),
             RemoteWork = view.RemoteWork,
+            Workplace = McpWorkplaceRef.From(view.Workplace),
+            Seat = McpSeatRef.From(view.Seat),
+            Presence = McpPresenceRef.From(view.Presence),
             EmploymentType = view.EmploymentType,
             JobType = view.JobType,
             HireDate = view.HireDate,
@@ -170,6 +180,68 @@ internal sealed record McpPerson
 }
 
 internal sealed record McpLegalEntity(Guid Id, string? Code, string? Name);
+
+/// <summary>人の階・エリア（REST API の <c>WorkplaceRefResponse</c> と同じ項目）。</summary>
+internal sealed record McpWorkplaceRef(
+    Guid SiteId,
+    Guid BuildingId,
+    string BuildingCode,
+    string BuildingName,
+    Guid FloorId,
+    string FloorLabel,
+    int LevelOrder,
+    Guid? ZoneKey,
+    string? ZoneName,
+    string Source)
+{
+    public static McpWorkplaceRef? From(WorkplaceView? view) =>
+        view is null
+            ? null
+            : new McpWorkplaceRef(
+                view.SiteId, view.BuildingId, view.BuildingCode, view.BuildingName, view.FloorId, view.FloorLabel, view.LevelOrder, view.ZoneKey, view.ZoneName,
+                view.Source == WorkplaceSource.Seat ? "seat" : "zone");
+}
+
+/// <summary>人の主の席（REST API の <c>SeatRefResponse</c> と同じ項目）。</summary>
+internal sealed record McpSeatRef(
+    Guid SeatId,
+    string Code,
+    Guid BuildingId,
+    string BuildingName,
+    Guid FloorId,
+    string FloorLabel,
+    Guid? ZoneKey,
+    string? ZoneName,
+    int XMm,
+    int YMm,
+    int RotationDeg,
+    string Kind)
+{
+    public static McpSeatRef? From(SeatView? view) =>
+        view is null
+            ? null
+            : new McpSeatRef(
+                view.SeatId, view.Code, view.BuildingId, view.BuildingName, view.FloorId, view.FloorLabel, view.ZoneKey, view.ZoneName, view.XMm, view.YMm,
+                view.RotationDeg, WorkplaceCodes.ToCode(view.Kind));
+}
+
+/// <summary>当日の所在（REST API の <c>PresenceRefResponse</c> と同じ項目）。</summary>
+internal sealed record McpPresenceRef(
+    DateOnly Date,
+    Guid BuildingId,
+    string BuildingName,
+    Guid FloorId,
+    string FloorLabel,
+    Guid? ZoneKey,
+    string? ZoneName,
+    Guid? SeatId,
+    string? SeatCode)
+{
+    public static McpPresenceRef? From(PresenceView? view) =>
+        view is null
+            ? null
+            : new McpPresenceRef(view.Date, view.BuildingId, view.BuildingName, view.FloorId, view.FloorLabel, view.ZoneKey, view.ZoneName, view.SeatId, view.SeatCode);
+}
 
 /// <summary>拠点の参照（REST API の <c>SiteRefResponse</c> と同じ項目）。</summary>
 internal sealed record McpSiteRef(Guid Id, Guid LegalEntityId, string Code, string Name, string Type, string? PrefectureCode, string? PrefectureName, bool Inherited)

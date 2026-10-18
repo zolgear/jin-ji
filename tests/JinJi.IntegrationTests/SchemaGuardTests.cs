@@ -102,6 +102,11 @@ public sealed class SchemaGuardTests : IAsyncLifetime
     [InlineData("personnel_action")]
     [InlineData("assignment")]
     [InlineData("account_suspension")]
+    [InlineData("site_version")]
+    [InlineData("building_version")]
+    [InlineData("floor_version")]
+    [InlineData("floor_layout")]
+    [InlineData("workplace_assignment")]
     public async Task RecordedPeriodGuard_IsOnAllBitemporalTables(string table)
     {
         await using var owner = await _database.OpenOwnerAsync(Ct);

@@ -30,7 +30,10 @@ public sealed class AccessUnitTests
         Assert.Equal(person, user.PersonId);
         Assert.True(user.IsHrAdmin);
         Assert.Equal("portal", user.ClientId);
-        Assert.True(user.FieldLimit.IsUnrestricted);
+        // 項目の上限の * は全項目だが、当日の所在（presence）は含めない（明示したクライアントにだけ渡す）
+        Assert.True(user.FieldLimit.Allows(PersonFields.WorkEmail));
+        Assert.True(user.FieldLimit.Allows(PersonFields.Seat));
+        Assert.False(user.FieldLimit.Allows(PersonFields.Presence));
 
         var agent = factory.Create(Principal(("iss", "https://a"), ("sub", person.ToString()), ("client_id", "agent-x"), ("act", "{\"sub\":\"agent-x\"}")), Channel.Mcp, null);
         Assert.Equal(ActorType.Agent, agent.Actor);
@@ -264,7 +267,7 @@ public sealed class AccessUnitTests
     {
         var ex = Assert.Throws<InvalidOperationException>(() => ServerHost.BuildWeb(
             HostRole.Api,
-            ["--JINJI_PG_APP_PASSWORD=", "--ConnectionStrings:App=", $"--JinJi:Listen:ApiPort={ApiTestHost.FreePort()}", $"--JinJi:Listen:MetricsPort={ApiTestHost.FreePort()}"]));
+            ["--JINJI_PG_APP_PASSWORD=", "--ConnectionStrings:App=", "--JinJi:Listen:ApiPort=0", "--JinJi:Listen:MetricsPort=0"]));
         Assert.Contains("ConnectionStrings:App", ex.Message, StringComparison.Ordinal);
 
         var config = new ConfigurationBuilder().AddInMemoryCollection([]).Build();

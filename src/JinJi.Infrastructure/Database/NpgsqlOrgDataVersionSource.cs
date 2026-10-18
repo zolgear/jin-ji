@@ -17,6 +17,7 @@ namespace JinJi.Infrastructure.Database;
 /// 既に見た最大値より前の時刻の行が現れるため（行数で検知する）</item>
 /// <item>段の定義（org_level_scheme）も見る。承認（decided_at）と置き換え（superseded_at）で値が変わる</item>
 /// <item>拠点の版（site_version。0017）も二つの時間軸の表として見る</item>
+/// <item>建物・階の版・配置図の改訂・人の席・組織のエリア（0019）も見る。ゾーン・席の置き場所は改訂と同じトランザクションで足すので、改訂の行数・記録時刻で変わる</item>
 /// <item>法人・組織・人・拠点の不変 ID の表（legal_entity / org_unit / person / site）は見ない。更新できず、版や所属の行が無ければスナップショットに現れないため</item>
 /// <item>閲覧者を RLS に渡して読む。見えない行（内示など）の変化では世代が変わらないが、その閲覧者のスナップショットも変わらない</item>
 /// <item>最大 1 万人規模（数十万行）なら、1 回の確認は全表の走査でも数十ミリ秒程度。確認の間隔は <c>OrgSnapshotCacheOptions</c> で絞る</item>
@@ -36,6 +37,14 @@ public sealed class NpgsqlOrgDataVersionSource : IOrgDataVersionSource
         SELECT 'account_suspension', count(*), max(lower(recorded_period)), max(upper(recorded_period)) FROM account_suspension
         UNION ALL
         SELECT 'site_version', count(*), max(lower(recorded_period)), max(upper(recorded_period)) FROM site_version
+        UNION ALL
+        SELECT 'building_version', count(*), max(lower(recorded_period)), max(upper(recorded_period)) FROM building_version
+        UNION ALL
+        SELECT 'floor_version', count(*), max(lower(recorded_period)), max(upper(recorded_period)) FROM floor_version
+        UNION ALL
+        SELECT 'floor_layout', count(*), max(lower(recorded_period)), max(upper(recorded_period)) FROM floor_layout
+        UNION ALL
+        SELECT 'workplace_assignment', count(*), max(lower(recorded_period)), max(upper(recorded_period)) FROM workplace_assignment
         UNION ALL
         SELECT 'org_level_scheme', count(*), max(decided_at), max(superseded_at) FROM org_level_scheme
         """;

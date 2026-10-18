@@ -63,8 +63,8 @@ public sealed class AuthHostTests(AuthFixtureDatabase db) : IClassFixture<AuthFi
         string[] baseArgs =
         [
             $"--ConnectionStrings:App={db.Database.AppConnectionString}",
-            $"--JinJi:Listen:ApiPort={ApiTestHost.FreePort()}",
-            $"--JinJi:Listen:MetricsPort={ApiTestHost.FreePort()}",
+            "--JinJi:Listen:ApiPort=0",
+            "--JinJi:Listen:MetricsPort=0",
         ];
 
         var ex = Assert.Throws<InvalidOperationException>(() => ServerHost.BuildWeb(HostRole.Api, baseArgs));
@@ -72,7 +72,7 @@ public sealed class AuthHostTests(AuthFixtureDatabase db) : IClassFixture<AuthFi
         Assert.Throws<ArgumentException>(() => ServerHost.BuildWeb(HostRole.Api, [.. baseArgs, "--JinJi:DataProtection:Certificate:Base64=bm90LWEtY2VydA=="]));
 
         // MCP だけの役割は人のログイン（Cookie・Data Protection の鍵）を持たない
-        await using var mcp = ServerHost.BuildWeb(HostRole.Mcp, [.. baseArgs, $"--JinJi:Listen:McpPort={ApiTestHost.FreePort()}"]);
+        await using var mcp = ServerHost.BuildWeb(HostRole.Mcp, [.. baseArgs, "--JinJi:Listen:McpPort=0"]);
         Assert.Null(mcp.Services.GetService(typeof(HumanLoginMarker)));
     }
 

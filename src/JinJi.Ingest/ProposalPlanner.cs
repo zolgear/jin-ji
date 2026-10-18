@@ -118,6 +118,8 @@ public sealed partial class ProposalPlanner
             ImportTargetKind.PersonnelActions => PlanPersonnelActions(context, rows),
             ImportTargetKind.DirectoryUsers => PlanDirectoryUsers(context, rows),
             ImportTargetKind.Sites => PlanSites(context, rows),
+            ImportTargetKind.FloorLayouts => PlanFloorLayouts(context, rows),
+            ImportTargetKind.WorkplaceAssignments => PlanWorkplaceAssignments(context, rows),
             _ => throw new ArgumentOutOfRangeException(nameof(context)),
         };
     }

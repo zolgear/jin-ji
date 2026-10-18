@@ -1,9 +1,11 @@
 using System.Net;
-using System.Net.Sockets;
 using System.Text.Json;
 using JinJi.Application.Organization;
 using JinJi.Application.People;
 using JinJi.Host;
+using JinJi.IntegrationTests.Support;
+using Microsoft.AspNetCore.Hosting.Server;
+using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace JinJi.IntegrationTests;
@@ -13,18 +15,32 @@ namespace JinJi.IntegrationTests;
 /// </summary>
 public sealed class HostSurfaceTests
 {
+    /// <summary>待ち受けの設定。ポートは 0 にして OS に割り当てさせ、待ち受けを始めた後に実際のポートを読む。</summary>
+    private static readonly string[] ListenArgs =
+    [
+        "--JinJi:Listen:Address=127.0.0.1",
+        "--JinJi:Listen:ApiPort=0",
+        "--JinJi:Listen:McpPort=0",
+        "--JinJi:Listen:MetricsPort=0",
+        // テストは証明書なしの Data Protection の鍵で動かす（明示した設定でだけ許す）
+        "--JinJi:DataProtection:AllowUnprotectedKeys=true",
+        // 公開面の振り分けだけを見るので DB は使わない。Data Protection は起動時に鍵リングを読みに行くため、
+        // 開発用の DB（環境変数から組み立てる接続文字列）に鍵を作らないよう、届かない接続先を明示する
+        "--ConnectionStrings:App=Host=127.0.0.1;Port=9;Database=jinji_unused;Username=jinji_app;Password=unused;Timeout=1",
+    ];
+
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
     [Fact(DisplayName = "all では API と MCP がそれぞれのポートで応答する")]
     public async Task RoleAll_ServesApiAndMcpOnTheirOwnPorts()
     {
-        var (apiPort, mcpPort) = (FreePort(), FreePort());
-        await using var app = ServerHost.BuildWeb(HostRole.All, ListenArgs(apiPort, mcpPort));
+        await using var app = ServerHost.BuildWeb(HostRole.All, ListenArgs);
         await app.StartAsync(Ct);
+        var ports = app.Services.GetRequiredService<SurfacePortMap>();
         using var client = new HttpClient();
 
-        Assert.Equal("api", await GetSurfaceAsync(client, apiPort));
-        Assert.Equal("mcp", await GetSurfaceAsync(client, mcpPort));
+        Assert.Equal("api", await GetSurfaceAsync(client, ApiTestHost.BoundPort(ports, Surface.Api)));
+        Assert.Equal("mcp", await GetSurfaceAsync(client, ApiTestHost.BoundPort(ports, Surface.Mcp)));
 
         await app.StopAsync(Ct);
     }
@@ -32,9 +48,9 @@ public sealed class HostSurfaceTests
     [Fact(DisplayName = "公開面を持たないパスは 404 になる")]
     public async Task UnknownPath_Returns404()
     {
-        var (apiPort, mcpPort) = (FreePort(), FreePort());
-        await using var app = ServerHost.BuildWeb(HostRole.All, ListenArgs(apiPort, mcpPort));
+        await using var app = ServerHost.BuildWeb(HostRole.All, ListenArgs);
         await app.StartAsync(Ct);
+        var apiPort = ApiTestHost.BoundPort(app.Services.GetRequiredService<SurfacePortMap>(), Surface.Api);
         using var client = new HttpClient();
 
         using var response = await client.GetAsync(new Uri($"http://127.0.0.1:{apiPort}/no-such-path"), Ct);
@@ -46,13 +62,16 @@ public sealed class HostSurfaceTests
     [Fact(DisplayName = "api の役割では MCP のポートを開かない")]
     public async Task RoleApi_DoesNotOpenMcpPort()
     {
-        var (apiPort, mcpPort) = (FreePort(), FreePort());
-        await using var app = ServerHost.BuildWeb(HostRole.Api, ListenArgs(apiPort, mcpPort));
+        await using var app = ServerHost.BuildWeb(HostRole.Api, ListenArgs);
         await app.StartAsync(Ct);
+        var ports = app.Services.GetRequiredService<SurfacePortMap>();
         using var client = new HttpClient();
 
-        Assert.Equal("api", await GetSurfaceAsync(client, apiPort));
-        await Assert.ThrowsAsync<HttpRequestException>(() => client.GetAsync(new Uri($"http://127.0.0.1:{mcpPort}/healthz"), Ct));
+        Assert.Equal("api", await GetSurfaceAsync(client, ApiTestHost.BoundPort(ports, Surface.Api)));
+        // 待ち受けは API とメトリクスの 2 つだけ（MCP の待ち受けを作らない）
+        Assert.Null(ports.PortOf(Surface.Mcp));
+        var addresses = app.Services.GetRequiredService<IServer>().Features.Get<IServerAddressesFeature>()!.Addresses;
+        Assert.Equal(2, addresses.Count);
 
         await app.StopAsync(Ct);
     }
@@ -77,8 +96,7 @@ public sealed class HostSurfaceTests
     [Fact(DisplayName = "設定: 退職者の公開日数とキャッシュの設定は既定値を持ち、設定で変えられる")]
     public async Task Settings_HaveDefaultsAndCanBeOverridden()
     {
-        var (apiPort, mcpPort) = (FreePort(), FreePort());
-        await using (var defaults = ServerHost.BuildWeb(HostRole.Api, ListenArgs(apiPort, mcpPort)))
+        await using (var defaults = ServerHost.BuildWeb(HostRole.Api, ListenArgs))
         {
             Assert.Equal(90, defaults.Services.GetRequiredService<PersonDirectoryOptions>().RetiredPublicDays);
             Assert.Equal(TimeSpan.FromSeconds(5), defaults.Services.GetRequiredService<OrgSnapshotCacheOptions>().VersionCheckInterval);
@@ -86,7 +104,7 @@ public sealed class HostSurfaceTests
 
         await using var custom = ServerHost.BuildWeb(
             HostRole.Api,
-            [.. ListenArgs(apiPort, mcpPort), "--JinJi:Directory:RetiredPublicDays=30", "--JinJi:OrgSnapshotCache:VersionCheckInterval=00:00:10"]);
+            [.. ListenArgs, "--JinJi:Directory:RetiredPublicDays=30", "--JinJi:OrgSnapshotCache:VersionCheckInterval=00:00:10"]);
         Assert.Equal(30, custom.Services.GetRequiredService<PersonDirectoryOptions>().RetiredPublicDays);
         Assert.Equal(TimeSpan.FromSeconds(10), custom.Services.GetRequiredService<OrgSnapshotCacheOptions>().VersionCheckInterval);
     }
@@ -95,33 +113,13 @@ public sealed class HostSurfaceTests
     public void Settings_RejectInvalidValues()
     {
         Assert.Throws<ArgumentOutOfRangeException>(() => ServerHost.BuildWeb(
-            HostRole.Api, [.. ListenArgs(FreePort(), FreePort()), "--JinJi:Directory:RetiredPublicDays=-1"]));
+            HostRole.Api, [.. ListenArgs, "--JinJi:Directory:RetiredPublicDays=-1"]));
     }
-
-    private static string[] ListenArgs(int apiPort, int mcpPort) =>
-    [
-        "--JinJi:Listen:Address=127.0.0.1",
-        $"--JinJi:Listen:ApiPort={apiPort}",
-        $"--JinJi:Listen:McpPort={mcpPort}",
-        $"--JinJi:Listen:MetricsPort={FreePort()}",
-        // テストは証明書なしの Data Protection の鍵で動かす（明示した設定でだけ許す）
-        "--JinJi:DataProtection:AllowUnprotectedKeys=true",
-        // 公開面の振り分けだけを見るので DB は使わない。Data Protection は起動時に鍵リングを読みに行くため、
-        // 開発用の DB（環境変数から組み立てる接続文字列）に鍵を作らないよう、届かない接続先を明示する
-        "--ConnectionStrings:App=Host=127.0.0.1;Port=9;Database=jinji_unused;Username=jinji_app;Password=unused;Timeout=1",
-    ];
 
     private static async Task<string?> GetSurfaceAsync(HttpClient client, int port)
     {
         var body = await client.GetStringAsync(new Uri($"http://127.0.0.1:{port}/healthz"), Ct);
         using var json = JsonDocument.Parse(body);
         return json.RootElement.GetProperty("surface").GetString();
-    }
-
-    private static int FreePort()
-    {
-        using var listener = new TcpListener(IPAddress.Loopback, 0);
-        listener.Start();
-        return ((IPEndPoint)listener.LocalEndpoint).Port;
     }
 }

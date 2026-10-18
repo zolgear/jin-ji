@@ -116,6 +116,7 @@ public static partial class ApiModule
         PeopleEndpoints.Map(api);
         OrgEndpoints.Map(api);
         SiteEndpoints.Map(api);
+        WorkplaceEndpoints.Map(api);
         MetaEndpoints.Map(api);
         ChangeEndpoints.Map(api);
         AdminEndpoints.Map(api);

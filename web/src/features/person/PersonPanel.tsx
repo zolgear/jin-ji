@@ -9,6 +9,8 @@ import { Badge, ErrorNote, FieldValue, isVisible, personKana, personName, Privat
 import { useAdapter } from "../../data/adapterContext";
 import { useQuery } from "../../data/query";
 import { describeError, type Assignment, type Person } from "../../data/types";
+import { workplaceOf } from "../../data/workplace";
+import { useRoute } from "../../lib/router";
 import { useFormatDate } from "../../lib/dateStyle";
 import { EMPLOYMENT_STATUS_LABEL, employmentTypeLabel } from "../../lib/labels";
 import { ReportCorrection } from "../corrections/ReportCorrection";
@@ -48,6 +50,52 @@ function Managers({ person }: { person: Person }) {
         </li>
       ))}
     </ul>
+  );
+}
+
+/** 席（建物・階・席番号）。押すと建物・フロアモードでその席を開く。 */
+function SeatValue({ person }: { person: Person }) {
+  const { navigate } = useRoute();
+  const { workplace, seat } = workplaceOf(person);
+  if (!workplace) return null;
+  const where = `${workplace.building_name} ${workplace.floor_label}`;
+  const detail = seat ? seat.code : workplace.zone_name;
+  return (
+    <span className="flex flex-col items-start gap-0.5">
+      <span>
+        {where}
+        {detail && <span className="tabular">・{detail}</span>}
+      </span>
+      <button
+        type="button"
+        className="text-xs text-accent hover:underline"
+        onClick={() =>
+          navigate({
+            view: "overview-3d",
+            params: { mode: "floor", site: workplace.site_id, building: workplace.building_id, floor: workplace.floor_id, person: person.id, plan: null, org: null, split: null, color: null },
+          })
+        }
+      >
+        建物・フロアで席を開く
+      </button>
+    </span>
+  );
+}
+
+/** 今日の所在（外部から届いたもの）。見られる場合だけ。無いときは行ごと出さない（「不在」と出さない）。 */
+function PresenceRow({ person }: { person: Person }) {
+  const { presence } = workplaceOf(person);
+  if (!presence) return null;
+  return (
+    <Row label="今日の所在">
+      <span className="inline-flex flex-wrap items-center gap-1.5">
+        <Badge tone="neutral">今日</Badge>
+        <span>
+          {presence.building_name} {presence.floor_label}
+          {presence.seat_code ? <span className="tabular">・{presence.seat_code}</span> : presence.zone_name ? `・${presence.zone_name}` : ""}
+        </span>
+      </span>
+    </Row>
   );
 }
 
@@ -157,6 +205,12 @@ export function PersonDetail({ person }: { person: Person }) {
           <Row label="拠点">
             <FieldValue person={person} field="site">{person.site && <SiteValue site={person.site} inheritedNote="主務の組織の拠点" ownNote="所属組織とは別の拠点" />}</FieldValue>
           </Row>
+          <Row label="席">
+            <FieldValue person={person} field="workplace">
+              {workplaceOf(person).workplace !== null && <SeatValue person={person} />}
+            </FieldValue>
+          </Row>
+          {asOf === today && <PresenceRow person={person} />}
           <Row label="リモートワーク">
             <FieldValue person={person} field="remote_work">{person.remote_work !== null && <RemoteWorkValue value={person.remote_work} />}</FieldValue>
           </Row>

@@ -1,0 +1,140 @@
+// 建物・階・配置図・席の割り当てと、外部から届く今日の所在の型と取得元のインターフェース。
+// 仕様は docs/design/building-floor-mode.md（§2 データモデル・§3 権限・§6 API）。
+//
+// - 座標は階ごとのローカル座標で、整数のミリメートル（原点は図面の左下、x は右、y は奥）
+// - 席の状態は閲覧者から見た 3 つだけ（人・空席・使えない席。§3.2）。閲覧者に見えない人の席は「使えない席」として届く
+// - 扱うのは人の決まった席・持ち場（有効期間付きの割り当て）だけ。タイムマシンで見た日の割り当てがその日の所在
+// - 今日の所在は、連携しているシステムから届いたものを重ねるだけ（今日だけ。提供元が無い導入先では無効）。無いことに意味を持たせない
+//
+// API の応答の型は生成型（schema.gen.ts）から導く。画面が使う内部モデル（配置図・在籍者・今日の所在）は、
+// API の応答を apiWorkplace.ts のアダプターで変換して作る（デモも同じ内部モデルを返す）。
+import type { Schemas } from "../api/schema.gen";
+import type { Person } from "./types";
+
+/** 階の種類（表示とまとめ方だけに使う固定の少数。§2.2）。 */
+export type FloorKind = Schemas["FloorSummaryResponse"]["kind"];
+/** エリア（ゾーン）の種類（§2.3）。 */
+export type ZoneKind = Schemas["ZoneResponse"]["kind"];
+/** 固定の部分（コア・壁で囲った部屋・吹き抜け）。 */
+export type FixtureKind = Schemas["FixtureResponse"]["kind"];
+/** 席の種類（固定席・持ち場）。 */
+export type SeatKind = Schemas["LayoutSeatResponse"]["kind"];
+/** 閲覧者から見た席の状態（§3.2 の 3 つ。occupied = 閲覧者に見える人の席）。 */
+export type SeatStatus = Schemas["LayoutSeatResponse"]["status"];
+
+/** [x_mm, y_mm] の点。 */
+export type PointMm = [number, number];
+
+/** 階の一覧の 1 行（席数・人がいる席・空席・使えない席は閲覧者に見える人だけで数える）。 */
+export type FloorSummary = Schemas["FloorSummaryResponse"];
+
+/** 建物と階の一覧（GET /sites/{id}/buildings の items、GET /buildings/{id} の building）。 */
+export type Building = Schemas["BuildingResponse"];
+
+export interface LayoutFixture {
+  kind: FixtureKind;
+  /** 表示用の短い名前（「会議室 A」「EV・階段」）。 */
+  name: string | null;
+  polygon: PointMm[];
+}
+
+export interface LayoutZone {
+  /** 改訂をまたいで同じゾーンを指す ID。 */
+  zone_key: string;
+  name: string;
+  kind: ZoneKind;
+  polygon: PointMm[];
+}
+
+export interface LayoutSeat {
+  seat_id: string;
+  /** 席番号（階の中で一意）。 */
+  code: string;
+  zone_key: string | null;
+  x_mm: number;
+  y_mm: number;
+  rotation_deg: number;
+  desk_type: Schemas["LayoutSeatResponse"]["desk_type"];
+  /** API の kind（固定席・持ち場）。 */
+  seat_kind: SeatKind;
+  capacity: number;
+  features: Schemas["LayoutSeatResponse"]["features"];
+  status: SeatStatus;
+}
+
+/** その日の配置図（GET /floors/{id}/layout の floor・layout を平らにしたもの）。人は含まない。配置図が無い階は空の配置図（layout_id が空）。 */
+export interface FloorLayout {
+  floor_id: string;
+  as_of: string;
+  /** 配置図の改訂の ID と有効になった日。 */
+  layout_id: string;
+  valid_from: string;
+  outline: PointMm[];
+  fixtures: LayoutFixture[];
+  grid_mm: number;
+  zones: LayoutZone[];
+  seats: LayoutSeat[];
+}
+
+/** 階の人と席の対応（GET /floors/{id}/occupants の items。閲覧者に seat が見える人だけ）。 */
+export interface FloorOccupant {
+  person_id: string;
+  display_name: string | null;
+  /** 主務の組織（その日）。 */
+  org_unit_id: string | null;
+  org_unit_name: string | null;
+  /** 席の割り当て（席か、ライン・エリアのどちらか一方）。 */
+  seat_id: string | null;
+  zone_key: string | null;
+  role: "primary" | "secondary";
+}
+
+/** 人の所在の階・エリア（人の項目 workplace）。 */
+export type PersonWorkplace = Schemas["WorkplaceRefResponse"];
+
+/** 人の席（人の項目 seat）。 */
+export type PersonSeat = Schemas["SeatRefResponse"];
+
+/** 人の今日の所在（人の項目 presence。外部から届いたもの。GET /people/{id} だけに出る。無い・見えないときは null）。 */
+export type PersonPresence = Schemas["PresenceRefResponse"];
+
+export function workplaceOf(person: Person): { workplace: PersonWorkplace | null; seat: PersonSeat | null; presence: PersonPresence | null } {
+  return { workplace: person.workplace ?? null, seat: person.seat ?? null, presence: person.presence ?? null };
+}
+
+/** 階の今日の所在 1 件（閲覧者に presence が見える人の分だけ）。 */
+export interface FloorPresenceItem {
+  person_id: string;
+  display_name: string | null;
+  org_unit_id: string | null;
+  org_unit_name: string | null;
+  /** 席番号は seat も見えるときだけ（null ならエリアだけ）。 */
+  seat_id: string | null;
+  zone_key: string | null;
+}
+
+/** 階の今日の所在（GET /floors/{id}/presence。外部から届いたもの。今日だけ）。 */
+export interface FloorPresence {
+  floor_id: string;
+  date: string;
+  /** 見えない人の所在で埋まった席（応答の seats のうち status が unavailable の席。使えない席として表示する）。 */
+  unavailable_seat_ids: string[];
+  /** 閲覧者に見える人の所在。 */
+  items: FloorPresenceItem[];
+}
+
+/**
+ * 建物・フロアモードの取得元。API アダプタとデモアダプタが同じ形で実装する（DirectoryAdapter.workplace）。
+ * 時点（asOf）の規則は人の情報と同じ。
+ */
+export interface WorkplaceAdapter {
+  /** 拠点の建物と階の一覧。 */
+  listBuildings(siteId: string, asOf: string): Promise<Building[]>;
+  getBuilding(id: string, asOf: string): Promise<Building>;
+  /** その日の配置図（席の状態を含む。人は含まない）。 */
+  getFloorLayout(floorId: string, asOf: string): Promise<FloorLayout>;
+  /** 階の人と席の対応（すべてのページを読む）。 */
+  listFloorOccupants(floorId: string, asOf: string): Promise<FloorOccupant[]>;
+  /** 階の今日の所在（外部から届いたもの）。提供元が無い導入先では null。 */
+  getFloorPresence(floorId: string, date: string): Promise<FloorPresence | null>;
+}

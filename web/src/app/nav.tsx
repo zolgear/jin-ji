@@ -1,5 +1,5 @@
 // 画面の状態（時点・選択中の組織と人・画面）を URL に持ち、各画面から使う。
-import { createContext, useContext, useMemo, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, type ReactNode } from "react";
 import { useAdapter } from "../data/adapterContext";
 import { isIsoDate } from "../lib/date";
 import { useRoute, type View } from "../lib/router";
@@ -21,6 +21,13 @@ export interface Nav {
 
 const NavContext = createContext<Nav | null>(null);
 
+/** 設定の画面を開く前にいた画面のハッシュ（設定の「← 戻る」の戻り先）。まだ無ければ null。 */
+let lastAppHash: string | null = null;
+
+export function previousAppHash(): string | null {
+  return lastAppHash;
+}
+
 export function NavProvider({ children }: { children: ReactNode }) {
   const { adapter } = useAdapter();
   const { route, navigate } = useRoute();
@@ -28,6 +35,10 @@ export function NavProvider({ children }: { children: ReactNode }) {
   const asOf = rawAsOf && isIsoDate(rawAsOf) ? rawAsOf : adapter.businessDate;
   const orgId = route.params.get("org");
   const personId = route.params.get("person");
+  const hash = window.location.hash;
+  useEffect(() => {
+    if (route.view !== "settings") lastAppHash = hash || null;
+  }, [route.view, hash]);
 
   const nav = useMemo<Nav>(
     () => ({

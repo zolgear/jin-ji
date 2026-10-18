@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <!--
     実 PostgreSQL を使う結合テスト。Compose の PostgreSQL に接続し、テストごとに一時データベースを作って捨てる。
-    接続情報は環境変数（JINJI_PG_*）で渡す。README を参照。
+    接続情報は環境変数（JINJI_PG_*）で渡す。docs/getting-started.md の「ビルドとテスト」を参照。
   -->
 
   <PropertyGroup>

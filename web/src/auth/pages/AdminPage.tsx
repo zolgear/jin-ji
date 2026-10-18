@@ -8,6 +8,7 @@
 import { useCallback, useEffect, useId, useRef, useState, type FormEvent, type KeyboardEvent, type ReactNode } from "react";
 import { withSource, type AuthSource } from "../authAdapter";
 import {
+  ADMIN_TAB_LABELS,
   CLIENT_STATUS_LABELS,
   fieldLabel,
   MCP_TOOLS,
@@ -18,6 +19,7 @@ import {
   WEBHOOK_DELIVERY_KIND_LABELS,
   WEBHOOK_DELIVERY_STATUS_LABELS,
   WEBHOOK_STATUS_LABELS,
+  type AdminTab,
 } from "../labels";
 import { authErrorMessage } from "../messages";
 import { loginUrl } from "../returnUrl";
@@ -44,15 +46,9 @@ import {
 } from "../types";
 import { AuthFrame, Button, ConfirmButton, CopyField, Icon, Loading, Notice, Panel, TextField, formatDateTime } from "../ui";
 
-type Tab = "unbound" | "accounts" | "clients" | "webhooks" | "domains";
+type Tab = AdminTab;
 
-const TAB_LABELS: Record<Tab, string> = {
-  unbound: "未紐付けのログイン",
-  accounts: "ローカルアカウント",
-  clients: "API クライアント",
-  webhooks: "Webhook",
-  domains: "CIMD の許可ドメイン",
-};
+const TAB_LABELS = ADMIN_TAB_LABELS;
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 

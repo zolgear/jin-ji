@@ -1,6 +1,7 @@
 using JinJi.Application.Ingest;
 using JinJi.Domain.Organization;
 using JinJi.Domain.Text;
+using JinJi.Domain.Workplace;
 
 namespace JinJi.Ingest.Normalization;
 
@@ -254,6 +255,8 @@ public sealed class RowNormalizer
             }
         }
 
+        NormalizeWorkplace(Raw, Set, issues);
+
         return new NormalizedRow(stagingRowId, row.SourceRowNumber, data, issues);
 
         void MapCode(string key, Func<string?, string?> map)
@@ -268,6 +271,70 @@ public sealed class RowNormalizer
                 {
                     issues.Add(new NormalizationIssue(key, IssueCodes.InvalidValue));
                 }
+            }
+        }
+    }
+
+    /// <summary>
+    /// 建物・階・配置図・割り当ての項目（0019）。コード・席番号は全角・ハイフンの揺れをそろえ、種類は表示名からコード値にし、整数・多角形・設備のタグの形を確かめる。
+    /// </summary>
+    private static void NormalizeWorkplace(Func<string, string?> raw, Action<string, string?> set, List<NormalizationIssue> issues)
+    {
+        set(IngestFields.BuildingCode, WorkplaceCodes.NormalizeCode(raw(IngestFields.BuildingCode)));
+        set(IngestFields.SeatCode, WorkplaceCodes.NormalizeCode(raw(IngestFields.SeatCode)));
+        set(IngestFields.FloorLabel, WorkplaceCodes.NormalizeFloorLabel(raw(IngestFields.FloorLabel)));
+        foreach (var key in new[] { IngestFields.BuildingName, IngestFields.LayoutName, IngestFields.SeatZone, IngestFields.ZoneName })
+        {
+            set(key, TextNormalizer.ToDisplay(raw(key)));
+        }
+
+        foreach (var (key, min, max) in new[]
+                 {
+                     (IngestFields.BuildingSortOrder, -999, 999), (IngestFields.FloorLevelOrder, -1000, 2000), (IngestFields.LayoutGridMm, 10, 1000),
+                     (IngestFields.SeatXMm, 0, WorkplaceCodes.MaxCoordinateMm), (IngestFields.SeatYMm, 0, WorkplaceCodes.MaxCoordinateMm),
+                     (IngestFields.SeatRotation, 0, 359), (IngestFields.SeatCapacity, 1, WorkplaceCodes.MaxCapacity),
+                 })
+        {
+            if (raw(key) is not { } text)
+            {
+                continue;
+            }
+
+            if (int.TryParse(TextNormalizer.Nfkc(text).Replace(",", string.Empty, StringComparison.Ordinal), System.Globalization.NumberStyles.AllowLeadingSign, System.Globalization.CultureInfo.InvariantCulture, out var number)
+                && number >= min && number <= max)
+            {
+                set(key, number.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            }
+            else
+            {
+                issues.Add(new NormalizationIssue(key, IssueCodes.InvalidValue));
+            }
+        }
+
+        MapWorkplace(IngestFields.FloorKind, WorkplaceValueCodes.FloorKind);
+        MapWorkplace(IngestFields.LayoutElement, WorkplaceValueCodes.LayoutElement);
+        MapWorkplace(IngestFields.LayoutKind, WorkplaceValueCodes.LayoutKind);
+        MapWorkplace(IngestFields.SeatKind, WorkplaceValueCodes.SeatKind);
+        MapWorkplace(IngestFields.SeatDeskType, v => WorkplaceCodes.DeskTypes.Contains(v.ToLowerInvariant(), StringComparer.Ordinal) ? v.ToLowerInvariant() : null);
+        MapWorkplace(IngestFields.WorkplaceRole, WorkplaceValueCodes.Role);
+        MapWorkplace(IngestFields.SeatOutOfService, ParseFlag);
+        MapWorkplace(IngestFields.SeatFeatures, WorkplaceValueCodes.Features);
+        MapWorkplace(IngestFields.LayoutPolygon, WorkplaceValueCodes.Polygon);
+
+        void MapWorkplace(string key, Func<string, string?> map)
+        {
+            if (raw(key) is not { } value)
+            {
+                return;
+            }
+
+            if (map(TextNormalizer.Nfkc(value).Trim()) is { } code)
+            {
+                set(key, code);
+            }
+            else
+            {
+                issues.Add(new NormalizationIssue(key, IssueCodes.InvalidValue));
             }
         }
     }

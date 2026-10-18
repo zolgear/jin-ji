@@ -61,6 +61,10 @@ internal static class DatabaseRegistration
         services.TryAddSingleton<IPolicyRuleStore, NpgsqlPolicyRuleStore>();
         services.TryAddSingleton<PersonDirectoryService>();
         services.TryAddSingleton<OrgDirectoryService>();
+        services.TryAddSingleton<Application.Workplace.WorkplaceDirectoryService>();
+        // 当日の所在の提供（拡張点）。導入先が自前の実装を先に登録すればそれを使う。既定は提供なし（機能は無効）
+        services.TryAddSingleton<Application.Presence.IPresenceProvider, Application.Presence.NoPresenceProvider>();
+        services.TryAddSingleton<Application.Presence.PresenceService>();
         services.TryAddSingleton<IDirectoryCalendarStore, NpgsqlDirectoryCalendarStore>();
         services.TryAddSingleton<DirectoryMetaService>();
         services.TryAddSingleton<IChangeFeedStore, NpgsqlChangeFeedStore>();

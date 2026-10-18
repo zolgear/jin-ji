@@ -167,6 +167,10 @@ public static class SourceReader
         {
             raw = GraphUsersJson.Read(content);
         }
+        else if (kind == ImportSourceKind.LayoutJson)
+        {
+            raw = FloorLayoutJson.Read(content);
+        }
         else
         {
             var (text, _) = TextEncodingDetector.Decode(content, mapping.Source.Encoding);

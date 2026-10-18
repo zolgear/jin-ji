@@ -37,8 +37,8 @@ import { assignSiteColors, siteColorVar } from "../../lib/siteColors";
 import { splitBySite } from "../../lib/siteSplit";
 import { useResolvedTheme } from "../../lib/theme";
 import { useRoute } from "../../lib/router";
+import { chartDirectionParam, resolveChartDirection, useSettings } from "../../lib/settings";
 import {
-  DEFAULT_DIRECTION,
   NODE_HEIGHT,
   NODE_WIDTH,
   isOpen,
@@ -62,13 +62,17 @@ const nodeTypes = { org: OrgNodeCard, siteGroup: SiteGroupNode };
 type LinkMode = "focus" | "all" | "none";
 const edgeTypes = { cross: CrossEdge };
 
-/** 組織図の向き（URL の dir。既定の上から下は URL に書かない）と、その切り替え。拠点の色分けと同じく、画面を移っても引き継ぐ。 */
+/**
+ * 組織図の向き（URL の dir。書かなければ設定画面の既定。lib/settings.ts）と、その切り替え。拠点の色分けと同じく、画面を移っても引き継ぐ。
+ * 設定の既定と同じ向きは URL に書かない。
+ */
 function useChartDirection(): [ChartDirection, (next: ChartDirection) => void] {
   const { route, navigate } = useRoute();
-  const direction: ChartDirection = route.params.get("dir") === "lr" ? "lr" : DEFAULT_DIRECTION;
+  const { chartDirection } = useSettings();
+  const direction: ChartDirection = resolveChartDirection(route.params.get("dir"), chartDirection);
   const set = useCallback(
-    (next: ChartDirection) => navigate({ params: { dir: next === DEFAULT_DIRECTION ? null : next } }, true),
-    [navigate],
+    (next: ChartDirection) => navigate({ params: { dir: chartDirectionParam(next, chartDirection) } }, true),
+    [navigate, chartDirection],
   );
   return [direction, set];
 }

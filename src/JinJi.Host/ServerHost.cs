@@ -17,7 +17,7 @@ internal static class ServerHost
     public const int DefaultMetricsPort = 28100;
 
     /// <summary>API・MCP の少なくとも一方を含む役割のホストを組み立てる。</summary>
-    /// <param name="configureServices">テスト用: 登録の後にサービスを差し替える（時刻など）。</param>
+    /// <param name="configureServices">登録の後にサービスを差し替える（テストの時刻など、配備側の当日の所在の提供。<see cref="JinJiHost"/>）。</param>
     public static WebApplication BuildWeb(HostRole role, string[] args, Action<IServiceCollection>? configureServices = null)
     {
         if ((role & (HostRole.Api | HostRole.Mcp)) == HostRole.None)
@@ -37,33 +37,38 @@ internal static class ServerHost
             DatabaseRegistration.RequireAppConnectionString(builder.Configuration);
         }
 
-        var ports = new Dictionary<int, Surface>();
+        // ポート 0 は OS が空いているポートを割り当てる（同じポートの重なりは 0 以外で判定する）
+        var listeners = new List<SurfaceListener>();
         if (role.HasFlag(HostRole.Api))
         {
-            ports.Add(listen.GetValue("ApiPort", DefaultApiPort), Surface.Api);
+            listeners.Add(new SurfaceListener(Surface.Api, address, listen.GetValue("ApiPort", DefaultApiPort)));
         }
 
         if (role.HasFlag(HostRole.Mcp))
         {
             var mcpPort = listen.GetValue("McpPort", DefaultMcpPort);
-            if (!ports.TryAdd(mcpPort, Surface.Mcp))
+            if (mcpPort != 0 && listeners.Any(l => l.Port == mcpPort))
             {
                 throw new ArgumentException($"API と MCP に同じポート {mcpPort} は指定できません。", nameof(args));
             }
+
+            listeners.Add(new SurfaceListener(Surface.Mcp, address, mcpPort));
         }
 
         var metricsPort = listen.GetValue("MetricsPort", DefaultMetricsPort);
-        if (!ports.TryAdd(metricsPort, Surface.Metrics))
+        if (metricsPort != 0 && listeners.Any(l => l.Port == metricsPort))
         {
             throw new ArgumentException($"メトリクスに API・MCP と同じポート {metricsPort} は指定できません。", nameof(args));
         }
 
-        var portMap = new SurfacePortMap(ports);
+        listeners.Add(new SurfaceListener(Surface.Metrics, metricsAddress, metricsPort));
+
+        var portMap = new SurfacePortMap(listeners);
         builder.WebHost.ConfigureKestrel(kestrel =>
         {
-            foreach (var (port, surface) in portMap.Ports)
+            foreach (var listener in portMap.Listeners)
             {
-                kestrel.Listen(surface == Surface.Metrics ? metricsAddress : address, port);
+                kestrel.Listen(listener.Address, listener.Port, options => portMap.Attach(listener.Surface, options));
             }
         });
 

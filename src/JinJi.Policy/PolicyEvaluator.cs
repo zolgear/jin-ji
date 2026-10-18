@@ -34,23 +34,29 @@ public sealed class PolicyEvaluator
         ArgumentNullException.ThrowIfNull(viewer);
 
         IEnumerable<string> candidates;
-        if (viewer.IsHrAdmin)
-        {
-            candidates = PersonFields.All;
-        }
-        else if (viewer.EffectivePersonId == targetPersonId)
+        if (viewer.EffectivePersonId == targetPersonId && !viewer.IsHrAdmin)
         {
             candidates = PersonFields.PolicyControllable;
+        }
+        else if (viewer.IsHrAdmin)
+        {
+            // 人事管理者は全項目を見られる。ただし当日の所在だけは例外を効かせず、他の閲覧者と同じ規則で判定する
+            // （人事管理者を含め、所在だけは全員を一覧できる立場を作らない）
+            var applicable = ApplicableRules(targetPersonId);
+            candidates = PersonFields.All.Where(field =>
+                field != PersonFields.Presence || viewer.EffectivePersonId == targetPersonId || Satisfied(viewer, targetPersonId, applicable, field));
         }
         else
         {
             var applicable = ApplicableRules(targetPersonId);
-            candidates = PersonFields.PolicyControllable.Where(field =>
-                applicable.Where(r => r.Covers(field)).All(r => _relations.Satisfies(viewer.EffectivePersonId, targetPersonId, r.Allow)));
+            candidates = PersonFields.PolicyControllable.Where(field => Satisfied(viewer, targetPersonId, applicable, field));
         }
 
         return candidates.Where(viewer.FieldLimit.Allows).ToHashSet(StringComparer.Ordinal);
     }
+
+    private bool Satisfied(ViewerContext viewer, Guid targetPersonId, IReadOnlyList<PolicyRule> applicable, string field) =>
+        applicable.Where(r => r.Covers(field)).All(r => _relations.Satisfies(viewer.EffectivePersonId, targetPersonId, r.Allow));
 
     /// <summary>対象者に当てはまる規則（全員・所属組織・個人単位の例外）。</summary>
     public IReadOnlyList<PolicyRule> ApplicableRules(Guid targetPersonId) =>

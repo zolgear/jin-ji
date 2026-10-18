@@ -49,6 +49,18 @@ public sealed record PersonResponse
     /// <summary>リモートワークの対象か（有無だけ。理由・頻度・シフトは持たない）。</summary>
     public bool? RemoteWork { get; init; }
 
+    /// <summary>階・エリア（席・ゾーンの割り当てか、主務の組織のエリア。source・inherited で区別する）。無ければ null。</summary>
+    public WorkplaceRefResponse? Workplace { get; init; }
+
+    /// <summary>主の席（席番号・座標・階）。席が無い・その時点の配置図に無ければ null。</summary>
+    public SeatRefResponse? Seat { get; init; }
+
+    /// <summary>
+    /// 当日の所在（外部の提供の今日の分。jin-ji は保持しない）。1 人の参照（GET /people/{id}）で、提供があり、今日を表示し、
+    /// 項目の上限に presence を明示したクライアントと UI だけ。所在が無い・見えないときは null で、visible_fields にも入れない（「不在」の値を作らない）。
+    /// </summary>
+    public PresenceRefResponse? Presence { get; init; }
+
     public string? EmploymentType { get; init; }
 
     public string? JobType { get; init; }
@@ -99,6 +111,9 @@ public sealed record PersonResponse
             WorkMobilePhone = view.WorkMobilePhone,
             Site = SiteRefResponse.From(view.Site),
             RemoteWork = view.RemoteWork,
+            Workplace = WorkplaceRefResponse.From(view.Workplace),
+            Seat = SeatRefResponse.From(view.Seat),
+            Presence = PresenceRefResponse.From(view.Presence),
             EmploymentType = view.EmploymentType,
             JobType = view.JobType,
             HireDate = view.HireDate,

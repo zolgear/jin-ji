@@ -6,7 +6,7 @@ using JinJi.IntegrationTests.Support;
 namespace JinJi.IntegrationTests.Ingest;
 
 /// <summary>
-/// サンプル（samples/messy-corp）の 5 ファイルを項目マッピングで読めることの軽い確認（DB を使わない）。
+/// サンプル（samples/messy-corp）のファイルを項目マッピングで読めることの軽い確認（DB を使わない）。
 /// 取り込みから承認・正解データとの照合までの重い評価は <c>JinJi.Host evaluate-ingest</c> で行う（docs/reports/ingest-accuracy.md）。
 /// </summary>
 public sealed class SampleSmokeTests
@@ -20,6 +20,8 @@ public sealed class SampleSmokeTests
         { "jirei_2026.json", "jirei_2026.csv", 108 },
         { "entra_users.json", "entra_users.json", 347 },
         { "sites.json", "sites.csv", 8 },
+        { "floor_layouts.json", "floor_layouts.json", 380 },
+        { "seat_assignments.json", "seat_assignments.csv", 233 },
     };
 
     [Theory(DisplayName = "サンプル: 項目マッピングで読め、行数が正解データと一致し、値は許可リストの取込項目だけ")]
@@ -87,5 +89,18 @@ public sealed class SampleSmokeTests
         Assert.DoesNotContain(people, r => r.HasIssue(IngestFields.RemoteWork, IssueCodes.InvalidValue));
         Assert.Contains(people, r => r[IngestFields.SiteName] is { } name && name.StartsWith("本社", StringComparison.Ordinal)
             && Domain.Text.SiteNameKey.Candidates(name).Contains(Domain.Text.SiteNameKey.From("東京本社")!));
+    }
+
+    [Fact(DisplayName = "サンプル: 座席表の列はすべて取り込む項目で、席番号の全角・ハイフンの揺れをそろえる")]
+    public async Task Sample_SeatAssignments()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var mapping = ConnectorMapping.Parse(await File.ReadAllBytesAsync(Sample("mappings/seat_assignments.json"), ct));
+        var table = SourceReader.Read(await File.ReadAllBytesAsync(Sample("seat_assignments.csv"), ct), "seat_assignments.csv", mapping);
+        Assert.Empty(table.DroppedColumns);
+        var normalizer = new RowNormalizer(mapping.Profile);
+        var codes = table.Rows.Select(r => normalizer.Normalize(Guid.NewGuid(), r)[IngestFields.SeatCode]).OfType<string>().ToList();
+        Assert.All(codes, c => Assert.True(c.All(char.IsAscii), c));
+        Assert.Contains("3F-Z99", codes);
     }
 }

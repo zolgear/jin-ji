@@ -6,7 +6,7 @@
     "所属": "法人、組織、主務/兼務、役職、出向・出向受入の区別",
     "在籍": "入社年月日、退職年月日、在籍状態、アカウント状態（一時停止）",
     "業務連絡先": "社用メール、内線、社用携帯（自由記述の勤務地は 0017 で拠点に置き換え、廃止予定）",
-    "拠点": "拠点（コード・名称・種別・所在地〔事業所の住所。会社の情報〕・法人・有効期間）、組織の拠点、人の拠点の上書き、リモートワークの有無（有無だけ。理由・頻度・シフトは持たない）",
+    "拠点": "拠点（コード・名称・種別・所在地〔事業所の住所。会社の情報〕・法人・有効期間）、組織の拠点、人の拠点の上書き、リモートワークの有無（有無だけ。理由・頻度・シフトは持たない）、建物・階・簡易フロアマップ（外形・ゾーン・席の置き場所）、人の決まった席・持ち場（有効期間付き。0019。ADR-0012）",
     "その他": "雇用区分、職種、顔写真",
     "組織": "組織名・略称・コード・段（階層の定義）・上位組織・組織長・有効期間",
     "発令": "異動・役職の任免・入退社・兼務・出向・一時停止の発令",
@@ -271,6 +271,283 @@
         "valid_period": {
           "category": "システム管理用",
           "description": "有効時間（拠点が開設されている期間）"
+        },
+        "recorded_period": {
+          "category": "システム管理用",
+          "description": "記録時間（jin-ji がこの内容を記録していた期間）"
+        }
+      }
+    },
+    "building": {
+      "description": "建物の不変 ID",
+      "columns": {
+        "id": {
+          "category": "識別",
+          "description": "建物 ID（UUIDv7）"
+        },
+        "site_id": {
+          "category": "拠点",
+          "description": "建物の拠点"
+        }
+      }
+    },
+    "building_version": {
+      "description": "建物の版",
+      "columns": {
+        "id": {
+          "category": "システム管理用",
+          "description": "版の行 ID（UUIDv7）"
+        },
+        "building_id": {
+          "category": "拠点",
+          "description": "対象の建物"
+        },
+        "site_id": {
+          "category": "拠点",
+          "description": "建物の拠点（building と同じ値。建物コードの一意性の検査に使う）"
+        },
+        "code": {
+          "category": "拠点",
+          "description": "建物コード（拠点の中で一意）"
+        },
+        "name": {
+          "category": "拠点",
+          "description": "建物名（本館・第二工場棟など）"
+        },
+        "sort_order": {
+          "category": "拠点",
+          "description": "拠点の中の建物の並び順"
+        },
+        "valid_period": {
+          "category": "システム管理用",
+          "description": "有効時間（事実として有効な期間）"
+        },
+        "recorded_period": {
+          "category": "システム管理用",
+          "description": "記録時間（jin-ji がこの内容を記録していた期間）"
+        }
+      }
+    },
+    "floor": {
+      "description": "階の不変 ID",
+      "columns": {
+        "id": {
+          "category": "識別",
+          "description": "階 ID（UUIDv7）"
+        },
+        "building_id": {
+          "category": "拠点",
+          "description": "階の建物"
+        }
+      }
+    },
+    "floor_version": {
+      "description": "階の版",
+      "columns": {
+        "id": {
+          "category": "システム管理用",
+          "description": "版の行 ID（UUIDv7）"
+        },
+        "floor_id": {
+          "category": "拠点",
+          "description": "対象の階"
+        },
+        "building_id": {
+          "category": "拠点",
+          "description": "階の建物（floor と同じ値。表示名・並び順の一意性の検査に使う）"
+        },
+        "label": {
+          "category": "拠点",
+          "description": "階の表示名（B1・1F・M2F など）"
+        },
+        "level_order": {
+          "category": "拠点",
+          "description": "階の並び順（地上 n 階 = n × 10、地下は負、中二階は間の値）"
+        },
+        "floor_kind": {
+          "category": "拠点",
+          "description": "階の種類（事務所・製造フロア・倉庫・ロビー・機械室・その他）"
+        },
+        "valid_period": {
+          "category": "システム管理用",
+          "description": "有効時間（事実として有効な期間）"
+        },
+        "recorded_period": {
+          "category": "システム管理用",
+          "description": "記録時間（jin-ji がこの内容を記録していた期間）"
+        }
+      }
+    },
+    "seat": {
+      "description": "座席の不変 ID と席番号",
+      "columns": {
+        "id": {
+          "category": "識別",
+          "description": "席 ID（UUIDv7）"
+        },
+        "floor_id": {
+          "category": "拠点",
+          "description": "席の階"
+        },
+        "code": {
+          "category": "拠点",
+          "description": "席番号（階の中で一意。正規化した表記）"
+        }
+      }
+    },
+    "floor_layout": {
+      "description": "配置図の承認済みの改訂",
+      "columns": {
+        "id": {
+          "category": "システム管理用",
+          "description": "改訂の行 ID（UUIDv7）"
+        },
+        "floor_id": {
+          "category": "拠点",
+          "description": "対象の階"
+        },
+        "outline": {
+          "category": "拠点",
+          "description": "階の外形の多角形（整数のミリメートル）"
+        },
+        "fixtures": {
+          "category": "拠点",
+          "description": "固定の部分（コア・部屋・吹き抜け）の多角形と表示名"
+        },
+        "grid_mm": {
+          "category": "拠点",
+          "description": "編集の格子の間隔（ミリメートル）"
+        },
+        "proposed_by_person_id": {
+          "category": "認可",
+          "description": "改訂の起案者（取込の実行者）"
+        },
+        "approved_by_person_id": {
+          "category": "認可",
+          "description": "改訂の承認者（起案者とは別人）"
+        },
+        "valid_period": {
+          "category": "システム管理用",
+          "description": "有効時間（改訂が有効な期間）"
+        },
+        "recorded_period": {
+          "category": "システム管理用",
+          "description": "記録時間（jin-ji がこの内容を記録していた期間）"
+        }
+      }
+    },
+    "layout_zone": {
+      "description": "改訂ごとのエリア / ゾーン",
+      "columns": {
+        "layout_id": {
+          "category": "拠点",
+          "description": "ゾーンの改訂"
+        },
+        "zone_key": {
+          "category": "拠点",
+          "description": "改訂をまたいで同じゾーンを指す ID"
+        },
+        "name": {
+          "category": "拠点",
+          "description": "ゾーンの名前（表示用）"
+        },
+        "zone_kind": {
+          "category": "拠点",
+          "description": "ゾーンの種類（事務所・製造ライン・保管・共用・立入制限）"
+        },
+        "polygon": {
+          "category": "拠点",
+          "description": "ゾーンの多角形（整数のミリメートル）"
+        }
+      }
+    },
+    "layout_seat": {
+      "description": "改訂ごとの席の置き場所と属性",
+      "columns": {
+        "layout_id": {
+          "category": "拠点",
+          "description": "席の置き場所の改訂"
+        },
+        "floor_id": {
+          "category": "拠点",
+          "description": "階（改訂・席と同じ値）"
+        },
+        "seat_id": {
+          "category": "拠点",
+          "description": "席"
+        },
+        "zone_key": {
+          "category": "拠点",
+          "description": "席が属するゾーン（任意）"
+        },
+        "x_mm": {
+          "category": "拠点",
+          "description": "机の中心の x 座標（ミリメートル）"
+        },
+        "y_mm": {
+          "category": "拠点",
+          "description": "机の中心の y 座標（ミリメートル）"
+        },
+        "rotation_deg": {
+          "category": "拠点",
+          "description": "机の向き（15° 刻み）"
+        },
+        "desk_type": {
+          "category": "拠点",
+          "description": "机の型（既定の型の許可リスト）"
+        },
+        "seat_kind": {
+          "category": "拠点",
+          "description": "席の種類（固定席・持ち場）"
+        },
+        "capacity": {
+          "category": "拠点",
+          "description": "定員（持ち場だけ 2 以上）"
+        },
+        "features": {
+          "category": "拠点",
+          "description": "設備のタグ（許可リスト。健康・障害に関わるタグは持たない）"
+        },
+        "out_of_service": {
+          "category": "拠点",
+          "description": "使えない席（保守中・予備）"
+        }
+      }
+    },
+    "workplace_assignment": {
+      "description": "人の席・持ち場",
+      "columns": {
+        "id": {
+          "category": "システム管理用",
+          "description": "割り当ての行 ID（UUIDv7）"
+        },
+        "person_id": {
+          "category": "拠点",
+          "description": "対象の人"
+        },
+        "floor_id": {
+          "category": "拠点",
+          "description": "割り当ての階"
+        },
+        "seat_id": {
+          "category": "拠点",
+          "description": "割り当ての席（ゾーンの割り当てでは NULL）"
+        },
+        "zone_key": {
+          "category": "拠点",
+          "description": "割り当てのゾーン（工場のライン・倉庫のエリアなど席の無い持ち場。席の割り当てでは NULL）"
+        },
+        "role": {
+          "category": "拠点",
+          "description": "主の席 / 副の席"
+        },
+        "exclusive": {
+          "category": "拠点",
+          "description": "定員 1 の席か（排他制約に使う）"
+        },
+        "valid_period": {
+          "category": "システム管理用",
+          "description": "有効時間（事実として有効な期間）"
         },
         "recorded_period": {
           "category": "システム管理用",

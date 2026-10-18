@@ -14,7 +14,7 @@ export const PERSON_FIELDS = [
   "employee_number", "legal_entity", "display_name", "family_name", "given_name", "family_name_kana", "given_name_kana",
   "family_name_latin", "given_name_latin", "work_email", "extension_number", "work_mobile_phone", "site",
   "remote_work", "employment_type", "job_type", "hire_date", "termination_date", "employment_status", "account_status",
-  "account_suspension", "assignments", "managers", "personnel_actions", "name_history",
+  "account_suspension", "assignments", "managers", "personnel_actions", "name_history", "workplace", "seat", "presence",
 ] as const;
 export type PersonField = (typeof PERSON_FIELDS)[number];
 
@@ -24,13 +24,26 @@ export interface DemoPolicy {
   hiddenFields: PersonField[];
   /** 組織単位の制限: この組織コード（配下を含む）に所属する人の、これらの項目は見えない。 */
   orgRestrictions: Array<{ orgCode: string; fields: PersonField[] }>;
+  /**
+   * 当日の所在（項目 presence）が見える人（既定の公開範囲は本人と同じ部。仕様 §3.4）。
+   * 無ければ当日の所在の機能が無効で、presence は誰についても見えない。
+   */
+  presenceVisible?: (person: DemoPerson) => boolean;
 }
 
 export const DEFAULT_DEMO_POLICY: DemoPolicy = {
   // 社用携帯は部内のみ・発令の履歴と氏名の履歴は人事管理者のみ、という想定
   hiddenFields: ["work_mobile_phone", "personnel_actions", "name_history"],
   // 内部監査部（A020）の人の内線・拠点・リモートワークの有無は部内のみ、という想定
-  orgRestrictions: [{ orgCode: "A020", fields: ["extension_number", "site", "remote_work"] }],
+  // 席・階も同じく部内のみ（隠した人の席は、配置図では「使えない席」に含める。仕様 §3.2）
+  orgRestrictions: [{ orgCode: "A020", fields: ["extension_number", "site", "remote_work", "workplace", "seat"] }],
+};
+
+/** 人の席・階・今日の所在の投影（デモの建物・フロアモード。demo/demoWorkplace.ts が設定する）。 */
+export type PersonWorkplaceProjection = (person: DemoPerson, asOf: string, visible: ReadonlySet<PersonField>) => {
+  workplace: unknown;
+  seat: unknown;
+  presence: unknown;
 };
 
 export interface PersonListResult {
@@ -47,10 +60,12 @@ export class DemoDirectory {
   private readonly siteById = new Map<string, DemoSite>();
   private readonly entityById: Map<string, DemoDataset["legal_entities"][number]>;
   private readonly visibleCache = new Map<string, PersonField[]>();
+  /** 席・階・今日の所在の投影（無ければ null）。 */
+  workplaceProjection: PersonWorkplaceProjection | null = null;
 
   constructor(data: DemoDataset, policy: DemoPolicy = DEFAULT_DEMO_POLICY) {
     this.data = data;
-    this.policy = policy;
+    this.policy = { ...policy };
     this.businessDate = data.meta.business_date;
     for (const o of data.org_units) this.orgById.set(o.id, o);
     for (const p of data.people) this.personById.set(p.id, p);
@@ -185,8 +200,15 @@ export class DemoDirectory {
     return fields;
   }
 
+  /** 当日の所在の公開範囲を設定する（機能を有効にする）。項目の判定を覚え直す。 */
+  setPresenceVisibility(visible: (person: DemoPerson) => boolean): void {
+    this.policy.presenceVisible = visible;
+    this.visibleCache.clear();
+  }
+
   private computeVisibleFields(person: DemoPerson): PersonField[] {
     const hidden = new Set<PersonField>(this.policy.hiddenFields);
+    if (!this.policy.presenceVisible?.(person)) hidden.add("presence");
     const todays = this.assignmentsAt(person, this.businessDate);
     for (const rule of this.policy.orgRestrictions) {
       const applies = todays.some((a) => this.ancestors(a.org_unit_id).some((o) => o.code === rule.orgCode));
@@ -232,7 +254,7 @@ export class DemoDirectory {
         valid_until: a.valid_until && a.valid_until <= today ? a.valid_until : null,
       };
     });
-    const values: Partial<Person> = {
+    const values: Partial<Record<PersonField, unknown>> = {
       employee_number: person.employee_number,
       legal_entity: entity ? { id: entity.id, code: entity.code, name: entity.name } : null,
       display_name: person.display_name,
@@ -260,6 +282,7 @@ export class DemoDirectory {
         : null,
       assignments,
       managers: this.managerIds(person, asOf),
+      ...(this.workplaceProjection?.(person, asOf, visible) ?? {}),
     };
     // API と同じく、すべての項目を明示的に返す（見えない項目・値の無い項目は null。見えるかどうかは visible_fields で区別する）
     const out: Record<string, unknown> = { id: person.id, visible_fields: [...visible] };
@@ -267,6 +290,8 @@ export class DemoDirectory {
       const value = values[field];
       out[field] = visible.has(field) && value !== undefined ? value : null;
     }
+    // 今日の所在は、無い・見えないときは項目ごと省く（「不在」の値を作らない。仕様 §6.1）
+    if (out.presence === null) delete out.presence;
     return out as Person;
   }
 

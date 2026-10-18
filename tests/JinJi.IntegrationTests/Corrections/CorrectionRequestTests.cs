@@ -431,7 +431,8 @@ public sealed class CorrectionRequestTests : IAsyncLifetime
         var declared = (System.Reflection.CustomAttributeExtensions.GetCustomAttributes(typeof(global::JinJi.Api.CreateCorrectionRequest).GetProperty(nameof(global::JinJi.Api.CreateCorrectionRequest.Field))!, typeof(global::JinJi.Api.OpenApiEnumAttribute), true)
             .Cast<global::JinJi.Api.OpenApiEnumAttribute>().Single()).Values;
         Assert.Equal(CorrectionFields.All.Order(StringComparer.Ordinal), declared.Order(StringComparer.Ordinal));
-        Assert.Equal(PersonFields.PolicyControllable.Order(StringComparer.Ordinal), CorrectionFields.All.Order(StringComparer.Ordinal));
+        // 当日の所在（保存しない項目）は修正依頼の項目にしない
+        Assert.Equal(PersonFields.PolicyControllable.Except(PersonFields.ExplicitOnly).Order(StringComparer.Ordinal), CorrectionFields.All.Order(StringComparer.Ordinal));
         Assert.All(CorrectionFields.All, f => Assert.NotEqual(f, CorrectionFields.Label(f)));
     }
 }

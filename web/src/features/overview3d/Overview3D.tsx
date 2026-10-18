@@ -38,8 +38,7 @@ import { Canvas, useFrame, useThree, type ThreeEvent } from "@react-three/fiber"
 import { useReducedMotion } from "motion/react";
 import { Component, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from "react";
 import * as THREE from "three";
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
+import type { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { Line2 } from "three/examples/jsm/lines/Line2.js";
 import { LineGeometry } from "three/examples/jsm/lines/LineGeometry.js";
 import { LineMaterial } from "three/examples/jsm/lines/LineMaterial.js";
@@ -55,6 +54,10 @@ import { partitionName, splitBySite, type SiteSplit } from "../../lib/siteSplit"
 import { ChartToolbar, ChartToolbarEnd, CrossKindFilter, NoStatsBadge, SiteModeControls, ToolbarButton } from "../orgchart/ChartToolbar";
 import { useSiteColorMode, useSiteSplitMode } from "../orgchart/SiteLegend";
 import { useResolvedTheme } from "../../lib/theme";
+import { useFloorRoute } from "../floor/floorHooks";
+import { FloorMode } from "../floor/FloorMode";
+import { ModeSwitch } from "../floor/FloorParts";
+import { GridFloor, PALETTE, setEnvironment, useOrbitControls, type Palette } from "./common3d";
 import { boundingSphere, heightOf, layout3d, layout3dSplit, personDots, type Island3D, type Layer3D, type Placed3D, type Scene3D } from "./layout3d";
 import { buildModules, hazardRing } from "./modules3d";
 import { TIER_COUNT, TIER_NAMES, TIER_SHAPES } from "./shapes3d";
@@ -62,55 +65,7 @@ import beadUrl from "./textures/bead.webp";
 import hairlineUrl from "./textures/hairline.webp";
 import panelUrl from "./textures/panel.webp";
 
-const PALETTE = {
-  light: {
-    bg: "#f4f6f8",
-    primary: "#2a78d6",
-    deemph: "#c3c9d1",
-    entity: "#556274",
-    edge: "#8a96a6",
-    concurrent: "#eb6834",
-    secondment: "#1baf7a",
-    dot: "#ffffff",
-    // 拠点で色分け（src/index.css の --site-1〜3・--site-other と同じ値）
-    site: ["#2a78d6", "#eb6834", "#1baf7a"],
-    siteOther: "#8a96a6",
-    // 空間（ワイヤー・床の格子）
-    wire: "#9aa5b2",
-    grid: "#c9d0d8",
-    // モジュールの外装（白基調）。退かせた組織は地に寄せ、法人は黒鉛色
-    shell: "#eef1f4",
-    shellDeemph: "#e6e9ed",
-    shellEntity: "#59636f",
-    // アクセント（src/index.css の --signal・--signal-ink）
-    signal: "#ffd400",
-    signalInk: "#1d232a",
-    lampOff: "#5b6470",
-    light: { ambient: 0.5, key: 1.35, env: 0.5 },
-  },
-  dark: {
-    bg: "#0f141a",
-    primary: "#3987e5",
-    deemph: "#3a4553",
-    entity: "#a0acba",
-    edge: "#6b7889",
-    concurrent: "#d95926",
-    secondment: "#199e70",
-    dot: "#e5eaf0",
-    site: ["#3987e5", "#d95926", "#199e70"],
-    siteOther: "#6b7889",
-    wire: "#7d8a99",
-    grid: "#34404c",
-    shell: "#b9c1ca",
-    shellDeemph: "#3b4450",
-    shellEntity: "#6f7b88",
-    signal: "#ffd400",
-    signalInk: "#11161c",
-    lampOff: "#3a4553",
-    light: { ambient: 0.35, key: 1.3, env: 0.35 },
-  },
-} as const;
-type Palette = (typeof PALETTE)[keyof typeof PALETTE];
+
 
 /** 最初のカメラの向き（注視点からカメラへ）。斜め上 約 30° から見下ろす。 */
 const VIEW_DIR = new THREE.Vector3(0, 0.58, 1).normalize();
@@ -137,37 +92,6 @@ class WebGlBoundary extends Component<{ children: ReactNode }, { failed: boolean
     }
     return this.props.children;
   }
-}
-
-function useOrbitControls(reduced: boolean) {
-  const { camera, gl, invalidate } = useThree();
-  const [controls, setControls] = useState<OrbitControls | null>(null);
-  useEffect(() => {
-    const c = new OrbitControls(camera, gl.domElement);
-    c.enableDamping = !reduced;
-    c.dampingFactor = 0.12;
-    c.screenSpacePanning = true;
-    // ホイールの拡大・縮小はカーソルの位置へ向ける。組織を選ぶと、選んだ組織が画面の中心に無い
-    // （相手先まで収めるため上の方に来る）ので、中心へ寄せると選んだ組織が画面の外へ逃げてしまう
-    c.zoomToCursor = true;
-    // 真下・真上からは見せない（段の重なりが読めなくなる）
-    c.minPolarAngle = Math.PI * 0.08;
-    c.maxPolarAngle = Math.PI * 0.62;
-    const onChange = () => invalidate();
-    c.addEventListener("change", onChange);
-    // OrbitControls は DOM にリスナーを付ける外部のオブジェクトなので、effect で作って state に置く
-    // oxlint-disable-next-line react/set-state-in-effect
-    setControls(c);
-    return () => {
-      c.removeEventListener("change", onChange);
-      c.dispose();
-    };
-  }, [camera, gl, invalidate, reduced]);
-  useFrame(() => {
-    // 減衰の間は update が change を出して次のフレームを要求する
-    controls?.update();
-  });
-  return controls;
 }
 
 /** 選んだ組織に関係する組織（自分・上位・配下・兼務出向の相手先）。 */
@@ -1133,87 +1057,10 @@ function UpperLinks({ pairs, byId, palette }: { pairs: Array<[string, string]>; 
   );
 }
 
-const FLOOR_VERTEX = /* glsl */ `
-varying vec3 vWorld;
-void main() {
-  vec4 w = modelMatrix * vec4(position, 1.0);
-  vWorld = w.xyz;
-  gl_Position = projectionMatrix * viewMatrix * w;
-}
-`;
-
-const FLOOR_FRAGMENT = /* glsl */ `
-uniform vec3 uColor;
-uniform vec2 uCenter;
-uniform float uRadius;
-uniform float uCell;
-varying vec3 vWorld;
-float gridLine(vec2 p, float cell, float width) {
-  vec2 c = p / cell;
-  vec2 d = abs(fract(c - 0.5) - 0.5) / max(fwidth(c), vec2(1e-4));
-  return 1.0 - clamp(min(d.x, d.y) / width, 0.0, 1.0);
-}
-void main() {
-  float minor = gridLine(vWorld.xz, uCell, 0.8);
-  float major = gridLine(vWorld.xz, uCell * 5.0, 1.2);
-  // 中心から離れるほど薄れる（遠方へ溶ける）
-  float fade = 1.0 - smoothstep(uRadius * 0.15, uRadius, length(vWorld.xz - uCenter));
-  float a = max(minor * 0.22, major * 0.55) * fade;
-  if (a < 0.01) discard;
-  gl_FragColor = vec4(uColor, a);
-  #include <colorspace_fragment>
-}
-`;
-
-function setFloorUniforms(material: THREE.ShaderMaterial, palette: Palette, scene: Scene3D, size: number) {
-  (material.uniforms.uColor!.value as THREE.Color).set(palette.grid);
-  (material.uniforms.uCenter!.value as THREE.Vector2).set(scene.center[0], scene.center[2]);
-  material.uniforms.uRadius!.value = size / 2;
-  // 格子の目は全体の大きさに合わせる（1 万人でも細かすぎない）
-  material.uniforms.uCell!.value = Math.max(4, Math.round(scene.extent / 24));
-}
-
-/** 床の格子（シェーダーで線を引く。テクスチャ無し・描画呼び出し 1 回）。 */
+/** 床の格子（common3d の GridFloor。格子の目は全体の大きさに合わせる＝1 万人でも細かすぎない）。 */
 function Floor({ scene, y, palette }: { scene: Scene3D; y: number; palette: Palette }) {
-  const material = useMemo(
-    () =>
-      new THREE.ShaderMaterial({
-        vertexShader: FLOOR_VERTEX,
-        fragmentShader: FLOOR_FRAGMENT,
-        transparent: true,
-        depthWrite: false,
-        side: THREE.DoubleSide,
-        uniforms: {
-          uColor: { value: new THREE.Color() },
-          uCenter: { value: new THREE.Vector2() },
-          uRadius: { value: 100 },
-          uCell: { value: 2 },
-        },
-      }),
-    [],
-  );
-  useEffect(() => () => material.dispose(), [material]);
   const size = scene.extent * 2.4 + 60;
-  useLayoutEffect(() => setFloorUniforms(material, palette, scene, size), [material, palette, scene, size]);
-  return (
-    <mesh position={[scene.center[0], y, scene.center[2]]} rotation={[-Math.PI / 2, 0, 0]} material={material} raycast={() => null} renderOrder={-1}>
-      <planeGeometry args={[size, size]} />
-    </mesh>
-  );
-}
-
-// three のシーンの変更（フックの外の関数で行う）
-function setEnvironment(gl: THREE.WebGLRenderer, scene: THREE.Scene) {
-  const pmrem = new THREE.PMREMGenerator(gl);
-  const room = new RoomEnvironment();
-  const target = pmrem.fromScene(room, 0.04);
-  scene.environment = target.texture;
-  room.dispose();
-  pmrem.dispose();
-  return () => {
-    scene.environment = null;
-    target.dispose();
-  };
+  return <GridFloor center={[scene.center[0], scene.center[2]]} y={y} size={size} cell={Math.max(4, Math.round(scene.extent / 24))} palette={palette} />;
 }
 
 function setFog(scene: THREE.Scene, palette: Palette) {
@@ -1914,8 +1761,15 @@ function HowToRead({ stats }: { stats: boolean }) {
   );
 }
 
+/** 3D 表示: 組織モード（既定）と建物・フロアモード（mode=floor）。 */
 export function Overview3D() {
+  const { floorMode } = useFloorRoute();
+  return floorMode ? <FloorMode /> : <OrgOverview3D />;
+}
+
+function OrgOverview3D() {
   const { adapter } = useAdapter();
+  const { setMode } = useFloorRoute();
   const { asOf, orgId, selectOrg } = useNav();
   const tree = useOrgTree(asOf);
   const stats = useOrgStats(asOf);
@@ -1975,6 +1829,7 @@ export function Overview3D() {
     <div className="flex size-full flex-col">
       {/* 操作の帯（2D の組織図と共通の部品・同じ順序）。図に重なる箱は置かず、読み方の説明は「図の見方」（?）の中に入れる */}
       <ChartToolbar>
+        <ModeSwitch floor={false} onChange={setMode} />
         <SiteModeControls split={splitMode} onSplit={setSplitMode} color={siteMode} onColor={setSiteMode} coloring={coloring} />
         <CrossKindFilter
           concurrent={showConcurrent}

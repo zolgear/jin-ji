@@ -1,3 +1,5 @@
+using JinJi.Domain.Workplace;
+
 namespace JinJi.Domain.Organization;
 
 /// <summary>
@@ -62,10 +64,12 @@ public sealed class OrgSnapshot
         Dictionary<Guid, PersonRecord> people,
         Dictionary<Guid, IReadOnlyList<Assignment>> assignmentsByPerson,
         IReadOnlyList<OrgLevelScheme> levelSchemes,
-        Dictionary<Guid, Site> sites)
+        Dictionary<Guid, Site> sites,
+        WorkplaceMap workplace)
     {
         AsOf = asOf;
         _sites = sites;
+        Workplace = workplace;
         _legalEntities = legalEntities;
         _units = units;
         _people = people;
@@ -101,9 +105,13 @@ public sealed class OrgSnapshot
     /// <summary>有効な段の定義（グループ共通の既定と法人ごとの定義）。</summary>
     public IReadOnlyList<OrgLevelScheme> LevelSchemes { get; }
 
+    /// <summary>その時点の建物・階・配置図・人の席（建物・フロアモード。0019）。</summary>
+    public WorkplaceMap Workplace { get; }
+
     /// <summary>スナップショットを作る。</summary>
     /// <param name="levelSchemes">有効な段の定義。既定（法人 null）は高々 1 つ、法人ごとにも高々 1 つ（重複は先のものを使う）。</param>
     /// <param name="sites">その時点で有効な拠点（省略は拠点なし）。</param>
+    /// <param name="workplace">その時点の建物・階・配置図・人の席（省略は建物なし）。</param>
     public static OrgSnapshot Create(
         DateOnly asOf,
         IEnumerable<LegalEntity> legalEntities,
@@ -111,7 +119,8 @@ public sealed class OrgSnapshot
         IEnumerable<PersonRecord> people,
         IEnumerable<Assignment> assignments,
         IEnumerable<OrgLevelScheme> levelSchemes,
-        IEnumerable<Site>? sites = null)
+        IEnumerable<Site>? sites = null,
+        WorkplaceMap? workplace = null)
     {
         ArgumentNullException.ThrowIfNull(legalEntities);
         ArgumentNullException.ThrowIfNull(units);
@@ -126,14 +135,15 @@ public sealed class OrgSnapshot
             .GroupBy(a => a.PersonId)
             .ToDictionary(g => g.Key, g => (IReadOnlyList<Assignment>)[.. g.OrderBy(a => a.Type)]);
 
-        return new OrgSnapshot(asOf, legalEntities.ToDictionary(e => e.Id), unitMap, peopleMap, byPerson, [.. levelSchemes], (sites ?? []).ToDictionary(s => s.Id));
+        return new OrgSnapshot(
+            asOf, legalEntities.ToDictionary(e => e.Id), unitMap, peopleMap, byPerson, [.. levelSchemes], (sites ?? []).ToDictionary(s => s.Id), workplace ?? WorkplaceMap.Empty);
     }
 
     /// <summary>同じ組織・人のデータで、段の定義だけを差し替えたスナップショットを作る（段の定義の変更の検査に使う）。</summary>
     public OrgSnapshot WithLevelSchemes(IEnumerable<OrgLevelScheme> levelSchemes)
     {
         ArgumentNullException.ThrowIfNull(levelSchemes);
-        return new OrgSnapshot(AsOf, _legalEntities, _units, _people, _assignmentsByPerson, [.. levelSchemes], _sites);
+        return new OrgSnapshot(AsOf, _legalEntities, _units, _people, _assignmentsByPerson, [.. levelSchemes], _sites, Workplace);
     }
 
     /// <summary>法人に効く段の定義（法人の定義、無ければグループ共通の既定）。</summary>
@@ -188,6 +198,45 @@ public sealed class OrgSnapshot
             ?? assignments.FirstOrDefault(a => a.Type == AssignmentType.Primary);
         return home is not null && SiteOfUnit(home.OrgUnitId) is { } unitSite ? unitSite with { Inherited = true } : null;
     }
+
+    /// <summary>
+    /// 人の階・エリア（建物・フロアモードの仕様 §2.4）: 主の席の割り当てならその席の階とゾーン、主のゾーンの割り当て（工場のライン・倉庫のエリアなど
+    /// 席の無い持ち場）ならその階とゾーン。割り当てが無ければ null。割り当ての席・ゾーンがその時点の改訂に無ければエリアは無し（階は割り当ての階）で、
+    /// 別の席・エリアに読み替えない。
+    /// </summary>
+    public ResolvedWorkplace? WorkplaceOf(Guid personId)
+    {
+        if (Workplace.AssignmentsOf(personId).FirstOrDefault(a => a.Role == WorkplaceRole.Primary) is not { } primary
+            || Workplace.FindFloor(primary.FloorId) is not { } floor
+            || Workplace.FindBuilding(floor.BuildingId) is not { } building)
+        {
+            return null;
+        }
+
+        if (primary.SeatId is { } seatId)
+        {
+            var seatZone = Workplace.FindSeat(seatId)?.Seat.ZoneKey;
+            return new ResolvedWorkplace(building, floor, seatZone is { } z ? Workplace.FindZone(floor.Id, z) : null, WorkplaceSource.Seat);
+        }
+
+        return new ResolvedWorkplace(building, floor, primary.ZoneKey is { } key ? Workplace.FindZone(floor.Id, key) : null, WorkplaceSource.Zone);
+    }
+
+    /// <summary>
+    /// 人の席（主の席が先、副の席が後）。その時点の改訂に無い席・階・建物の席は含めない（「席なし」。別の席に読み替えない）。
+    /// ゾーンの割り当て（席の無い持ち場・エリア）は含めない。
+    /// </summary>
+    public IReadOnlyList<ResolvedSeat> SeatsOf(Guid personId) =>
+    [
+        .. Workplace.AssignmentsOf(personId)
+            .Where(a => a.SeatId is not null)
+            .Select(a => Workplace.FindSeat(a.SeatId!.Value) is { } placement
+                && placement.Floor.Id == a.FloorId
+                && Workplace.FindBuilding(placement.Floor.BuildingId) is { } building
+                ? new ResolvedSeat(building, placement.Floor, placement.Seat, placement.Seat.ZoneKey is { } z ? Workplace.FindZone(a.FloorId, z) : null, a.Role)
+                : null)
+            .OfType<ResolvedSeat>(),
+    ];
 
     /// <summary>人の所属（主務が先）。スナップショットに居なければ空。</summary>
     public IReadOnlyList<Assignment> AssignmentsOf(Guid personId) => _assignmentsByPerson.GetValueOrDefault(personId) ?? NoAssignments;

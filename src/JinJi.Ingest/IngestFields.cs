@@ -106,6 +106,71 @@ public static class IngestFields
     /// <summary>リモートワークの対象か（はい/いいえ・○/×・有/無 などの表示値を "true" / "false" にそろえる）。</summary>
     public const string RemoteWork = "remote_work";
 
+    // 建物・階・配置図の改訂（0019。配置図の JSON・席の CSV。行は要素ごと: 外形・固定の部分・ゾーン・席）
+    public const string BuildingCode = "building_code";
+    public const string BuildingName = "building_name";
+    public const string BuildingSortOrder = "building_sort_order";
+
+    /// <summary>階の表示名（1F・B1・M2F など。全角・小文字は正規化する）。</summary>
+    public const string FloorLabel = "floor_label";
+
+    /// <summary>階の並び順（地上 n 階 = n × 10、地下は負、中二階は間の値）。</summary>
+    public const string FloorLevelOrder = "floor_level_order";
+
+    /// <summary>階の種類（office・factory などのコード値か、事務所・製造フロアなどの表示名）。</summary>
+    public const string FloorKind = "floor_kind";
+
+    /// <summary>改訂の有効日。</summary>
+    public const string LayoutValidFrom = "layout_valid_from";
+
+    /// <summary>配置図の行の要素（outline 外形 / fixture 固定の部分 / zone ゾーン / seat 席 / floor 階だけ）。</summary>
+    public const string LayoutElement = "layout_element";
+
+    /// <summary>固定の部分・ゾーンの名前（表示用。保持しない情報の混入を検査する）。</summary>
+    public const string LayoutName = "layout_name";
+
+    /// <summary>固定の部分・ゾーンの種類。</summary>
+    public const string LayoutKind = "layout_kind";
+
+    /// <summary>外形・固定の部分・ゾーンの多角形（[[x_mm, y_mm], …] の JSON）。</summary>
+    public const string LayoutPolygon = "layout_polygon";
+
+    public const string LayoutGridMm = "layout_grid_mm";
+
+    /// <summary>席番号（全角・ハイフンの揺れを正規化する。３F－Ａ０１ → 3F-A01）。</summary>
+    public const string SeatCode = "seat_code";
+
+    public const string SeatXMm = "seat_x_mm";
+    public const string SeatYMm = "seat_y_mm";
+    public const string SeatRotation = "seat_rotation";
+    public const string SeatDeskType = "seat_desk_type";
+
+    /// <summary>席の種類（fixed / station か、固定席・持ち場）。</summary>
+    public const string SeatKind = "seat_kind";
+
+    public const string SeatCapacity = "seat_capacity";
+
+    /// <summary>設備のタグ（カンマ区切り。許可リストだけ。健康・障害に関わるタグは作らない）。</summary>
+    public const string SeatFeatures = "seat_features";
+
+    /// <summary>席が属するゾーンの名前（同じ階のゾーン）。</summary>
+    public const string SeatZone = "seat_zone";
+
+    public const string SeatOutOfService = "seat_out_of_service";
+
+    // 人の席・持ち場と組織のエリア（0019。割り当ての CSV）
+
+    /// <summary>ゾーン（エリア）の名前（ゾーンの割り当て・組織のエリア）。</summary>
+    public const string ZoneName = "zone_name";
+
+    /// <summary>席の役割（primary 主 / secondary 副。既定は主）。</summary>
+    public const string WorkplaceRole = "workplace_role";
+
+    public const string WorkplaceValidFrom = "workplace_valid_from";
+
+    /// <summary>割り当ての最終日（この日の翌日で割り当てを終える）。</summary>
+    public const string WorkplaceEndDate = "workplace_end_date";
+
     // 正規化で作る検索用の表記（取込元の列には対応させない）
     public const string SearchName = "search_name";
     public const string SearchNameKana = "search_name_kana";
@@ -123,7 +188,28 @@ public static class IngestFields
         EmploymentStatus, SuspensionStartDate, OrgHeadName, OrgRemarks, ParentOrgAltName, ConcurrentOrgName, ConcurrentPositionTitle,
         SecondmentLegalEntityCode, SecondmentOrgName, SecondmentStartDate, ActionDate, ActionText, ActionNote, ExternalId, AccountEnabled,
         SiteCode, SiteName, SiteType, SitePrefecture, SiteLocation, SiteValidFrom, SiteClosedDate, RemoteWork,
+        BuildingCode, BuildingName, BuildingSortOrder, FloorLabel, FloorLevelOrder, FloorKind, LayoutValidFrom, LayoutElement, LayoutName, LayoutKind,
+        LayoutPolygon, LayoutGridMm, SeatCode, SeatXMm, SeatYMm, SeatRotation, SeatDeskType, SeatKind, SeatCapacity, SeatFeatures, SeatZone, SeatOutOfService,
+        ZoneName, WorkplaceRole, WorkplaceValidFrom, WorkplaceEndDate,
     };
+
+    /// <summary>配置図の取込（対象 floor_layouts）に書ける項目。</summary>
+    public static readonly IReadOnlySet<string> FloorLayout = new HashSet<string>(StringComparer.Ordinal)
+    {
+        SiteCode, BuildingCode, BuildingName, BuildingSortOrder, FloorLabel, FloorLevelOrder, FloorKind, LayoutValidFrom, LayoutElement, LayoutName, LayoutKind,
+        LayoutPolygon, LayoutGridMm, SeatCode, SeatXMm, SeatYMm, SeatRotation, SeatDeskType, SeatKind, SeatCapacity, SeatFeatures, SeatZone, SeatOutOfService,
+    };
+
+    /// <summary>割り当ての取込（対象 workplace_assignments）に書ける項目。</summary>
+    public static readonly IReadOnlySet<string> WorkplaceAssignment = new HashSet<string>(StringComparer.Ordinal)
+    {
+        EmployeeNumber, LegalEntityCode, SiteCode, BuildingCode, FloorLabel, SeatCode, ZoneName, WorkplaceRole, WorkplaceValidFrom, WorkplaceEndDate,
+    };
+
+    /// <summary>建物・フロアモードの取込（配置図・割り当て）だけに書ける項目。人・組織の取込の列には対応させない。</summary>
+    public static readonly IReadOnlySet<string> WorkplaceOnly = FloorLayout.Union(WorkplaceAssignment)
+        .Except([EmployeeNumber, LegalEntityCode, SiteCode])
+        .ToHashSet(StringComparer.Ordinal);
 
     /// <summary>拠点マスタの取込（対象 sites）だけに書ける項目。所在地（事業所の住所）を人の取込の列に対応させないため。</summary>
     public static readonly IReadOnlySet<string> SiteMasterOnly = new HashSet<string>(StringComparer.Ordinal)
@@ -153,15 +239,17 @@ public static class IngestFields
     public static readonly IReadOnlySet<string> Dates = new HashSet<string>(StringComparer.Ordinal)
     {
         HireDate, TerminationDate, OrgValidFrom, SuspensionStartDate, SecondmentStartDate, ActionDate, SiteValidFrom, SiteClosedDate,
+        LayoutValidFrom, WorkplaceValidFrom, WorkplaceEndDate,
     };
 
     /// <summary>
     /// 自由記述の項目。生年月日・住所・電話番号らしき値が混ざっていないかを取込時に検査する（<see cref="Domain.Text.SensitiveValueDetector"/>）。
     /// 拠点名も含める（人事パッケージの勤務地の欄に自宅の住所が書かれていることがあるため）。拠点の所在地（<see cref="SiteLocation"/>）は事業所の住所なので検査しない
-    /// （拠点マスタの取込だけに書ける。<see cref="SiteMasterOnly"/>）。
+    /// （拠点マスタの取込だけに書ける。<see cref="SiteMasterOnly"/>）。建物名・ゾーンの名前も含める（ゾーンの名前に個人名や健康の情報を書かれることがあるため）。
     /// </summary>
     public static readonly IReadOnlySet<string> FreeText = new HashSet<string>(StringComparer.Ordinal)
     {
         ActionText, ActionNote, OrgRemarks, SiteName, JobType, PositionTitle, ConcurrentPositionTitle, DisplayName,
+        BuildingName, LayoutName, SeatZone, ZoneName,
     };
 }

@@ -1,5 +1,5 @@
 // 各画面のスクリーンショットを撮る（ライト / ダーク × デスクトップ幅 / スマホ幅）。
-// ホストにブラウザを入れず、公式イメージ mcr.microsoft.com/playwright のコンテナ内で実行する（README の「Web UI」）。
+// ホストにブラウザを入れず、公式イメージ mcr.microsoft.com/playwright のコンテナ内で実行する（docs/getting-started.md の「Web UI の開発」）。
 //
 //   node scripts/screenshots.mjs <開発サーバーの URL> [出力ディレクトリ]
 //
@@ -35,6 +35,11 @@ async function fillReport(page, field, reason, suggested) {
   await page.locator("form button[type='submit']").scrollIntoViewIfNeeded();
 }
 
+// 建物・フロアモード（デモの建物は src/demo/workplace.ts が決定的に作る。本館の階の ID は bld-<拠点コード>-MAIN-<階>）
+const mainFloor = (label) => `bld-${demo.sites.find((s) => s.name === "東京本社").code}-MAIN-${label}`;
+const seOrg = demo.org_units.find((o) => o.name === "社内SE課");
+const seatedPerson = demo.people.find((p) => p.termination_date === null && p.assignments.some((a) => a.org_unit_id === seOrg.id && a.type === "primary" && a.valid_until === null));
+
 const concurrentPerson = demo.people.find((p) => p.assignments.some((a) => a.type === "concurrent" && a.secondment === "none"));
 
 const viewports = {
@@ -64,6 +69,24 @@ const shots = [
   { name: "overview-3d", hash: "#/overview-3d", wait: "canvas", settle: 3500 },
   { name: "overview-3d-selected", hash: `#/overview-3d?org=${sales.id}`, wait: "canvas", settle: 4500 },
   { name: "overview-3d-large", hash: "#/overview-3d?source=demo-large", wait: "canvas", settle: 6000, only: "desktop" },
+  // 建物・フロアモード（mode=floor）: 建物（分解した階の積層）・階の詳細・当日の所在の重ね・過去の日（重ねない）・2D の平面図・人の席
+  { name: "floor-building", hash: "#/overview-3d?mode=floor", wait: "canvas", settle: 3500 },
+  { name: "floor-detail", hash: `#/overview-3d?mode=floor&floor=${mainFloor("4F")}`, wait: "canvas", settle: 3500 },
+  { name: "floor-presence", hash: `#/overview-3d?mode=floor&floor=${mainFloor("3F")}`, wait: "canvas", settle: 3500, only: "desktop" },
+  { name: "floor-past", hash: `#/overview-3d?mode=floor&floor=${mainFloor("3F")}&as_of=2026-04-01`, wait: "canvas", settle: 3500, only: "desktop" },
+  { name: "floor-plan", hash: `#/overview-3d?mode=floor&floor=${mainFloor("3F")}&plan=1`, wait: "svg[aria-labelledby]" },
+  // 組織で色分け（既定はオン）を設定でオフにしたときと、URL の color=org で明示したとき（URL が設定より優先）
+  { name: "floor-detail-no-org-color", hash: `#/overview-3d?mode=floor&floor=${mainFloor("4F")}`, wait: "canvas", settle: 3500, only: "desktop", storage: { "jinji.floorOrgColor": "off" } },
+  { name: "floor-plan-no-org-color", hash: `#/overview-3d?mode=floor&floor=${mainFloor("3F")}&plan=1`, wait: "svg[aria-labelledby]", only: "desktop", storage: { "jinji.floorOrgColor": "off" } },
+  { name: "floor-plan-org-color-url", hash: `#/overview-3d?mode=floor&floor=${mainFloor("3F")}&plan=1&color=org`, wait: "svg[aria-labelledby]", only: "desktop", storage: { "jinji.floorOrgColor": "off" } },
+  { name: "floor-site", hash: `#/overview-3d?mode=floor&site=${siteId("横浜工場")}`, wait: "canvas", settle: 3500, only: "desktop" },
+  { name: "floor-person", hash: `#/org-chart?person=${seatedPerson.id}`, wait: "text=建物・フロアで席を開く", action: async (page) => {
+    await page.click("text=建物・フロアで席を開く");
+    await page.waitForSelector("canvas");
+    await page.waitForTimeout(3500);
+  } },
+  { name: "floor-help", hash: `#/overview-3d?mode=floor&floor=${mainFloor("3F")}`, wait: "canvas", settle: 3500, only: "desktop", action: (page) => page.click("button[aria-label='図の見方']") },
+  { name: "floor-large", hash: `#/overview-3d?mode=floor&source=demo-large&floor=bld-S01-MAIN-5F`, wait: "canvas", settle: 6000, only: "desktop" },
   { name: "person-suspended", hash: `#/org-chart?person=${suspended.id}`, wait: "text=人の詳細" },
   { name: "person-private-fields", hash: `#/org-chart?person=${auditMember.id}`, wait: "text=人の詳細" },
   { name: "person-concurrent", hash: `#/search?q=${encodeURIComponent(concurrentPerson.family_name_kana)}&person=${concurrentPerson.id}`, wait: "text=人の詳細" },
@@ -140,7 +163,13 @@ const shots = [
   } },
   // 認証まわりの画面（パスで開く。デモの認証の架空のデータ）
   { name: "user-menu", hash: "#/org-chart", wait: ".react-flow__node", action: (page) => page.click("button[aria-controls='user-menu']") },
-  { name: "settings", hash: "#/org-chart", wait: ".react-flow__node", action: (page) => page.click("button[aria-label='設定']") },
+  // 設定の画面（スマホ幅の #/settings は目次だけ）・jin-ji について・同梱しているライブラリのライセンス（1 件を開いた状態）
+  { name: "settings", hash: "#/settings", wait: "nav[aria-label='設定の項目']" },
+  { name: "settings-display", hash: "#/settings/display", wait: "text=組織図の向き" },
+  { name: "settings-data", hash: "#/settings/data", wait: "select[aria-label='データ']", only: "desktop" },
+  { name: "settings-admin", hash: "#/settings/admin", wait: "text=未紐付けのログイン", only: "desktop" },
+  { name: "settings-about", hash: "#/settings/about", wait: "text=Copyright 2026 Toru Suzuki" },
+  { name: "settings-licenses", hash: "#/settings/licenses", wait: "summary", action: (page) => page.click("summary:has-text('react-dom')") },
   { name: "login", path: `/login?return_url=${encodeURIComponent("/#/search")}`, wait: "text=jin-ji のアカウント" },
   { name: "login-unbound", path: "/login?error=unbound", wait: "text=jin-ji のアカウント", only: "mobile" },
   {

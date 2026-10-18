@@ -18,6 +18,7 @@ public static class Problems
     public const string RateLimitedType = "urn:jinji:problem:rate-limited";
     public const string ReturnedPeopleLimitedType = "urn:jinji:problem:returned-people-limited";
     public const string ConflictType = "urn:jinji:problem:conflict";
+    public const string PresenceUnavailableType = "urn:jinji:problem:presence-unavailable";
 
     /// <summary>
     /// 見つからない。存在しない ID・参照できない ID・形の不正な ID のどれも同じ応答にする（列挙対策。本文・ヘッダーで区別させない）。
@@ -31,6 +32,18 @@ public static class Problems
             title: "見つかりません",
             detail: "指定したものは存在しないか、参照できません。",
             type: NotFoundType);
+    }
+
+    /// <summary>当日の所在の提供が無い（配備側が IPresenceProvider を登録していない）。機能が無いことは秘密ではないので type で区別する。</summary>
+    public static IResult PresenceUnavailable(HttpContext http)
+    {
+        ArgumentNullException.ThrowIfNull(http);
+        Observe(http).RejectReason = RejectReasons.NotFound;
+        return Results.Problem(
+            statusCode: StatusCodes.Status404NotFound,
+            title: "当日の所在は提供されていません",
+            detail: "この環境には当日の所在の提供がありません（jin-ji は所在を保持しません）。",
+            type: PresenceUnavailableType);
     }
 
     /// <summary>要求の形が不正。</summary>

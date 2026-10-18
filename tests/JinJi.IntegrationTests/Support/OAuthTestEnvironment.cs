@@ -100,7 +100,11 @@ internal sealed class OAuthTestEnvironment : IAsyncDisposable
 
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
-    public static async Task<OAuthTestEnvironment> StartAsync(AuthFixtureDatabase db, IEnumerable<string>? extraArgs = null, TimeProvider? timeProvider = null)
+    public static async Task<OAuthTestEnvironment> StartAsync(
+        AuthFixtureDatabase db,
+        IEnumerable<string>? extraArgs = null,
+        TimeProvider? timeProvider = null,
+        Action<IServiceCollection>? configureServices = null)
     {
         var stub = await StubOidcProvider.StartAsync();
         var jwtIssuer = new TestIssuer();
@@ -132,6 +136,8 @@ internal sealed class OAuthTestEnvironment : IAsyncDisposable
                 {
                     services.Replace(ServiceDescriptor.Singleton(timeProvider));
                 }
+
+                configureServices?.Invoke(services);
             });
         return new OAuthTestEnvironment(db, host, stub, jwtIssuer, fetcher, serverArgs);
     }

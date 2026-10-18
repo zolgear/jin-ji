@@ -27,6 +27,18 @@ public static class PersonFields
     /// <summary>リモートワークの対象か（有無だけ。ADR-0002）。</summary>
     public const string RemoteWork = "remote_work";
 
+    /// <summary>階・エリア（建物・階・ゾーン。席・持ち場・ゾーンの割り当て。0019）。</summary>
+    public const string Workplace = "workplace";
+
+    /// <summary>席（主の席の席番号・座標・階）。階・エリアより粒度が細かいので別の項目にし、ポリシーで別々に狭められるようにする。</summary>
+    public const string Seat = "seat";
+
+    /// <summary>
+    /// 当日の所在（今日の建物・階・席またはエリア）。jin-ji は保存せず、外部の提供（IPresenceProvider）を注入したときだけ 1 人の参照に出す。
+    /// クライアントの項目の上限の <c>*</c> には含めない（<see cref="ExplicitOnly"/>）。
+    /// </summary>
+    public const string Presence = "presence";
+
     public const string EmploymentType = "employment_type";
     public const string JobType = "job_type";
     public const string HireDate = "hire_date";
@@ -57,7 +69,7 @@ public static class PersonFields
     public static readonly IReadOnlySet<string> All = new HashSet<string>(StringComparer.Ordinal)
     {
         EmployeeNumber, LegalEntity, DisplayName, FamilyName, GivenName, FamilyNameKana, GivenNameKana,
-        FamilyNameLatin, GivenNameLatin, WorkEmail, ExtensionNumber, WorkMobilePhone, Site, RemoteWork,
+        FamilyNameLatin, GivenNameLatin, WorkEmail, ExtensionNumber, WorkMobilePhone, Site, RemoteWork, Workplace, Seat, Presence,
         EmploymentType, JobType, HireDate, TerminationDate, EmploymentStatus, AccountStatus, AccountSuspension,
         Assignments, Managers, PersonnelActions, NameHistory,
     };
@@ -67,4 +79,9 @@ public static class PersonFields
 
     /// <summary>ポリシーで公開範囲を指定できる項目。</summary>
     public static readonly IReadOnlySet<string> PolicyControllable = All.Except(HrAdminOnly).ToHashSet(StringComparer.Ordinal);
+
+    /// <summary>
+    /// クライアントの項目の上限の <c>*</c> に含めず、名前を明示したクライアントにだけ渡す項目（当日の所在）。保存しない項目なので修正依頼の項目にもしない。
+    /// </summary>
+    public static readonly IReadOnlySet<string> ExplicitOnly = new HashSet<string>(StringComparer.Ordinal) { Presence };
 }

@@ -494,7 +494,12 @@ public sealed partial class NpgsqlIngestStore : IIngestStore
                     await EndRowsAsync(tx, "site_version", SiteVersionColumns, "site_id = $1", [P(target)], Required(proposal), cancellationToken);
                     break;
                 default:
-                    throw new InvalidOperationException($"この提案は反映できません: {proposal.TargetKind} / {proposal.Operation}");
+                    if (!await ApplyWorkplaceAsync(tx, target, proposal, viewer.EffectivePersonId ?? throw new InvalidOperationException("承認者（人）がいません。"), today, cancellationToken))
+                    {
+                        throw new InvalidOperationException($"この提案は反映できません: {proposal.TargetKind} / {proposal.Operation}");
+                    }
+
+                    break;
             }
         }
         catch (PostgresException ex) when (ex.SqlState.StartsWith("23", StringComparison.Ordinal))
@@ -750,6 +755,7 @@ public sealed partial class NpgsqlIngestStore : IIngestStore
                     JsonValueKind.Null => null,
                     JsonValueKind.True => "true",
                     JsonValueKind.False => "false",
+                    JsonValueKind.Number => value.GetRawText(),
                     _ => value.GetString(),
                 }
                 : null;

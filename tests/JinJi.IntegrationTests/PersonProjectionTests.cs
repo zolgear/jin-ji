@@ -125,7 +125,8 @@ public sealed partial class PersonProjectionTests
 
         Assert.Equal(PersonFields.All.Order(StringComparer.Ordinal), properties.Keys.Order(StringComparer.Ordinal));
 
-        foreach (var field in PersonFields.All)
+        // 当日の所在（presence）は外部の提供があり、その人の所在があるときだけ項目に入る（PresenceApiTests）
+        foreach (var field in PersonFields.All.Except(PersonFields.ExplicitOnly))
         {
             var view = Project(F.HrAdmin(FieldLimit.Of([field])), "u1_member")!;
             Assert.Equal([field], view.VisibleFields);

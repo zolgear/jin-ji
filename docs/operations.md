@@ -41,6 +41,7 @@ jin-ji を動かし続けるための設定と保守。ポート・待ち受け�
 | --- | --- | --- |
 | `JinJi:Directory:RetiredPublicDays` | `90` | 退職者を人事管理者以外に公開する日数（退職年月日の翌日から数える） |
 | `JinJi:Directory:MassActionThreshold` | `10` | 一斉異動とみなす発令の件数（同じ発令日の異動・役職の任免・兼務・出向）。メタ情報の時点の目盛りに使い、件数は返さない |
+| `JinJi:Directory:PresenceVisibilityScope` | `same_level(department)` | 当日の所在（項目 `presence`。所在の提供を登録したときだけ）の公開範囲（関係スコープの表記。`none` は不可）。ポリシーでさらに狭められる |
 | `JinJi:Web:RootPath` | `web/dist`（コンテンツルートからの相対） | Web UI の成果物の場所。`index.html` が無ければ SPA を配信せず API だけで動く |
 | `JinJi:Web:Hsts:Enabled` / `MaxAge` / `IncludeSubDomains` | `false` / `365.00:00:00` / `false` | HSTS。TLS を終端するリバースプロキシの後ろに置くときだけ有効にする |
 | `JinJi:OrgSnapshotCache:VersionCheckInterval` | `00:00:05` | 他のプロセスの書き込みを確かめる間隔（反映の最大の遅れ） |

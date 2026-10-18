@@ -5,7 +5,10 @@ using System.Text;
 using System.Text.Json;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Hosting.Server;
+using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
@@ -28,15 +31,15 @@ internal sealed class StubOidcProvider : IAsyncDisposable
     private readonly ConcurrentDictionary<string, PendingCode> _codes = new(StringComparer.Ordinal);
     private readonly WebApplication _app;
 
-    private StubOidcProvider(WebApplication app, int port, string clientId, string clientSecret)
+    private StubOidcProvider(WebApplication app, string clientId, string clientSecret)
     {
         _app = app;
-        Issuer = $"http://127.0.0.1:{port}";
         ClientId = clientId;
         ClientSecret = clientSecret;
     }
 
-    public string Issuer { get; }
+    /// <summary>発行者の URL（待ち受けを始めた後に、OS が割り当てたポートで決まる）。</summary>
+    public string Issuer { get; private set; } = string.Empty;
 
     public string ClientId { get; }
 
@@ -50,25 +53,17 @@ internal sealed class StubOidcProvider : IAsyncDisposable
 
     public static async Task<StubOidcProvider> StartAsync(string clientId = "jinji-test", string clientSecret = "stub-secret")
     {
-        for (var attempt = 1; ; attempt++)
-        {
-            var port = ApiTestHost.FreePort();
-            var builder = WebApplication.CreateSlimBuilder();
-            builder.WebHost.ConfigureKestrel(k => k.Listen(IPAddress.Loopback, port));
-            builder.Logging.SetMinimumLevel(LogLevel.Warning);
-            var app = builder.Build();
-            var stub = new StubOidcProvider(app, port, clientId, clientSecret);
-            stub.Map(app);
-            try
-            {
-                await app.StartAsync(TestContext.Current.CancellationToken);
-                return stub;
-            }
-            catch (IOException ex) when (attempt < 5 && ex.InnerException is Microsoft.AspNetCore.Connections.AddressInUseException)
-            {
-                await stub.DisposeAsync();
-            }
-        }
+        // ポートは 0 を指定して OS に割り当てさせる（空いているポートを先に選んで閉じると、待ち受けるまでの間に他が取り得る）
+        var builder = WebApplication.CreateSlimBuilder();
+        builder.WebHost.ConfigureKestrel(k => k.Listen(IPAddress.Loopback, 0));
+        builder.Logging.SetMinimumLevel(LogLevel.Warning);
+        var app = builder.Build();
+        var stub = new StubOidcProvider(app, clientId, clientSecret);
+        stub.Map(app);
+        await app.StartAsync(TestContext.Current.CancellationToken);
+        var address = app.Services.GetRequiredService<IServer>().Features.Get<IServerAddressesFeature>()!.Addresses.Single();
+        stub.Issuer = $"http://127.0.0.1:{new Uri(address).Port}";
+        return stub;
     }
 
     /// <summary>OIDC の設定（コマンドライン引数の形）。</summary>

@@ -54,8 +54,8 @@ scripts/dotnet.sh run --project src/JinJi.Host -- import /src/samples/messy-corp
 }
 ```
 
-- `target`: `people`（在籍者名簿）、`org_units`（組織図。`org_code`・`org_name`・`org_level`・`parent_org_code`・`org_head_employee_number` / `org_head_name`・`org_remarks` など）、`personnel_actions`（辞令。`action_date`・`action_text` など）、`directory_users`（Entra ID のユーザー。`external_id`・`account_enabled` など）、`sites`（拠点マスタ）
-- `source`: `kind`（`csv` / `xlsx` / `graph_json`。省略時は拡張子）、`encoding`（`auto` / `utf-8` / `shift_jis`）、`delimiter`、`headerRow`（表題の行がある場合）、`sheet`、`fillMergedCells`（結合セルの値を補完する）、`hierarchy`（列が階層の組織図。`entityColumn`・`columns`・`noCarrySuffixes`）
+- `target`: `people`（在籍者名簿）、`org_units`（組織図。`org_code`・`org_name`・`org_level`・`parent_org_code`・`org_head_employee_number` / `org_head_name`・`org_remarks` など）、`personnel_actions`（辞令。`action_date`・`action_text` など）、`directory_users`（Entra ID のユーザー。`external_id`・`account_enabled` など）、`sites`（拠点マスタ）、`floor_layouts`（建物・階・配置図の改訂。配置図の JSON〔`source.kind: layout_json`、形式 `jinji-floor-layout/v1`〕か席の CSV。外形の行の無い CSV は今の配置図を引き継いで席だけを置き換える）、`workplace_assignments`（人の決まった席・持ち場。社員番号・席番号〔全角・ハイフンの揺れをそろえる〕かエリア・主副・開始日・最終日）
+- `source`: `kind`（`csv` / `xlsx` / `graph_json` / `layout_json`。省略時は拡張子）、`encoding`（`auto` / `utf-8` / `shift_jis`）、`delimiter`、`headerRow`（表題の行がある場合）、`sheet`、`fillMergedCells`（結合セルの値を補完する）、`hierarchy`（列が階層の組織図。`entityColumn`・`columns`・`noCarrySuffixes`）
 - 候補の列名は全角・空白のゆれを吸収して比べ、行ごとに先に書いた列の値を優先する（空なら次の候補）。候補・無視する列名に保持禁止の項目名は書けない
 - `legalEntityAliases`（法人のコード → 別名）、`employeeNumber.prefixedPadLength`（L45 → L0045）、`discardWhenPresent`（列に値がある行で捨てる項目）、`fullSnapshot`（Entra の全件の取込）
 - サンプルの設定は `samples/messy-corp/mappings/`

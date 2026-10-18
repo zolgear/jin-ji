@@ -171,7 +171,7 @@ public sealed record OAuthClient
 
     /// <summary>項目の上限。</summary>
     public FieldLimit FieldLimit() =>
-        Fields is [PersonFields.Wildcard] ? Policy.FieldLimit.Unrestricted : Policy.FieldLimit.Of(Fields);
+        Policy.FieldLimit.ForClient(Fields);
 
     /// <summary>ループバックの redirect_uri しか持たないか（同意画面の注意書き。MCP 仕様の要求）。</summary>
     public bool HasOnlyLoopbackRedirects => RedirectUris.Count > 0 && RedirectUris.All(OAuthRedirectUris.IsLoopback);

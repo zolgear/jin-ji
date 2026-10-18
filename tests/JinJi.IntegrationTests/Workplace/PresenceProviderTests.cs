@@ -15,7 +15,7 @@ namespace JinJi.IntegrationTests.Workplace;
 /// </summary>
 /// <remarks>
 /// 提供（<see cref="FixedPresenceProvider"/>）の今日の所在: u1_member → 3F-B01、u2_member → 3F-B02（席は本人だけ = 個人単位の例外）、
-/// s2_member → 3F 東（エリアだけ）、dp2_member → 3F-B03（企画部 = 営業部の人には見えない）、b_member → jin-ji に無い席（捨てる）。
+/// s2_member → 3F 東（エリアだけ）、dp2_member → 3F-B03（企画部 = 営業部の人には見えない）、b_member → jin-ji に無い席（捨てる）、hr_admin（人事部）→ 3F 西（エリアだけ）。
 /// </remarks>
 public sealed class PresenceProviderTests(WorkplaceFixtureDatabase db) : IClassFixture<WorkplaceFixtureDatabase>, IAsyncLifetime
 {
@@ -53,6 +53,28 @@ public sealed class PresenceProviderTests(WorkplaceFixtureDatabase db) : IClassF
     }
 
     private string Token(string person, string client = FloorClient) => _issuer.User(client, F.Person(person));
+
+    private string AdminToken() => _issuer.User(FloorClient, F.Person("hr_admin"), "hr_admin");
+
+    [Fact(DisplayName = "人事管理者: 所在だけは全項目の閲覧の例外を効かせず、同じ部の人（と本人）だけ。別の部の人の所在は階の所在・人の応答のどちらにも出ない")]
+    public async Task HrAdmin_PresenceIsNarrowedToo()
+    {
+        var (status, floor) = await _host.GetJsonAsync($"/api/v1/floors/{db.Floor3F}/presence", AdminToken());
+        Assert.Equal(HttpStatusCode.OK, status);
+        Assert.Equal([F.Person("hr_admin")], floor.GetProperty("items").EnumerateArray().Select(i => i.GetProperty("person").GetProperty("id").GetGuid()));
+        var seats = floor.GetProperty("seats").EnumerateArray().ToDictionary(x => x.GetProperty("code").GetString()!, x => x.GetProperty("status").GetString());
+        Assert.All(seats.Values, v => Assert.Equal("unavailable", v));
+
+        // 別の部（営業部）の人: 席・階は見えるが、所在は返さない
+        var (_, other) = await _host.GetJsonAsync($"/api/v1/people/{F.Person("u1_member")}", AdminToken());
+        Assert.Equal(JsonValueKind.Null, other.GetProperty("presence").ValueKind);
+        Assert.DoesNotContain("presence", Visible(other));
+        Assert.Contains("seat", Visible(other));
+
+        // 本人の所在は見える
+        var (_, self) = await _host.GetJsonAsync($"/api/v1/people/{F.Person("hr_admin")}", AdminToken());
+        Assert.Equal("3F 西", self.GetProperty("presence").GetProperty("zone_name").GetString());
+    }
 
     [Fact(DisplayName = "階の所在: 見える人だけ（既定は本人と同じ部）。席番号は席も見えるときだけ、見えない人の所在の席は unavailable。no-store で今日だけ問い合わせる")]
     public async Task Floor_AppliesAuthorization()
@@ -141,6 +163,15 @@ public sealed class PresenceProviderTests(WorkplaceFixtureDatabase db) : IClassF
         var occupants = (await explicitClient.CallAsync("list_floor_occupants", new { floor_id = db.Floor3F })).Structured.GetProperty("items");
         Assert.All(occupants.EnumerateArray(), o => Assert.False(o.GetProperty("person").TryGetProperty("presence", out var p) && p.ValueKind != JsonValueKind.Null));
         Assert.All(provider.Queries, q => Assert.Equal(F.Today, q.Date));
+
+        // 人事管理者の委任でも、別の部の人の所在は返さない
+        await env.RegisterPublicClientAsync("presence-admin-agent", Loopback, fields: "*,presence", mcpTools: "*");
+        var adminClient = new McpTestClient(env.Host.McpPort, await env.AccessTokenAsync(F.Person("hr_admin"), "presence-admin-agent", Loopback));
+        var byAdmin = (await adminClient.CallAsync("get_person", new { person_id = F.Person("u1_member") })).Structured.GetProperty("person");
+        Assert.False(byAdmin.TryGetProperty("presence", out var hidden) && hidden.ValueKind != JsonValueKind.Null);
+        Assert.True(byAdmin.TryGetProperty("seat", out _));
+        var own = (await adminClient.CallAsync("get_person", new { person_id = F.Person("hr_admin") })).Structured.GetProperty("person");
+        Assert.Equal("3F 西", own.GetProperty("presence").GetProperty("zone_name").GetString());
     }
 
     private FixedPresenceProvider Provider() => new(
@@ -150,6 +181,7 @@ public sealed class PresenceProviderTests(WorkplaceFixtureDatabase db) : IClassF
         new PresenceEntry(F.Person("s2_member"), db.Floor3F, null, db.ZoneEast),
         new PresenceEntry(F.Person("dp2_member"), db.Floor3F, db.Seat("B03"), null),
         new PresenceEntry(F.Person("b_member"), db.Floor3F, Guid.NewGuid(), null),
+        new PresenceEntry(F.Person("hr_admin"), db.Floor3F, null, db.ZoneWest),
     ]);
 
     private static Action<IServiceCollection> Register(FixedPresenceProvider provider) =>

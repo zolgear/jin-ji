@@ -23,6 +23,9 @@ public static class McpToolNames
     public const string GetOrgTree = "get_org_tree";
     public const string SearchOrgs = "search_orgs";
     public const string ListSites = "list_sites";
+    public const string ListFloors = "list_floors";
+    public const string FindVacantSeats = "find_vacant_seats";
+    public const string ListFloorOccupants = "list_floor_occupants";
     public const string GetChanges = "get_changes";
     public const string GetDirectoryInfo = "get_directory_info";
     public const string ListReviewProposals = "list_review_proposals";
@@ -34,6 +37,7 @@ public static class McpToolNames
     public static readonly IReadOnlySet<string> Read = new HashSet<string>(StringComparer.Ordinal)
     {
         SearchPeople, GetPerson, GetPeople, GetApprovalRoute, GetOrg, GetOrgTree, SearchOrgs, ListSites, GetChanges, GetDirectoryInfo, ListReviewProposals, ListCorrections,
+        ListFloors, FindVacantSeats, ListFloorOccupants,
     };
 
     /// <summary>

@@ -17,7 +17,7 @@ internal static class ServerHost
     public const int DefaultMetricsPort = 28100;
 
     /// <summary>API・MCP の少なくとも一方を含む役割のホストを組み立てる。</summary>
-    /// <param name="configureServices">テスト用: 登録の後にサービスを差し替える（時刻など）。</param>
+    /// <param name="configureServices">登録の後にサービスを差し替える（テストの時刻など、配備側の当日の所在の提供。<see cref="JinJiHost"/>）。</param>
     public static WebApplication BuildWeb(HostRole role, string[] args, Action<IServiceCollection>? configureServices = null)
     {
         if ((role & (HostRole.Api | HostRole.Mcp)) == HostRole.None)

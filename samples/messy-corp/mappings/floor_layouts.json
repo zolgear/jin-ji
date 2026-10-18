@@ -1,0 +1,31 @@
+{
+  "$comment": "floor_layouts.json（UTF-8）。jin-ji の配置図の形式 v1（jinji-floor-layout/v1）を要素ごとの行（外形・固定の部分・ゾーン・席。配置図の無い階は階だけの行）に読む。見出しは取込項目の名前なので、同じ名前を対応させる。建物・階・改訂は別の人事管理者の承認で公開側に出る。",
+  "name": "messy-corp-floor-layouts",
+  "target": "floor_layouts",
+  "source": { "kind": "layout_json" },
+  "fields": {
+    "site_code": ["site_code"],
+    "building_code": ["building_code"],
+    "building_name": ["building_name"],
+    "building_sort_order": ["building_sort_order"],
+    "floor_label": ["floor_label"],
+    "floor_level_order": ["floor_level_order"],
+    "floor_kind": ["floor_kind"],
+    "layout_valid_from": ["layout_valid_from"],
+    "layout_grid_mm": ["layout_grid_mm"],
+    "layout_element": ["layout_element"],
+    "layout_name": ["layout_name"],
+    "layout_kind": ["layout_kind"],
+    "layout_polygon": ["layout_polygon"],
+    "seat_code": ["seat_code"],
+    "seat_x_mm": ["seat_x_mm"],
+    "seat_y_mm": ["seat_y_mm"],
+    "seat_rotation": ["seat_rotation"],
+    "seat_desk_type": ["seat_desk_type"],
+    "seat_kind": ["seat_kind"],
+    "seat_capacity": ["seat_capacity"],
+    "seat_features": ["seat_features"],
+    "seat_zone": ["seat_zone"],
+    "seat_out_of_service": ["seat_out_of_service"]
+  }
+}

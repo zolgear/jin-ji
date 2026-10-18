@@ -227,10 +227,7 @@ public sealed partial class CimdOptions
             throw new ArgumentException("JinJi:Auth:Server:Cimd:DefaultFields を指定してください（上限なしは [\"*\"]）。", nameof(DefaultFields));
         }
 
-        if (DefaultFields is not [PersonFields.Wildcard])
-        {
-            _ = FieldLimit.Of(DefaultFields);
-        }
+        _ = FieldLimit.ForClient(DefaultFields);
 
         if (DefaultMcpTools.FirstOrDefault(t => !Access.McpToolNames.IsKnown(t)) is { } unknown)
         {

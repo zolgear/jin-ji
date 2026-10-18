@@ -1,0 +1,4339 @@
+{
+  "format": "jinji-floor-layout/v1",
+  "buildings": [
+    {
+      "site_code": "S010",
+      "code": "MAIN",
+      "name": "本館",
+      "sort_order": 0,
+      "floors": [
+        {
+          "label": "1F",
+          "level_order": 10,
+          "kind": "lobby"
+        },
+        {
+          "label": "2F",
+          "level_order": 20,
+          "kind": "office",
+          "layout": {
+            "valid_from": "2025-04-01",
+            "grid_mm": 100,
+            "outline": [
+              [
+                0,
+                0
+              ],
+              [
+                48000,
+                0
+              ],
+              [
+                48000,
+                24000
+              ],
+              [
+                0,
+                24000
+              ]
+            ],
+            "fixtures": [
+              {
+                "kind": "core",
+                "name": "コア",
+                "polygon": [
+                  [
+                    21000,
+                    10000
+                  ],
+                  [
+                    27000,
+                    10000
+                  ],
+                  [
+                    27000,
+                    14000
+                  ],
+                  [
+                    21000,
+                    14000
+                  ]
+                ]
+              },
+              {
+                "kind": "room",
+                "name": "会議室",
+                "polygon": [
+                  [
+                    0,
+                    19000
+                  ],
+                  [
+                    7000,
+                    19000
+                  ],
+                  [
+                    7000,
+                    24000
+                  ],
+                  [
+                    0,
+                    24000
+                  ]
+                ]
+              }
+            ],
+            "zones": [
+              {
+                "name": "2F 西",
+                "kind": "office",
+                "polygon": [
+                  [
+                    0,
+                    0
+                  ],
+                  [
+                    24000,
+                    0
+                  ],
+                  [
+                    24000,
+                    24000
+                  ],
+                  [
+                    0,
+                    24000
+                  ]
+                ]
+              },
+              {
+                "name": "2F 東",
+                "kind": "office",
+                "polygon": [
+                  [
+                    24000,
+                    0
+                  ],
+                  [
+                    48000,
+                    0
+                  ],
+                  [
+                    48000,
+                    24000
+                  ],
+                  [
+                    24000,
+                    24000
+                  ]
+                ]
+              }
+            ],
+            "seats": [
+              {
+                "code": "2F-A01",
+                "x_mm": 2000,
+                "y_mm": 2000,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "2F 西"
+              },
+              {
+                "code": "2F-A02",
+                "x_mm": 3600,
+                "y_mm": 2000,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "2F 西"
+              },
+              {
+                "code": "2F-A03",
+                "x_mm": 5200,
+                "y_mm": 2000,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "2F 西"
+              },
+              {
+                "code": "2F-A04",
+                "x_mm": 6800,
+                "y_mm": 2000,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "2F 西"
+              },
+              {
+                "code": "2F-A05",
+                "x_mm": 8400,
+                "y_mm": 2000,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "2F 西"
+              },
+              {
+                "code": "2F-A06",
+                "x_mm": 10000,
+                "y_mm": 2000,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "2F 西"
+              },
+              {
+                "code": "2F-A07",
+                "x_mm": 11600,
+                "y_mm": 2000,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "2F 西"
+              },
+              {
+                "code": "2F-A08",
+                "x_mm": 13200,
+                "y_mm": 2000,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "2F 西"
+              },
+              {
+                "code": "2F-A09",
+                "x_mm": 2000,
+                "y_mm": 4400,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "2F 西"
+              },
+              {
+                "code": "2F-A10",
+                "x_mm": 3600,
+                "y_mm": 4400,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "2F 西"
+              },
+              {
+                "code": "2F-A11",
+                "x_mm": 5200,
+                "y_mm": 4400,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "2F 西"
+              },
+              {
+                "code": "2F-A12",
+                "x_mm": 6800,
+                "y_mm": 4400,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "2F 西"
+              },
+              {
+                "code": "2F-A13",
+                "x_mm": 8400,
+                "y_mm": 4400,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "2F 西"
+              },
+              {
+                "code": "2F-A14",
+                "x_mm": 10000,
+                "y_mm": 4400,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "2F 西"
+              },
+              {
+                "code": "2F-A15",
+                "x_mm": 11600,
+                "y_mm": 4400,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "2F 西"
+              },
+              {
+                "code": "2F-A16",
+                "x_mm": 13200,
+                "y_mm": 4400,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "2F 西"
+              },
+              {
+                "code": "2F-A17",
+                "x_mm": 2000,
+                "y_mm": 6800,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "2F 西"
+              },
+              {
+                "code": "2F-A18",
+                "x_mm": 3600,
+                "y_mm": 6800,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "2F 西"
+              },
+              {
+                "code": "2F-A19",
+                "x_mm": 5200,
+                "y_mm": 6800,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "2F 西"
+              },
+              {
+                "code": "2F-A20",
+                "x_mm": 6800,
+                "y_mm": 6800,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "2F 西"
+              },
+              {
+                "code": "2F-A21",
+                "x_mm": 8400,
+                "y_mm": 6800,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "2F 西"
+              },
+              {
+                "code": "2F-A22",
+                "x_mm": 10000,
+                "y_mm": 6800,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "2F 西"
+              },
+              {
+                "code": "2F-A23",
+                "x_mm": 11600,
+                "y_mm": 6800,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "2F 西"
+              },
+              {
+                "code": "2F-A24",
+                "x_mm": 13200,
+                "y_mm": 6800,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "2F 西"
+              },
+              {
+                "code": "2F-A25",
+                "x_mm": 2000,
+                "y_mm": 9200,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "2F 西"
+              },
+              {
+                "code": "2F-A26",
+                "x_mm": 3600,
+                "y_mm": 9200,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "2F 西"
+              },
+              {
+                "code": "2F-A27",
+                "x_mm": 5200,
+                "y_mm": 9200,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "2F 西"
+              },
+              {
+                "code": "2F-A28",
+                "x_mm": 6800,
+                "y_mm": 9200,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "2F 西"
+              },
+              {
+                "code": "2F-A29",
+                "x_mm": 8400,
+                "y_mm": 9200,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "2F 西"
+              },
+              {
+                "code": "2F-A30",
+                "x_mm": 10000,
+                "y_mm": 9200,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "2F 西"
+              },
+              {
+                "code": "2F-A31",
+                "x_mm": 11600,
+                "y_mm": 9200,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "2F 西"
+              },
+              {
+                "code": "2F-A32",
+                "x_mm": 13200,
+                "y_mm": 9200,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "2F 西"
+              },
+              {
+                "code": "2F-B01",
+                "x_mm": 27000,
+                "y_mm": 2000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "2F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "2F-B02",
+                "x_mm": 28800,
+                "y_mm": 2000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "2F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "2F-B03",
+                "x_mm": 30600,
+                "y_mm": 2000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "2F 東",
+                "features": [
+                  "dual_monitor"
+                ]
+              },
+              {
+                "code": "2F-B04",
+                "x_mm": 32400,
+                "y_mm": 2000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "2F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "2F-B05",
+                "x_mm": 34200,
+                "y_mm": 2000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "2F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "2F-B06",
+                "x_mm": 36000,
+                "y_mm": 2000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "2F 東",
+                "features": [
+                  "dual_monitor"
+                ]
+              },
+              {
+                "code": "2F-B07",
+                "x_mm": 27000,
+                "y_mm": 5000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "2F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "2F-B08",
+                "x_mm": 28800,
+                "y_mm": 5000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "2F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "2F-B09",
+                "x_mm": 30600,
+                "y_mm": 5000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "2F 東",
+                "features": [
+                  "dual_monitor"
+                ]
+              },
+              {
+                "code": "2F-B10",
+                "x_mm": 32400,
+                "y_mm": 5000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "2F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "2F-B11",
+                "x_mm": 34200,
+                "y_mm": 5000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "2F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "2F-B12",
+                "x_mm": 36000,
+                "y_mm": 5000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "2F 東",
+                "features": [
+                  "dual_monitor"
+                ]
+              },
+              {
+                "code": "2F-B13",
+                "x_mm": 27000,
+                "y_mm": 8000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "2F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "2F-B14",
+                "x_mm": 28800,
+                "y_mm": 8000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "2F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "2F-B15",
+                "x_mm": 30600,
+                "y_mm": 8000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "2F 東",
+                "features": [
+                  "dual_monitor"
+                ]
+              },
+              {
+                "code": "2F-B16",
+                "x_mm": 32400,
+                "y_mm": 8000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "2F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "2F-B17",
+                "x_mm": 34200,
+                "y_mm": 8000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "2F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "2F-B18",
+                "x_mm": 36000,
+                "y_mm": 8000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "2F 東",
+                "features": [
+                  "dual_monitor"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "label": "3F",
+          "level_order": 30,
+          "kind": "office",
+          "layout": {
+            "valid_from": "2025-04-01",
+            "grid_mm": 100,
+            "outline": [
+              [
+                0,
+                0
+              ],
+              [
+                48000,
+                0
+              ],
+              [
+                48000,
+                24000
+              ],
+              [
+                0,
+                24000
+              ]
+            ],
+            "fixtures": [
+              {
+                "kind": "core",
+                "name": "コア",
+                "polygon": [
+                  [
+                    21000,
+                    10000
+                  ],
+                  [
+                    27000,
+                    10000
+                  ],
+                  [
+                    27000,
+                    14000
+                  ],
+                  [
+                    21000,
+                    14000
+                  ]
+                ]
+              },
+              {
+                "kind": "room",
+                "name": "会議室",
+                "polygon": [
+                  [
+                    0,
+                    19000
+                  ],
+                  [
+                    7000,
+                    19000
+                  ],
+                  [
+                    7000,
+                    24000
+                  ],
+                  [
+                    0,
+                    24000
+                  ]
+                ]
+              }
+            ],
+            "zones": [
+              {
+                "name": "3F 西",
+                "kind": "office",
+                "polygon": [
+                  [
+                    0,
+                    0
+                  ],
+                  [
+                    24000,
+                    0
+                  ],
+                  [
+                    24000,
+                    24000
+                  ],
+                  [
+                    0,
+                    24000
+                  ]
+                ]
+              },
+              {
+                "name": "3F 東",
+                "kind": "office",
+                "polygon": [
+                  [
+                    24000,
+                    0
+                  ],
+                  [
+                    48000,
+                    0
+                  ],
+                  [
+                    48000,
+                    24000
+                  ],
+                  [
+                    24000,
+                    24000
+                  ]
+                ]
+              }
+            ],
+            "seats": [
+              {
+                "code": "3F-A01",
+                "x_mm": 2000,
+                "y_mm": 2000,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "3F 西"
+              },
+              {
+                "code": "3F-A02",
+                "x_mm": 3600,
+                "y_mm": 2000,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "3F 西"
+              },
+              {
+                "code": "3F-A03",
+                "x_mm": 5200,
+                "y_mm": 2000,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "3F 西"
+              },
+              {
+                "code": "3F-A04",
+                "x_mm": 6800,
+                "y_mm": 2000,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "3F 西"
+              },
+              {
+                "code": "３Ｆ－Ａ０５",
+                "x_mm": 8400,
+                "y_mm": 2000,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "3F 西"
+              },
+              {
+                "code": "3F-A06",
+                "x_mm": 10000,
+                "y_mm": 2000,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "3F 西"
+              },
+              {
+                "code": "3F-A07",
+                "x_mm": 11600,
+                "y_mm": 2000,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "3F 西"
+              },
+              {
+                "code": "3F-A08",
+                "x_mm": 13200,
+                "y_mm": 2000,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "3F 西"
+              },
+              {
+                "code": "3F-A09",
+                "x_mm": 2000,
+                "y_mm": 4400,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "3F 西"
+              },
+              {
+                "code": "3F-A10",
+                "x_mm": 3600,
+                "y_mm": 4400,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "3F 西"
+              },
+              {
+                "code": "3F-A11",
+                "x_mm": 5200,
+                "y_mm": 4400,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "3F 西"
+              },
+              {
+                "code": "3F-A12",
+                "x_mm": 6800,
+                "y_mm": 4400,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "3F 西"
+              },
+              {
+                "code": "3F-A13",
+                "x_mm": 8400,
+                "y_mm": 4400,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "3F 西"
+              },
+              {
+                "code": "3F-A14",
+                "x_mm": 10000,
+                "y_mm": 4400,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "3F 西"
+              },
+              {
+                "code": "3F-A15",
+                "x_mm": 11600,
+                "y_mm": 4400,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "3F 西"
+              },
+              {
+                "code": "3F-A16",
+                "x_mm": 13200,
+                "y_mm": 4400,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "3F 西"
+              },
+              {
+                "code": "3F-A17",
+                "x_mm": 2000,
+                "y_mm": 6800,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "3F 西"
+              },
+              {
+                "code": "3F-A18",
+                "x_mm": 3600,
+                "y_mm": 6800,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "3F 西"
+              },
+              {
+                "code": "3F-A19",
+                "x_mm": 5200,
+                "y_mm": 6800,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "3F 西"
+              },
+              {
+                "code": "3F-A20",
+                "x_mm": 6800,
+                "y_mm": 6800,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "3F 西"
+              },
+              {
+                "code": "3F-A21",
+                "x_mm": 8400,
+                "y_mm": 6800,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "3F 西"
+              },
+              {
+                "code": "3F-A22",
+                "x_mm": 10000,
+                "y_mm": 6800,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "3F 西"
+              },
+              {
+                "code": "3F-A23",
+                "x_mm": 11600,
+                "y_mm": 6800,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "3F 西"
+              },
+              {
+                "code": "3F-A24",
+                "x_mm": 13200,
+                "y_mm": 6800,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "3F 西"
+              },
+              {
+                "code": "3F-A25",
+                "x_mm": 2000,
+                "y_mm": 9200,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "3F 西"
+              },
+              {
+                "code": "3F-A26",
+                "x_mm": 3600,
+                "y_mm": 9200,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "3F 西"
+              },
+              {
+                "code": "3F-A27",
+                "x_mm": 5200,
+                "y_mm": 9200,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "3F 西"
+              },
+              {
+                "code": "3F-A28",
+                "x_mm": 6800,
+                "y_mm": 9200,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "3F 西"
+              },
+              {
+                "code": "3F-A29",
+                "x_mm": 8400,
+                "y_mm": 9200,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "3F 西"
+              },
+              {
+                "code": "3F-A30",
+                "x_mm": 10000,
+                "y_mm": 9200,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "3F 西"
+              },
+              {
+                "code": "3F-A31",
+                "x_mm": 11600,
+                "y_mm": 9200,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "3F 西"
+              },
+              {
+                "code": "3F-A32",
+                "x_mm": 13200,
+                "y_mm": 9200,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "3F 西"
+              },
+              {
+                "code": "3F-A33",
+                "x_mm": 2000,
+                "y_mm": 11600,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "3F 西"
+              },
+              {
+                "code": "3F-A34",
+                "x_mm": 3600,
+                "y_mm": 11600,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "3F 西"
+              },
+              {
+                "code": "3F-A35",
+                "x_mm": 5200,
+                "y_mm": 11600,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "3F 西"
+              },
+              {
+                "code": "3F-A36",
+                "x_mm": 6800,
+                "y_mm": 11600,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "3F 西"
+              },
+              {
+                "code": "3F-A37",
+                "x_mm": 8400,
+                "y_mm": 11600,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "3F 西"
+              },
+              {
+                "code": "3F-A38",
+                "x_mm": 10000,
+                "y_mm": 11600,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "3F 西"
+              },
+              {
+                "code": "3F-A39",
+                "x_mm": 11600,
+                "y_mm": 11600,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "3F 西"
+              },
+              {
+                "code": "3F-A40",
+                "x_mm": 13200,
+                "y_mm": 11600,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "3F 西"
+              },
+              {
+                "code": "3F-A41",
+                "x_mm": 2000,
+                "y_mm": 14000,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "3F 西"
+              },
+              {
+                "code": "3F-A42",
+                "x_mm": 3600,
+                "y_mm": 14000,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "3F 西"
+              },
+              {
+                "code": "3F-A43",
+                "x_mm": 5200,
+                "y_mm": 14000,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "3F 西"
+              },
+              {
+                "code": "3F-A44",
+                "x_mm": 6800,
+                "y_mm": 14000,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "3F 西"
+              },
+              {
+                "code": "3F-A45",
+                "x_mm": 8400,
+                "y_mm": 14000,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "3F 西"
+              },
+              {
+                "code": "3F-A46",
+                "x_mm": 10000,
+                "y_mm": 14000,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "3F 西"
+              },
+              {
+                "code": "3F-A47",
+                "x_mm": 11600,
+                "y_mm": 14000,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "3F 西"
+              },
+              {
+                "code": "3F-A48",
+                "x_mm": 13200,
+                "y_mm": 14000,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "3F 西"
+              },
+              {
+                "code": "3F-B01",
+                "x_mm": 27000,
+                "y_mm": 2000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "3F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "3F-B02",
+                "x_mm": 28800,
+                "y_mm": 2000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "3F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "3F-B03",
+                "x_mm": 30600,
+                "y_mm": 2000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "3F 東",
+                "features": [
+                  "dual_monitor"
+                ]
+              },
+              {
+                "code": "3F-B04",
+                "x_mm": 32400,
+                "y_mm": 2000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "3F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "3F-B05",
+                "x_mm": 34200,
+                "y_mm": 2000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "3F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "3F-B06",
+                "x_mm": 36000,
+                "y_mm": 2000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "3F 東",
+                "features": [
+                  "dual_monitor"
+                ]
+              },
+              {
+                "code": "3F-B07",
+                "x_mm": 27000,
+                "y_mm": 5000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "3F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "3F-B08",
+                "x_mm": 28800,
+                "y_mm": 5000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "3F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "3F-B09",
+                "x_mm": 30600,
+                "y_mm": 5000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "3F 東",
+                "features": [
+                  "dual_monitor"
+                ]
+              },
+              {
+                "code": "3F-B10",
+                "x_mm": 32400,
+                "y_mm": 5000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "3F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "3F-B11",
+                "x_mm": 34200,
+                "y_mm": 5000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "3F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "3F-B12",
+                "x_mm": 36000,
+                "y_mm": 5000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "3F 東",
+                "features": [
+                  "dual_monitor"
+                ]
+              },
+              {
+                "code": "3F-B13",
+                "x_mm": 27000,
+                "y_mm": 8000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "3F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "3F-B14",
+                "x_mm": 28800,
+                "y_mm": 8000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "3F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "3F-B15",
+                "x_mm": 30600,
+                "y_mm": 8000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "3F 東",
+                "features": [
+                  "dual_monitor"
+                ]
+              },
+              {
+                "code": "3F-B16",
+                "x_mm": 32400,
+                "y_mm": 8000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "3F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "3F-B17",
+                "x_mm": 34200,
+                "y_mm": 8000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "3F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "3F-B18",
+                "x_mm": 36000,
+                "y_mm": 8000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "3F 東",
+                "features": [
+                  "wheelchair"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "label": "4F",
+          "level_order": 40,
+          "kind": "office",
+          "layout": {
+            "valid_from": "2025-04-01",
+            "grid_mm": 100,
+            "outline": [
+              [
+                0,
+                0
+              ],
+              [
+                48000,
+                0
+              ],
+              [
+                48000,
+                24000
+              ],
+              [
+                0,
+                24000
+              ]
+            ],
+            "fixtures": [
+              {
+                "kind": "core",
+                "name": "コア",
+                "polygon": [
+                  [
+                    21000,
+                    10000
+                  ],
+                  [
+                    27000,
+                    10000
+                  ],
+                  [
+                    27000,
+                    14000
+                  ],
+                  [
+                    21000,
+                    14000
+                  ]
+                ]
+              },
+              {
+                "kind": "room",
+                "name": "会議室",
+                "polygon": [
+                  [
+                    0,
+                    19000
+                  ],
+                  [
+                    7000,
+                    19000
+                  ],
+                  [
+                    7000,
+                    24000
+                  ],
+                  [
+                    0,
+                    24000
+                  ]
+                ]
+              }
+            ],
+            "zones": [
+              {
+                "name": "4F 西",
+                "kind": "office",
+                "polygon": [
+                  [
+                    0,
+                    0
+                  ],
+                  [
+                    24000,
+                    0
+                  ],
+                  [
+                    24000,
+                    24000
+                  ],
+                  [
+                    0,
+                    24000
+                  ]
+                ]
+              },
+              {
+                "name": "4F 東",
+                "kind": "office",
+                "polygon": [
+                  [
+                    24000,
+                    0
+                  ],
+                  [
+                    48000,
+                    0
+                  ],
+                  [
+                    48000,
+                    24000
+                  ],
+                  [
+                    24000,
+                    24000
+                  ]
+                ]
+              },
+              {
+                "name": "4F 書庫",
+                "kind": "restricted",
+                "polygon": [
+                  [
+                    42000,
+                    19000
+                  ],
+                  [
+                    48000,
+                    19000
+                  ],
+                  [
+                    48000,
+                    24000
+                  ],
+                  [
+                    42000,
+                    24000
+                  ]
+                ]
+              }
+            ],
+            "seats": [
+              {
+                "code": "4F-A01",
+                "x_mm": 2000,
+                "y_mm": 2000,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "4F 西"
+              },
+              {
+                "code": "4F-A02",
+                "x_mm": 3600,
+                "y_mm": 2000,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "4F 西"
+              },
+              {
+                "code": "4F-A03",
+                "x_mm": 5200,
+                "y_mm": 2000,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "4F 西"
+              },
+              {
+                "code": "4F-A04",
+                "x_mm": 6800,
+                "y_mm": 2000,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "4F 西"
+              },
+              {
+                "code": "4F-A05",
+                "x_mm": 8400,
+                "y_mm": 2000,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "4F 西"
+              },
+              {
+                "code": "4F-A06",
+                "x_mm": 10000,
+                "y_mm": 2000,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "4F 西"
+              },
+              {
+                "code": "4F-A07",
+                "x_mm": 11600,
+                "y_mm": 2000,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "4F 西"
+              },
+              {
+                "code": "4F-A08",
+                "x_mm": 13200,
+                "y_mm": 2000,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "4F 西"
+              },
+              {
+                "code": "4F-A09",
+                "x_mm": 2000,
+                "y_mm": 4400,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "4F 西"
+              },
+              {
+                "code": "4F-A10",
+                "x_mm": 3600,
+                "y_mm": 4400,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "4F 西"
+              },
+              {
+                "code": "4F-A11",
+                "x_mm": 5200,
+                "y_mm": 4400,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "4F 西"
+              },
+              {
+                "code": "4F-A12",
+                "x_mm": 6800,
+                "y_mm": 4400,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "4F 西"
+              },
+              {
+                "code": "4F-A13",
+                "x_mm": 8400,
+                "y_mm": 4400,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "4F 西"
+              },
+              {
+                "code": "4F-A14",
+                "x_mm": 10000,
+                "y_mm": 4400,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "4F 西"
+              },
+              {
+                "code": "4F-A15",
+                "x_mm": 11600,
+                "y_mm": 4400,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "4F 西"
+              },
+              {
+                "code": "4F-A16",
+                "x_mm": 13200,
+                "y_mm": 4400,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "4F 西"
+              },
+              {
+                "code": "4F-A17",
+                "x_mm": 2000,
+                "y_mm": 6800,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "4F 西"
+              },
+              {
+                "code": "4F-A18",
+                "x_mm": 3600,
+                "y_mm": 6800,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "4F 西"
+              },
+              {
+                "code": "4F-A19",
+                "x_mm": 5200,
+                "y_mm": 6800,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "4F 西"
+              },
+              {
+                "code": "4F-A20",
+                "x_mm": 6800,
+                "y_mm": 6800,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "4F 西"
+              },
+              {
+                "code": "4F-A21",
+                "x_mm": 8400,
+                "y_mm": 6800,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "4F 西"
+              },
+              {
+                "code": "4F-A22",
+                "x_mm": 10000,
+                "y_mm": 6800,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "4F 西"
+              },
+              {
+                "code": "4F-A23",
+                "x_mm": 11600,
+                "y_mm": 6800,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "4F 西"
+              },
+              {
+                "code": "4F-A24",
+                "x_mm": 13200,
+                "y_mm": 6800,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "4F 西"
+              },
+              {
+                "code": "4F-A25",
+                "x_mm": 2000,
+                "y_mm": 9200,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "4F 西"
+              },
+              {
+                "code": "4F-A26",
+                "x_mm": 3600,
+                "y_mm": 9200,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "4F 西"
+              },
+              {
+                "code": "4F-A27",
+                "x_mm": 5200,
+                "y_mm": 9200,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "4F 西"
+              },
+              {
+                "code": "4F-A28",
+                "x_mm": 6800,
+                "y_mm": 9200,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "4F 西"
+              },
+              {
+                "code": "4F-A29",
+                "x_mm": 8400,
+                "y_mm": 9200,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "4F 西"
+              },
+              {
+                "code": "4F-A30",
+                "x_mm": 10000,
+                "y_mm": 9200,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "4F 西"
+              },
+              {
+                "code": "4F-A31",
+                "x_mm": 11600,
+                "y_mm": 9200,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "4F 西"
+              },
+              {
+                "code": "4F-A32",
+                "x_mm": 13200,
+                "y_mm": 9200,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "4F 西"
+              },
+              {
+                "code": "4F-A33",
+                "x_mm": 2000,
+                "y_mm": 11600,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "4F 西"
+              },
+              {
+                "code": "4F-A34",
+                "x_mm": 3600,
+                "y_mm": 11600,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "4F 西"
+              },
+              {
+                "code": "4F-A35",
+                "x_mm": 5200,
+                "y_mm": 11600,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "4F 西"
+              },
+              {
+                "code": "4F-A36",
+                "x_mm": 6800,
+                "y_mm": 11600,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "4F 西"
+              },
+              {
+                "code": "4F-A37",
+                "x_mm": 8400,
+                "y_mm": 11600,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "4F 西"
+              },
+              {
+                "code": "4F-A38",
+                "x_mm": 10000,
+                "y_mm": 11600,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "4F 西"
+              },
+              {
+                "code": "4F-A39",
+                "x_mm": 11600,
+                "y_mm": 11600,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "4F 西"
+              },
+              {
+                "code": "4F-A40",
+                "x_mm": 13200,
+                "y_mm": 11600,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "4F 西"
+              },
+              {
+                "code": "4F-A41",
+                "x_mm": 2000,
+                "y_mm": 14000,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "4F 西"
+              },
+              {
+                "code": "4F-A42",
+                "x_mm": 3600,
+                "y_mm": 14000,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "4F 西"
+              },
+              {
+                "code": "4F-A43",
+                "x_mm": 5200,
+                "y_mm": 14000,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "4F 西"
+              },
+              {
+                "code": "4F-A44",
+                "x_mm": 6800,
+                "y_mm": 14000,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "4F 西"
+              },
+              {
+                "code": "4F-A45",
+                "x_mm": 8400,
+                "y_mm": 14000,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "4F 西"
+              },
+              {
+                "code": "4F-A46",
+                "x_mm": 10000,
+                "y_mm": 14000,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "4F 西"
+              },
+              {
+                "code": "4F-A47",
+                "x_mm": 11600,
+                "y_mm": 14000,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "4F 西"
+              },
+              {
+                "code": "4F-A48",
+                "x_mm": 13200,
+                "y_mm": 14000,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "4F 西"
+              },
+              {
+                "code": "4F-B01",
+                "x_mm": 27000,
+                "y_mm": 2000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "4F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "4F-B02",
+                "x_mm": 28800,
+                "y_mm": 2000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "4F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "4F-B03",
+                "x_mm": 30600,
+                "y_mm": 2000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "4F 東",
+                "features": [
+                  "dual_monitor"
+                ]
+              },
+              {
+                "code": "4F-B04",
+                "x_mm": 32400,
+                "y_mm": 2000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "4F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "4F-B05",
+                "x_mm": 34200,
+                "y_mm": 2000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "4F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "4F-B06",
+                "x_mm": 36000,
+                "y_mm": 2000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "4F 東",
+                "features": [
+                  "dual_monitor"
+                ]
+              },
+              {
+                "code": "4F-B07",
+                "x_mm": 27000,
+                "y_mm": 5000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "4F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "4F-B08",
+                "x_mm": 28800,
+                "y_mm": 5000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "4F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "4F-B09",
+                "x_mm": 30600,
+                "y_mm": 5000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "4F 東",
+                "features": [
+                  "dual_monitor"
+                ]
+              },
+              {
+                "code": "4F-B10",
+                "x_mm": 32400,
+                "y_mm": 5000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "4F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "4F-B11",
+                "x_mm": 34200,
+                "y_mm": 5000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "4F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "4F-B12",
+                "x_mm": 36000,
+                "y_mm": 5000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "4F 東",
+                "features": [
+                  "dual_monitor"
+                ]
+              },
+              {
+                "code": "4F-B13",
+                "x_mm": 27000,
+                "y_mm": 8000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "4F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "4F-B14",
+                "x_mm": 28800,
+                "y_mm": 8000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "4F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "4F-B15",
+                "x_mm": 30600,
+                "y_mm": 8000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "4F 東",
+                "features": [
+                  "dual_monitor"
+                ]
+              },
+              {
+                "code": "4F-B16",
+                "x_mm": 32400,
+                "y_mm": 8000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "4F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "4F-B17",
+                "x_mm": 34200,
+                "y_mm": 8000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "4F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "4F-B18",
+                "x_mm": 36000,
+                "y_mm": 8000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "4F 東",
+                "features": [
+                  "dual_monitor"
+                ]
+              },
+              {
+                "code": "4F-R01",
+                "x_mm": 45000,
+                "y_mm": 21500,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "4F 書庫"
+              }
+            ]
+          }
+        },
+        {
+          "label": "5F",
+          "level_order": 50,
+          "kind": "office",
+          "layout": {
+            "valid_from": "2025-04-01",
+            "grid_mm": 100,
+            "outline": [
+              [
+                0,
+                0
+              ],
+              [
+                48000,
+                0
+              ],
+              [
+                48000,
+                24000
+              ],
+              [
+                0,
+                24000
+              ]
+            ],
+            "fixtures": [
+              {
+                "kind": "core",
+                "name": "コア",
+                "polygon": [
+                  [
+                    21000,
+                    10000
+                  ],
+                  [
+                    27000,
+                    10000
+                  ],
+                  [
+                    27000,
+                    14000
+                  ],
+                  [
+                    21000,
+                    14000
+                  ]
+                ]
+              },
+              {
+                "kind": "room",
+                "name": "会議室",
+                "polygon": [
+                  [
+                    0,
+                    19000
+                  ],
+                  [
+                    7000,
+                    19000
+                  ],
+                  [
+                    7000,
+                    24000
+                  ],
+                  [
+                    0,
+                    24000
+                  ]
+                ]
+              }
+            ],
+            "zones": [
+              {
+                "name": "5F 西",
+                "kind": "office",
+                "polygon": [
+                  [
+                    0,
+                    0
+                  ],
+                  [
+                    24000,
+                    0
+                  ],
+                  [
+                    24000,
+                    24000
+                  ],
+                  [
+                    0,
+                    24000
+                  ]
+                ]
+              },
+              {
+                "name": "5F 東",
+                "kind": "office",
+                "polygon": [
+                  [
+                    24000,
+                    0
+                  ],
+                  [
+                    48000,
+                    0
+                  ],
+                  [
+                    48000,
+                    24000
+                  ],
+                  [
+                    24000,
+                    24000
+                  ]
+                ]
+              }
+            ],
+            "seats": [
+              {
+                "code": "5F-A01",
+                "x_mm": 2000,
+                "y_mm": 2000,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "5F 西"
+              },
+              {
+                "code": "5F-A02",
+                "x_mm": 3600,
+                "y_mm": 2000,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "5F 西"
+              },
+              {
+                "code": "5F-A03",
+                "x_mm": 5200,
+                "y_mm": 2000,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "5F 西"
+              },
+              {
+                "code": "5F-A04",
+                "x_mm": 6800,
+                "y_mm": 2000,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "5F 西"
+              },
+              {
+                "code": "5F-A05",
+                "x_mm": 8400,
+                "y_mm": 2000,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "5F 西"
+              },
+              {
+                "code": "5F-A06",
+                "x_mm": 10000,
+                "y_mm": 2000,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "5F 西"
+              },
+              {
+                "code": "5F-A07",
+                "x_mm": 11600,
+                "y_mm": 2000,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "5F 西"
+              },
+              {
+                "code": "5F-A08",
+                "x_mm": 13200,
+                "y_mm": 2000,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "5F 西"
+              },
+              {
+                "code": "5F-A09",
+                "x_mm": 2000,
+                "y_mm": 4400,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "5F 西"
+              },
+              {
+                "code": "5F-A10",
+                "x_mm": 3600,
+                "y_mm": 4400,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "5F 西"
+              },
+              {
+                "code": "5F-A11",
+                "x_mm": 5200,
+                "y_mm": 4400,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "5F 西"
+              },
+              {
+                "code": "5F-A12",
+                "x_mm": 6800,
+                "y_mm": 4400,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "5F 西"
+              },
+              {
+                "code": "5F-A13",
+                "x_mm": 8400,
+                "y_mm": 4400,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "5F 西"
+              },
+              {
+                "code": "5F-A14",
+                "x_mm": 10000,
+                "y_mm": 4400,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "5F 西"
+              },
+              {
+                "code": "5F-A15",
+                "x_mm": 11600,
+                "y_mm": 4400,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "5F 西"
+              },
+              {
+                "code": "5F-A16",
+                "x_mm": 13200,
+                "y_mm": 4400,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "5F 西"
+              },
+              {
+                "code": "5F-A17",
+                "x_mm": 2000,
+                "y_mm": 6800,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "5F 西"
+              },
+              {
+                "code": "5F-A18",
+                "x_mm": 3600,
+                "y_mm": 6800,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "5F 西"
+              },
+              {
+                "code": "5F-A19",
+                "x_mm": 5200,
+                "y_mm": 6800,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "5F 西"
+              },
+              {
+                "code": "5F-A20",
+                "x_mm": 6800,
+                "y_mm": 6800,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "5F 西"
+              },
+              {
+                "code": "5F-A21",
+                "x_mm": 8400,
+                "y_mm": 6800,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "5F 西"
+              },
+              {
+                "code": "5F-A22",
+                "x_mm": 10000,
+                "y_mm": 6800,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "5F 西"
+              },
+              {
+                "code": "5F-A23",
+                "x_mm": 11600,
+                "y_mm": 6800,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "5F 西"
+              },
+              {
+                "code": "5F-A24",
+                "x_mm": 13200,
+                "y_mm": 6800,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "5F 西"
+              },
+              {
+                "code": "5F-A25",
+                "x_mm": 2000,
+                "y_mm": 9200,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "5F 西"
+              },
+              {
+                "code": "5F-A26",
+                "x_mm": 3600,
+                "y_mm": 9200,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "5F 西"
+              },
+              {
+                "code": "5F-A27",
+                "x_mm": 5200,
+                "y_mm": 9200,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "5F 西"
+              },
+              {
+                "code": "5F-A28",
+                "x_mm": 6800,
+                "y_mm": 9200,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "5F 西"
+              },
+              {
+                "code": "5F-A29",
+                "x_mm": 8400,
+                "y_mm": 9200,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "5F 西"
+              },
+              {
+                "code": "5F-A30",
+                "x_mm": 10000,
+                "y_mm": 9200,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "5F 西"
+              },
+              {
+                "code": "5F-A31",
+                "x_mm": 11600,
+                "y_mm": 9200,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "5F 西"
+              },
+              {
+                "code": "5F-A32",
+                "x_mm": 13200,
+                "y_mm": 9200,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "5F 西"
+              },
+              {
+                "code": "5F-A33",
+                "x_mm": 2000,
+                "y_mm": 11600,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "5F 西"
+              },
+              {
+                "code": "5F-A34",
+                "x_mm": 3600,
+                "y_mm": 11600,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "5F 西"
+              },
+              {
+                "code": "5F-A35",
+                "x_mm": 5200,
+                "y_mm": 11600,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "5F 西"
+              },
+              {
+                "code": "5F-A36",
+                "x_mm": 6800,
+                "y_mm": 11600,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "5F 西"
+              },
+              {
+                "code": "5F-A37",
+                "x_mm": 8400,
+                "y_mm": 11600,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "5F 西"
+              },
+              {
+                "code": "5F-A38",
+                "x_mm": 10000,
+                "y_mm": 11600,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "5F 西"
+              },
+              {
+                "code": "5F-A39",
+                "x_mm": 11600,
+                "y_mm": 11600,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "5F 西"
+              },
+              {
+                "code": "5F-A40",
+                "x_mm": 13200,
+                "y_mm": 11600,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "5F 西"
+              },
+              {
+                "code": "5F-B01",
+                "x_mm": 27000,
+                "y_mm": 2000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "5F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "5F-B02",
+                "x_mm": 28800,
+                "y_mm": 2000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "5F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "5F-B03",
+                "x_mm": 30600,
+                "y_mm": 2000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "5F 東",
+                "features": [
+                  "dual_monitor"
+                ]
+              },
+              {
+                "code": "5F-B04",
+                "x_mm": 32400,
+                "y_mm": 2000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "5F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "5F-B05",
+                "x_mm": 34200,
+                "y_mm": 2000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "5F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "5F-B06",
+                "x_mm": 36000,
+                "y_mm": 2000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "5F 東",
+                "features": [
+                  "dual_monitor"
+                ]
+              },
+              {
+                "code": "5F-B07",
+                "x_mm": 27000,
+                "y_mm": 5000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "5F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "5F-B08",
+                "x_mm": 28800,
+                "y_mm": 5000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "5F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "5F-B09",
+                "x_mm": 30600,
+                "y_mm": 5000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "5F 東",
+                "features": [
+                  "dual_monitor"
+                ]
+              },
+              {
+                "code": "5F-B10",
+                "x_mm": 32400,
+                "y_mm": 5000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "5F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "5F-B11",
+                "x_mm": 34200,
+                "y_mm": 5000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "5F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "5F-B12",
+                "x_mm": 36000,
+                "y_mm": 5000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "5F 東",
+                "features": [
+                  "dual_monitor"
+                ]
+              },
+              {
+                "code": "5F-B13",
+                "x_mm": 27000,
+                "y_mm": 8000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "5F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "5F-B14",
+                "x_mm": 28800,
+                "y_mm": 8000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "5F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "5F-B15",
+                "x_mm": 30600,
+                "y_mm": 8000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "5F 東",
+                "features": [
+                  "dual_monitor"
+                ]
+              },
+              {
+                "code": "5F-B16",
+                "x_mm": 32400,
+                "y_mm": 8000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "5F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "5F-B17",
+                "x_mm": 34200,
+                "y_mm": 8000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "5F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "5F-B18",
+                "x_mm": 36000,
+                "y_mm": 8000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "5F 東",
+                "features": [
+                  "dual_monitor"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "label": "6F",
+          "level_order": 60,
+          "kind": "office",
+          "layout": {
+            "valid_from": "2025-04-01",
+            "grid_mm": 100,
+            "outline": [
+              [
+                0,
+                0
+              ],
+              [
+                48000,
+                0
+              ],
+              [
+                48000,
+                24000
+              ],
+              [
+                0,
+                24000
+              ]
+            ],
+            "fixtures": [
+              {
+                "kind": "core",
+                "name": "コア",
+                "polygon": [
+                  [
+                    21000,
+                    10000
+                  ],
+                  [
+                    27000,
+                    10000
+                  ],
+                  [
+                    27000,
+                    14000
+                  ],
+                  [
+                    21000,
+                    14000
+                  ]
+                ]
+              },
+              {
+                "kind": "room",
+                "name": "会議室",
+                "polygon": [
+                  [
+                    0,
+                    19000
+                  ],
+                  [
+                    7000,
+                    19000
+                  ],
+                  [
+                    7000,
+                    24000
+                  ],
+                  [
+                    0,
+                    24000
+                  ]
+                ]
+              }
+            ],
+            "zones": [
+              {
+                "name": "6F 西",
+                "kind": "office",
+                "polygon": [
+                  [
+                    0,
+                    0
+                  ],
+                  [
+                    24000,
+                    0
+                  ],
+                  [
+                    24000,
+                    24000
+                  ],
+                  [
+                    0,
+                    24000
+                  ]
+                ]
+              },
+              {
+                "name": "6F 東",
+                "kind": "office",
+                "polygon": [
+                  [
+                    24000,
+                    0
+                  ],
+                  [
+                    48000,
+                    0
+                  ],
+                  [
+                    48000,
+                    24000
+                  ],
+                  [
+                    24000,
+                    24000
+                  ]
+                ]
+              }
+            ],
+            "seats": [
+              {
+                "code": "6F-A01",
+                "x_mm": 2000,
+                "y_mm": 2000,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "6F 西"
+              },
+              {
+                "code": "6F-A02",
+                "x_mm": 3600,
+                "y_mm": 2000,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "6F 西"
+              },
+              {
+                "code": "6F-A03",
+                "x_mm": 5200,
+                "y_mm": 2000,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "6F 西"
+              },
+              {
+                "code": "6F-A04",
+                "x_mm": 6800,
+                "y_mm": 2000,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "6F 西"
+              },
+              {
+                "code": "6F-A05",
+                "x_mm": 8400,
+                "y_mm": 2000,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "6F 西"
+              },
+              {
+                "code": "6F-A06",
+                "x_mm": 10000,
+                "y_mm": 2000,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "6F 西"
+              },
+              {
+                "code": "6F-A07",
+                "x_mm": 11600,
+                "y_mm": 2000,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "6F 西"
+              },
+              {
+                "code": "6F-A08",
+                "x_mm": 13200,
+                "y_mm": 2000,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "6F 西"
+              },
+              {
+                "code": "6F-A09",
+                "x_mm": 2000,
+                "y_mm": 4400,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "6F 西"
+              },
+              {
+                "code": "6F-A10",
+                "x_mm": 3600,
+                "y_mm": 4400,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "6F 西"
+              },
+              {
+                "code": "6F-A11",
+                "x_mm": 5200,
+                "y_mm": 4400,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "6F 西"
+              },
+              {
+                "code": "6F-A12",
+                "x_mm": 6800,
+                "y_mm": 4400,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "6F 西"
+              },
+              {
+                "code": "6F-A13",
+                "x_mm": 8400,
+                "y_mm": 4400,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "6F 西"
+              },
+              {
+                "code": "6F-A14",
+                "x_mm": 10000,
+                "y_mm": 4400,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "6F 西"
+              },
+              {
+                "code": "6F-A15",
+                "x_mm": 11600,
+                "y_mm": 4400,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "6F 西"
+              },
+              {
+                "code": "6F-A16",
+                "x_mm": 13200,
+                "y_mm": 4400,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "6F 西"
+              },
+              {
+                "code": "6F-A17",
+                "x_mm": 2000,
+                "y_mm": 6800,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "6F 西"
+              },
+              {
+                "code": "6F-A18",
+                "x_mm": 3600,
+                "y_mm": 6800,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "6F 西"
+              },
+              {
+                "code": "6F-A19",
+                "x_mm": 5200,
+                "y_mm": 6800,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "6F 西"
+              },
+              {
+                "code": "6F-A20",
+                "x_mm": 6800,
+                "y_mm": 6800,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "6F 西"
+              },
+              {
+                "code": "6F-A21",
+                "x_mm": 8400,
+                "y_mm": 6800,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "6F 西"
+              },
+              {
+                "code": "6F-A22",
+                "x_mm": 10000,
+                "y_mm": 6800,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "6F 西"
+              },
+              {
+                "code": "6F-A23",
+                "x_mm": 11600,
+                "y_mm": 6800,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "6F 西"
+              },
+              {
+                "code": "6F-A24",
+                "x_mm": 13200,
+                "y_mm": 6800,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "6F 西"
+              },
+              {
+                "code": "6F-B01",
+                "x_mm": 27000,
+                "y_mm": 2000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "6F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "6F-B02",
+                "x_mm": 28800,
+                "y_mm": 2000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "6F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "6F-B03",
+                "x_mm": 30600,
+                "y_mm": 2000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "6F 東",
+                "features": [
+                  "dual_monitor"
+                ]
+              },
+              {
+                "code": "6F-B04",
+                "x_mm": 32400,
+                "y_mm": 2000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "6F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "6F-B05",
+                "x_mm": 34200,
+                "y_mm": 2000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "6F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "6F-B06",
+                "x_mm": 36000,
+                "y_mm": 2000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "6F 東",
+                "features": [
+                  "dual_monitor"
+                ]
+              },
+              {
+                "code": "6F-B07",
+                "x_mm": 27000,
+                "y_mm": 5000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "6F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "6F-B08",
+                "x_mm": 28800,
+                "y_mm": 5000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "6F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "6F-B09",
+                "x_mm": 30600,
+                "y_mm": 5000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "6F 東",
+                "features": [
+                  "dual_monitor"
+                ]
+              },
+              {
+                "code": "6F-B10",
+                "x_mm": 32400,
+                "y_mm": 5000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "6F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "6F-B11",
+                "x_mm": 34200,
+                "y_mm": 5000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "6F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "6F-B12",
+                "x_mm": 36000,
+                "y_mm": 5000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "6F 東",
+                "features": [
+                  "dual_monitor"
+                ]
+              },
+              {
+                "code": "6F-B13",
+                "x_mm": 27000,
+                "y_mm": 8000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "6F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "6F-B14",
+                "x_mm": 28800,
+                "y_mm": 8000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "6F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "6F-B15",
+                "x_mm": 30600,
+                "y_mm": 8000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "6F 東",
+                "features": [
+                  "dual_monitor"
+                ]
+              },
+              {
+                "code": "6F-B16",
+                "x_mm": 32400,
+                "y_mm": 8000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "6F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "6F-B17",
+                "x_mm": 34200,
+                "y_mm": 8000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "6F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "6F-B18",
+                "x_mm": 36000,
+                "y_mm": 8000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "6F 東",
+                "features": [
+                  "dual_monitor"
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "site_code": "S020",
+      "code": "F1",
+      "name": "第一工場棟",
+      "sort_order": 0,
+      "floors": [
+        {
+          "label": "1F",
+          "level_order": 10,
+          "kind": "factory",
+          "layout": {
+            "valid_from": "2024-10-01",
+            "grid_mm": 500,
+            "outline": [
+              [
+                0,
+                0
+              ],
+              [
+                52000,
+                0
+              ],
+              [
+                52000,
+                24000
+              ],
+              [
+                0,
+                24000
+              ]
+            ],
+            "fixtures": [],
+            "zones": [
+              {
+                "name": "ライン1",
+                "kind": "production_line",
+                "polygon": [
+                  [
+                    0,
+                    0
+                  ],
+                  [
+                    52000,
+                    0
+                  ],
+                  [
+                    52000,
+                    12000
+                  ],
+                  [
+                    0,
+                    12000
+                  ]
+                ]
+              },
+              {
+                "name": "ライン2",
+                "kind": "production_line",
+                "polygon": [
+                  [
+                    0,
+                    12000
+                  ],
+                  [
+                    52000,
+                    12000
+                  ],
+                  [
+                    52000,
+                    24000
+                  ],
+                  [
+                    0,
+                    24000
+                  ]
+                ]
+              }
+            ],
+            "seats": [
+              {
+                "code": "L1-S01",
+                "x_mm": 4000,
+                "y_mm": 6000,
+                "desk_type": "station",
+                "kind": "station",
+                "capacity": 3,
+                "zone": "ライン1"
+              },
+              {
+                "code": "L1-S02",
+                "x_mm": 12000,
+                "y_mm": 6000,
+                "desk_type": "station",
+                "kind": "station",
+                "capacity": 3,
+                "zone": "ライン1"
+              },
+              {
+                "code": "L1-S03",
+                "x_mm": 20000,
+                "y_mm": 6000,
+                "desk_type": "station",
+                "kind": "station",
+                "capacity": 3,
+                "zone": "ライン1"
+              },
+              {
+                "code": "L1-S04",
+                "x_mm": 28000,
+                "y_mm": 6000,
+                "desk_type": "station",
+                "kind": "station",
+                "capacity": 3,
+                "zone": "ライン1"
+              },
+              {
+                "code": "L1-S05",
+                "x_mm": 36000,
+                "y_mm": 6000,
+                "desk_type": "station",
+                "kind": "station",
+                "capacity": 3,
+                "zone": "ライン1"
+              },
+              {
+                "code": "L1-S06",
+                "x_mm": 44000,
+                "y_mm": 6000,
+                "desk_type": "station",
+                "kind": "station",
+                "capacity": 3,
+                "zone": "ライン1"
+              },
+              {
+                "code": "L2-S01",
+                "x_mm": 4000,
+                "y_mm": 18000,
+                "desk_type": "station",
+                "kind": "station",
+                "capacity": 3,
+                "zone": "ライン2"
+              },
+              {
+                "code": "L2-S02",
+                "x_mm": 12000,
+                "y_mm": 18000,
+                "desk_type": "station",
+                "kind": "station",
+                "capacity": 3,
+                "zone": "ライン2"
+              },
+              {
+                "code": "L2-S03",
+                "x_mm": 20000,
+                "y_mm": 18000,
+                "desk_type": "station",
+                "kind": "station",
+                "capacity": 3,
+                "zone": "ライン2"
+              },
+              {
+                "code": "L2-S04",
+                "x_mm": 28000,
+                "y_mm": 18000,
+                "desk_type": "station",
+                "kind": "station",
+                "capacity": 3,
+                "zone": "ライン2"
+              },
+              {
+                "code": "L2-S05",
+                "x_mm": 36000,
+                "y_mm": 18000,
+                "desk_type": "station",
+                "kind": "station",
+                "capacity": 3,
+                "zone": "ライン2"
+              },
+              {
+                "code": "L2-S06",
+                "x_mm": 44000,
+                "y_mm": 18000,
+                "desk_type": "station",
+                "kind": "station",
+                "capacity": 3,
+                "zone": "ライン2"
+              }
+            ]
+          }
+        },
+        {
+          "label": "2F",
+          "level_order": 20,
+          "kind": "office",
+          "layout": {
+            "valid_from": "2024-10-01",
+            "grid_mm": 100,
+            "outline": [
+              [
+                0,
+                0
+              ],
+              [
+                48000,
+                0
+              ],
+              [
+                48000,
+                24000
+              ],
+              [
+                0,
+                24000
+              ]
+            ],
+            "fixtures": [
+              {
+                "kind": "core",
+                "name": "コア",
+                "polygon": [
+                  [
+                    21000,
+                    10000
+                  ],
+                  [
+                    27000,
+                    10000
+                  ],
+                  [
+                    27000,
+                    14000
+                  ],
+                  [
+                    21000,
+                    14000
+                  ]
+                ]
+              },
+              {
+                "kind": "room",
+                "name": "会議室",
+                "polygon": [
+                  [
+                    0,
+                    19000
+                  ],
+                  [
+                    7000,
+                    19000
+                  ],
+                  [
+                    7000,
+                    24000
+                  ],
+                  [
+                    0,
+                    24000
+                  ]
+                ]
+              }
+            ],
+            "zones": [
+              {
+                "name": "2F 西",
+                "kind": "office",
+                "polygon": [
+                  [
+                    0,
+                    0
+                  ],
+                  [
+                    24000,
+                    0
+                  ],
+                  [
+                    24000,
+                    24000
+                  ],
+                  [
+                    0,
+                    24000
+                  ]
+                ]
+              },
+              {
+                "name": "2F 東",
+                "kind": "office",
+                "polygon": [
+                  [
+                    24000,
+                    0
+                  ],
+                  [
+                    48000,
+                    0
+                  ],
+                  [
+                    48000,
+                    24000
+                  ],
+                  [
+                    24000,
+                    24000
+                  ]
+                ]
+              }
+            ],
+            "seats": [
+              {
+                "code": "F1-2F-A01",
+                "x_mm": 2000,
+                "y_mm": 2000,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "2F 西"
+              },
+              {
+                "code": "F1-2F-A02",
+                "x_mm": 3600,
+                "y_mm": 2000,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "2F 西"
+              },
+              {
+                "code": "F1-2F-A03",
+                "x_mm": 5200,
+                "y_mm": 2000,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "2F 西"
+              },
+              {
+                "code": "F1-2F-A04",
+                "x_mm": 6800,
+                "y_mm": 2000,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "2F 西"
+              },
+              {
+                "code": "F1-2F-A05",
+                "x_mm": 8400,
+                "y_mm": 2000,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "2F 西"
+              },
+              {
+                "code": "F1-2F-A06",
+                "x_mm": 10000,
+                "y_mm": 2000,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "2F 西"
+              },
+              {
+                "code": "F1-2F-A07",
+                "x_mm": 11600,
+                "y_mm": 2000,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "2F 西"
+              },
+              {
+                "code": "F1-2F-A08",
+                "x_mm": 13200,
+                "y_mm": 2000,
+                "rotation_deg": 0,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "2F 西"
+              },
+              {
+                "code": "F1-2F-A09",
+                "x_mm": 2000,
+                "y_mm": 4400,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "2F 西"
+              },
+              {
+                "code": "F1-2F-A10",
+                "x_mm": 3600,
+                "y_mm": 4400,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "2F 西"
+              },
+              {
+                "code": "F1-2F-A11",
+                "x_mm": 5200,
+                "y_mm": 4400,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "2F 西"
+              },
+              {
+                "code": "F1-2F-A12",
+                "x_mm": 6800,
+                "y_mm": 4400,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "2F 西"
+              },
+              {
+                "code": "F1-2F-A13",
+                "x_mm": 8400,
+                "y_mm": 4400,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "2F 西"
+              },
+              {
+                "code": "F1-2F-A14",
+                "x_mm": 10000,
+                "y_mm": 4400,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "2F 西"
+              },
+              {
+                "code": "F1-2F-A15",
+                "x_mm": 11600,
+                "y_mm": 4400,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "2F 西"
+              },
+              {
+                "code": "F1-2F-A16",
+                "x_mm": 13200,
+                "y_mm": 4400,
+                "rotation_deg": 180,
+                "desk_type": "desk_1200",
+                "kind": "fixed",
+                "zone": "2F 西"
+              },
+              {
+                "code": "F1-2F-B01",
+                "x_mm": 27000,
+                "y_mm": 2000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "2F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "F1-2F-B02",
+                "x_mm": 28800,
+                "y_mm": 2000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "2F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "F1-2F-B03",
+                "x_mm": 30600,
+                "y_mm": 2000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "2F 東",
+                "features": [
+                  "dual_monitor"
+                ]
+              },
+              {
+                "code": "F1-2F-B04",
+                "x_mm": 32400,
+                "y_mm": 2000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "2F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "F1-2F-B05",
+                "x_mm": 34200,
+                "y_mm": 2000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "2F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "F1-2F-B06",
+                "x_mm": 36000,
+                "y_mm": 2000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "2F 東",
+                "features": [
+                  "dual_monitor"
+                ]
+              },
+              {
+                "code": "F1-2F-B07",
+                "x_mm": 27000,
+                "y_mm": 5000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "2F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "F1-2F-B08",
+                "x_mm": 28800,
+                "y_mm": 5000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "2F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "F1-2F-B09",
+                "x_mm": 30600,
+                "y_mm": 5000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "2F 東",
+                "features": [
+                  "dual_monitor"
+                ]
+              },
+              {
+                "code": "F1-2F-B10",
+                "x_mm": 32400,
+                "y_mm": 5000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "2F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "F1-2F-B11",
+                "x_mm": 34200,
+                "y_mm": 5000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "2F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "F1-2F-B12",
+                "x_mm": 36000,
+                "y_mm": 5000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "2F 東",
+                "features": [
+                  "dual_monitor"
+                ]
+              },
+              {
+                "code": "F1-2F-B13",
+                "x_mm": 27000,
+                "y_mm": 8000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "2F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "F1-2F-B14",
+                "x_mm": 28800,
+                "y_mm": 8000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "2F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "F1-2F-B15",
+                "x_mm": 30600,
+                "y_mm": 8000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "2F 東",
+                "features": [
+                  "dual_monitor"
+                ]
+              },
+              {
+                "code": "F1-2F-B16",
+                "x_mm": 32400,
+                "y_mm": 8000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "2F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "F1-2F-B17",
+                "x_mm": 34200,
+                "y_mm": 8000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "2F 東",
+                "features": [
+                  "monitor"
+                ]
+              },
+              {
+                "code": "F1-2F-B18",
+                "x_mm": 36000,
+                "y_mm": 8000,
+                "rotation_deg": 90,
+                "desk_type": "desk_1400",
+                "kind": "fixed",
+                "zone": "2F 東",
+                "features": [
+                  "dual_monitor"
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "site_code": "S020",
+      "code": "F2",
+      "name": "第二工場棟",
+      "sort_order": 1,
+      "floors": [
+        {
+          "label": "1F",
+          "level_order": 10,
+          "kind": "factory"
+        }
+      ]
+    },
+    {
+      "site_code": "LS10",
+      "code": "W1",
+      "name": "倉庫棟",
+      "sort_order": 0,
+      "floors": [
+        {
+          "label": "1F",
+          "level_order": 10,
+          "kind": "warehouse",
+          "layout": {
+            "valid_from": "2024-10-01",
+            "grid_mm": 500,
+            "outline": [
+              [
+                0,
+                0
+              ],
+              [
+                52000,
+                0
+              ],
+              [
+                52000,
+                24000
+              ],
+              [
+                0,
+                24000
+              ]
+            ],
+            "fixtures": [],
+            "zones": [
+              {
+                "name": "入荷",
+                "kind": "storage",
+                "polygon": [
+                  [
+                    0,
+                    0
+                  ],
+                  [
+                    52000,
+                    0
+                  ],
+                  [
+                    52000,
+                    12000
+                  ],
+                  [
+                    0,
+                    12000
+                  ]
+                ]
+              },
+              {
+                "name": "出荷",
+                "kind": "storage",
+                "polygon": [
+                  [
+                    0,
+                    12000
+                  ],
+                  [
+                    52000,
+                    12000
+                  ],
+                  [
+                    52000,
+                    24000
+                  ],
+                  [
+                    0,
+                    24000
+                  ]
+                ]
+              }
+            ],
+            "seats": [
+              {
+                "code": "W1-S01",
+                "x_mm": 4000,
+                "y_mm": 6000,
+                "desk_type": "station",
+                "kind": "station",
+                "capacity": 4,
+                "zone": "入荷"
+              },
+              {
+                "code": "W1-S02",
+                "x_mm": 12000,
+                "y_mm": 6000,
+                "desk_type": "station",
+                "kind": "station",
+                "capacity": 4,
+                "zone": "入荷"
+              },
+              {
+                "code": "W1-S03",
+                "x_mm": 20000,
+                "y_mm": 6000,
+                "desk_type": "station",
+                "kind": "station",
+                "capacity": 4,
+                "zone": "入荷"
+              },
+              {
+                "code": "W1-S04",
+                "x_mm": 28000,
+                "y_mm": 6000,
+                "desk_type": "station",
+                "kind": "station",
+                "capacity": 4,
+                "zone": "入荷"
+              },
+              {
+                "code": "W1-S05",
+                "x_mm": 36000,
+                "y_mm": 6000,
+                "desk_type": "station",
+                "kind": "station",
+                "capacity": 4,
+                "zone": "入荷"
+              },
+              {
+                "code": "W1-S06",
+                "x_mm": 44000,
+                "y_mm": 6000,
+                "desk_type": "station",
+                "kind": "station",
+                "capacity": 4,
+                "zone": "入荷"
+              },
+              {
+                "code": "W2-S01",
+                "x_mm": 4000,
+                "y_mm": 18000,
+                "desk_type": "station",
+                "kind": "station",
+                "capacity": 4,
+                "zone": "出荷"
+              },
+              {
+                "code": "W2-S02",
+                "x_mm": 12000,
+                "y_mm": 18000,
+                "desk_type": "station",
+                "kind": "station",
+                "capacity": 4,
+                "zone": "出荷"
+              },
+              {
+                "code": "W2-S03",
+                "x_mm": 20000,
+                "y_mm": 18000,
+                "desk_type": "station",
+                "kind": "station",
+                "capacity": 4,
+                "zone": "出荷"
+              },
+              {
+                "code": "W2-S04",
+                "x_mm": 28000,
+                "y_mm": 18000,
+                "desk_type": "station",
+                "kind": "station",
+                "capacity": 4,
+                "zone": "出荷"
+              },
+              {
+                "code": "W2-S05",
+                "x_mm": 36000,
+                "y_mm": 18000,
+                "desk_type": "station",
+                "kind": "station",
+                "capacity": 4,
+                "zone": "出荷"
+              },
+              {
+                "code": "W2-S06",
+                "x_mm": 44000,
+                "y_mm": 18000,
+                "desk_type": "station",
+                "kind": "station",
+                "capacity": 4,
+                "zone": "出荷"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

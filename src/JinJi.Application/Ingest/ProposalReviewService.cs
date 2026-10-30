@@ -80,7 +80,7 @@ public sealed class ProposalReviewService
         {
             if (proposal.TargetKind is ProposalTargetKind.OrgUnit or ProposalTargetKind.OrgUnitVersion && proposal.Operation != ProposalOperation.Abolish)
             {
-                await ValidateOrgAsync(viewer, proposal, today, cancellationToken);
+                await ValidateOrgAsync(_snapshots, viewer, proposal, today, cancellationToken);
             }
 
             if (!await _store.ApplyProposalAsync(viewer, proposal, today, cancellationToken))
@@ -153,11 +153,12 @@ public sealed class ProposalReviewService
 
     /// <summary>
     /// 組織の提案を反映した後の組織で、段のキーが法人の定義にあり、子の段の順位が親より下であること（新たな逆転を作らない）。
+    /// 直接登録（<see cref="FieldManagement.FieldRegistrationService"/>）も同じ検査を使う。
     /// </summary>
-    private async Task ValidateOrgAsync(ViewerContext viewer, ChangeProposalRecord proposal, DateOnly today, CancellationToken cancellationToken)
+    internal static async Task ValidateOrgAsync(IOrgSnapshotProvider snapshots, ViewerContext viewer, ChangeProposalRecord proposal, DateOnly today, CancellationToken cancellationToken)
     {
         var date = proposal.EffectiveDate ?? today;
-        var snapshot = await _snapshots.LoadAsync(viewer, date, today, cancellationToken);
+        var snapshot = await snapshots.LoadAsync(viewer, date, today, cancellationToken);
         var unitId = proposal.TargetId ?? throw new InvalidOperationException($"組織の提案 {proposal.Id} に対象の組織がありません。");
 
         OrgUnit unit;

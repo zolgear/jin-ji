@@ -77,8 +77,10 @@ export const MCP_TOOLS: McpToolInfo[] = [
   { name: "get_directory_info", label: "業務日付・組織の段・時点の目盛り", kind: "read" },
   { name: "list_review_proposals", label: "取込の要確認の根拠", kind: "read" },
   { name: "list_corrections", label: "修正依頼の一覧（委任元に見える範囲）", kind: "read" },
+  { name: "list_field_registrations", label: "組織・人の直接登録の一覧", kind: "read" },
   { name: "suggest_review_resolution", label: "要確認への解決の推定（作業領域だけに書く）", kind: "propose" },
   { name: "report_correction", label: "値の誤りの報告（修正依頼。公開データは変えない）", kind: "propose" },
+  { name: "draft_field_registration", label: "組織・人の変更の下書き（反映は委任元の確定）", kind: "propose" },
 ];
 
 export function mcpToolLabel(name: string): string {

@@ -1,7 +1,9 @@
 using JinJi.Application;
 using JinJi.Application.Audit;
+using JinJi.Application.FieldManagement;
 using JinJi.Application.Ingest;
 using JinJi.Domain;
+using JinJi.Domain.Organization;
 using JinJi.Domain.Text;
 using JinJi.Ingest.Normalization;
 using JinJi.Ingest.Suggestions;
@@ -74,9 +76,20 @@ public sealed class ImportService
     private readonly AuditWriter _audit;
     private readonly TimeProvider _timeProvider;
     private readonly ProposalSuggester? _suggester;
+    private readonly FieldManagementService? _fieldManagement;
+    private readonly IFieldRegistrationStore? _fieldRegistrations;
 
     /// <param name="suggester">LLM による候補提示（設定で有効にしたときだけ。取込ごとに <see cref="ImportRequest.UseLlm"/> でオプトインする）。</param>
-    public ImportService(IIngestStore store, IOrgSnapshotProvider snapshots, AuditWriter audit, TimeProvider timeProvider, ProposalSuggester? suggester = null)
+    /// <param name="fieldManagement">領域の管理元（ADR-0013。無ければすべて人事パッケージとして扱う）。</param>
+    /// <param name="fieldRegistrations">直接登録が書いた対象（管理元が両方の領域の印に使う）。</param>
+    public ImportService(
+        IIngestStore store,
+        IOrgSnapshotProvider snapshots,
+        AuditWriter audit,
+        TimeProvider timeProvider,
+        ProposalSuggester? suggester = null,
+        FieldManagementService? fieldManagement = null,
+        IFieldRegistrationStore? fieldRegistrations = null)
     {
         ArgumentNullException.ThrowIfNull(store);
         ArgumentNullException.ThrowIfNull(snapshots);
@@ -87,6 +100,8 @@ public sealed class ImportService
         _audit = audit;
         _timeProvider = timeProvider;
         _suggester = suggester;
+        _fieldManagement = fieldManagement;
+        _fieldRegistrations = fieldRegistrations;
     }
 
     public async Task<ImportResult> ImportAsync(ViewerContext viewer, ImportRequest request, CancellationToken cancellationToken)
@@ -204,6 +219,16 @@ public sealed class ImportService
         };
         var plan = ProposalPlanner.Plan(context, normalized);
         var proposals = plan.Proposals;
+
+        // 管理元が jin-ji・両方の領域の差分を振り分ける（ADR-0013 決定 2）
+        if (_fieldManagement is not null)
+        {
+            var modes = await _fieldManagement.ModesAsync(viewer, cancellationToken);
+            var written = _fieldRegistrations is not null && modes.Values.Contains(FieldManagementMode.Both)
+                ? await _fieldRegistrations.FieldWrittenAsync(viewer, today, cancellationToken)
+                : FieldWrittenTargets.None;
+            proposals = FieldModeFilter.Apply(proposals, modes, written);
+        }
 
         // LLM による候補提示（オプトイン）: 要確認の提案の根拠に推定を付けるだけ。提案の状態・値は変えない（§7.1）
         LlmUsageRecord? llm = null;

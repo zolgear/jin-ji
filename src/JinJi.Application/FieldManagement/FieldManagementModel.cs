@@ -85,5 +85,11 @@ public sealed class FieldManagementException : Exception
         Error = error;
     }
 
+    public FieldManagementException(FieldManagementError error, string message, Exception innerException)
+        : base(message, innerException)
+    {
+        Error = error;
+    }
+
     public FieldManagementError Error { get; }
 }

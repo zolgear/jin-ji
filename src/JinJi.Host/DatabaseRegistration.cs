@@ -78,9 +78,12 @@ internal static class DatabaseRegistration
         services.TryAddSingleton<ICorrectionWebhookSender, Web.CorrectionWebhookSender>();
         services.TryAddSingleton<CorrectionNoticeService>();
 
-        // 現場・IT 部門の直接登録の土台（管理元・担当の指名・範囲の判定。0020。ADR-0013）
+        // 現場・IT 部門の直接登録（管理元・担当の指名・範囲の判定は 0020、登録は 0021。ADR-0013）
         services.TryAddSingleton<Application.FieldManagement.IFieldManagementStore, NpgsqlFieldManagementStore>();
         services.TryAddSingleton<Application.FieldManagement.FieldManagementService>();
+        // 直接登録（登録・同意・取り消し。0021）
+        services.TryAddSingleton<Application.FieldManagement.IFieldRegistrationStore, NpgsqlFieldRegistrationStore>();
+        services.TryAddSingleton<Application.FieldManagement.FieldRegistrationService>();
 
         // 社内システムへの Webhook（0018。設定 JinJi:Webhooks は AddJinJiSettings が登録する）。収集と送信はワーカー、登録の管理は API の役割（OAuthRegistration）。
         // 受け手のクライアントは api_client から読む（認可サーバーを使わない構成でも読めるように、クライアントの表の読み取りだけを登録する）。

@@ -343,6 +343,14 @@ public static class SupplementCodes
 
     /// <summary>列が階層の組織図で、結合セルの補いで決めた上位組織が段飛ばしの可能性がある（上位組織の候補を確かめる）。</summary>
     public const string OrgParentAmbiguous = "org_parent_ambiguous";
+
+    /// <summary>
+    /// 管理元が jin-ji（field）の領域の差分（ADR-0013 決定 2）。人事パッケージとの差として出すだけで、承認できない（却下で確認済みにする）。
+    /// </summary>
+    public const string FieldManaged = "field_managed";
+
+    /// <summary>管理元が両方（both）の領域で、直接登録した値を変える差分（承認するまで上書きしない。承認する前に現場の登録と突き合わせる）。</summary>
+    public const string FieldRegistered = "field_registered";
 }
 
 /// <summary>変更提案（change_proposal の 1 行）。</summary>

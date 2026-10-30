@@ -123,6 +123,7 @@ public static partial class ApiModule
         IngestEndpoints.Map(api);
         SyncEndpoints.Map(api);
         CorrectionEndpoints.Map(api);
+        FieldEndpoints.Map(api);
         return endpoints;
     }
 

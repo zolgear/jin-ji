@@ -470,6 +470,17 @@ ADR-0002「拠点とリモートワーク」の実装の規則。コードでは
 - 世代で検知できない変更に備え、最長保持時間（`MaxAge`、既定 10 分）を過ぎたら必ず読み直す
 - メモリの目安: 1 万人・組織 1,000・人あたり属性の版 1〜3・発令 5 件の合成データで、スナップショット 1 つあたり約 20〜30 MB。区分 2 つで約 50〜60 MB、読み直しの間は一時的に最大その 2 倍
 
+### 5.7 直接登録の範囲（ADR-0013）
+
+[ADR-0013](../adr/0013-field-managed-changes.md) の段 1（管理元・担当の指名・範囲の判定）の実装の規則。コードでは `JinJi.Domain.Organization.FieldManagement`（`FieldDomain`・`FieldManagementMode`・`OrgEditorGrant`・`RegistrationScope`）、`JinJi.Application.FieldManagement.FieldManagementService`、`JinJi.Infrastructure.Database.NpgsqlFieldManagementStore`、`db/migrations/0020_field_management.sql` に対応する。直接登録そのもの（公開側の表への書き込み）はまだ無い。
+
+- ロール `org_admin`（組織管理者。IT 部門を想定）を足した。全社の範囲を持ち、管理元の起案・承認と担当の指名ができる。人事管理者と違い、氏名の履歴・取込の作業領域・監査ログ・内示は見えない。付与は `hr_corrector` と同じ流儀（管理 CLI `grant-role --role org_admin`。自分には付与できない）
+- 管理元（`field_domain_setting`）: 領域（`org_structure`・`org_site`・`assignment`・`person_site`・`person_contact`）ごとに `hr` / `field` / `both`。承認済みの行が無い領域は `hr`（`jinji_field_domain_mode()`）。起案 → 別人の承認で反映し、同じ領域の承認済みの行を置き換える（先行提供の日数と同じ形。起案者 ≠ 承認者は CHECK 制約、状態の遷移と中身の不変はトリガー）。起案・承認は人事管理者か `org_admin` の「人」だけ（AI エージェントは不可。アプリと RLS）。参照は閲覧者なら誰でも（設定データで、人事データの値ではない）
+- 担当の指名（`org_editor_grant`）: 組織に結び付け、期間（始まりと終わり。今日以降に始まり 366 日まで）を持つ。指名・取り消しは、その組織の組織長としての範囲（上位の組織長を含む）か、人事管理者・`org_admin` の「人」。担当としての範囲では指名できない（再指名の禁止）。自分は指名できない（CHECK 制約）。同じ組織・同じ人の有効な指名の期間は重ならない（排他制約）。参照は人の閲覧者（AI エージェントは委任元）と jin-ji 自身で、社内システムには見せない
+- 範囲（`RegistrationScope`・RLS の `jinji_viewer_scope_covers(組織, 日付, 担当を含めるか)`）: 人事管理者・`org_admin` は全社。それ以外は、その日の組織の祖先（自分を含む）のいずれかで組織長か、有効な担当の指名を持つこと。AI エージェントは委任元の範囲。権限を生む変更（組織長の任免・上位組織の付け替え）は一つ上の組織の範囲を要し（`CoversParentOf`）、最上位の組織は全社の範囲だけ。アプリと RLS は同じ規則で、テストで両方を突き合わせる
+- RLS の線: 将来の組織の版は人事管理者以外に見えないので、将来の日付の範囲は（人事管理者・`org_admin` を除き）今日の組織の構造で判定される。指名の表の書き込みの方針だけが範囲の関数を呼び、参照の方針は呼ばない（方針の再帰を作らない）
+- 監査ログ: `field.domain.propose`・`field.domain.approve`・`field.domain.reject`・`field.editor.grant`・`field.editor.revoke`（拒否・失敗も）
+
 ## 6. 認証とトークン
 
 導入先は、M365 テナントと Entra ID を持つ日本企業を主に想定する。**Keycloak などの追加の認証基盤を前提にしない**（導入・保守の負担が増えるため）。jin-ji は、既存の IdP にログインを委ねる側（OIDC RP）として動き、必要なトークンだけを自分で発行する。
@@ -1424,6 +1435,6 @@ jin-ji/
 | 5 | MCP サーバー（参照ツール → 提案ツール） | 実装済み |
 | 6 | Entra ID 同期の計画・スクリプト出力・直接反映（既定は無効） | 実装済み（[同期計画の評価](../reports/sync-plan.md)）。実テナントでの検証は未実施 |
 | 7 | Web UI（組織図・3D 俯瞰・人の詳細・検索・修正依頼・認証の画面） | 一部。発令のタイムライン・ポリシーのプレビューは未実装 |
-| 8 | 現場・IT 部門の直接登録（管理元・範囲・`org_admin`）、素案・申請版・提案資料、チーム・プロジェクトのグループ（[ADR-0013](../adr/0013-field-managed-changes.md)・[ADR-0014](../adr/0014-informal-groups.md)） | 未着手 |
+| 8 | 現場・IT 部門の直接登録（管理元・範囲・`org_admin`）、素案・申請版・提案資料、チーム・プロジェクトのグループ（[ADR-0013](../adr/0013-field-managed-changes.md)・[ADR-0014](../adr/0014-informal-groups.md)） | 一部。管理元・担当の指名・範囲の判定（[§5.7](#57-直接登録の範囲adr-0013)）。直接登録・素案・グループ・画面は未実装 |
 
 まだ無いもの: REST API からの取込の起動と、取込の変更提案の承認の REST API・画面（今はサービス・テスト・評価から使う）、アプリのコンテナイメージと Compose のサービス定義、リバースプロキシの選定（§3）、CI と依存の自動更新（ADR-0001）、実クライアントでの相互接続の受け入れ試験と外部のセキュリティレビュー（ADR-0004）。各節の「未解決」も参照。

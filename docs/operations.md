@@ -109,7 +109,7 @@ ADR-0004 の段階 A（[概要 §6.4](architecture/overview.md#64-人のログ�
 - 管理 CLI:
 
 ```sh
-scripts/dotnet.sh run --project src/JinJi.Host -- grant-role --person <person.id> --role hr_admin       # 修正担当者は --role hr_corrector
+scripts/dotnet.sh run --project src/JinJi.Host -- grant-role --person <person.id> --role hr_admin       # 修正担当者は --role hr_corrector、組織管理者は --role org_admin
 scripts/dotnet.sh run --project src/JinJi.Host -- create-local-account --person <person.id> --user-name <名前>      # パスワードの設定リンクを出す
 scripts/dotnet.sh run --project src/JinJi.Host -- create-break-glass-account --user-name <名前>                 # パスキーの登録リンクを出す
 scripts/dotnet.sh run --project src/JinJi.Host -- issue-reset-link --user-name <名前> [--purpose password|passkey]

@@ -1,6 +1,7 @@
 using System.Text;
 using JinJi.Application;
 using JinJi.Application.Audit;
+using JinJi.Application.FieldManagement;
 using JinJi.Application.Ingest;
 using JinJi.Connectors;
 using JinJi.Domain;
@@ -45,7 +46,13 @@ internal sealed class IngestDatabase : IAsyncDisposable
         Audit = new AuditWriter(new NpgsqlAuditSink(DataSource), TimeProvider.System);
         Snapshots = new NpgsqlOrgSnapshotProvider(DataSource);
         Store = new NpgsqlIngestStore(DataSource, TimeProvider.System);
-        Importer = new ImportService(Store, Snapshots, Audit, TimeProvider.System);
+        Importer = new ImportService(
+            Store,
+            Snapshots,
+            Audit,
+            TimeProvider.System,
+            fieldManagement: new FieldManagementService(new NpgsqlFieldManagementStore(DataSource), Snapshots, Audit, TimeProvider.System),
+            fieldRegistrations: new NpgsqlFieldRegistrationStore(DataSource, TimeProvider.System));
         Review = new ProposalReviewService(Store, Snapshots, Audit, TimeProvider.System, Notifier);
         Resolution = new ProposalResolutionService(Store, Snapshots, Audit, TimeProvider.System);
     }

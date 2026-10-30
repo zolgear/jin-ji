@@ -25,7 +25,7 @@ public sealed partial class NpgsqlIngestStore : IIngestStore
 {
     private const int BatchSize = 500;
 
-    private static readonly JsonSerializerOptions Json = new()
+    internal static readonly JsonSerializerOptions Json = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
         Converters = { new JsonStringEnumConverter(JsonNamingPolicy.SnakeCaseLower) },
@@ -271,7 +271,7 @@ public sealed partial class NpgsqlIngestStore : IIngestStore
     }
 
     public async Task<ChangeProposalRecord?> FindProposalAsync(ViewerContext viewer, Guid proposalId, CancellationToken cancellationToken) =>
-        (await QueryProposalsAsync(viewer, "id = $1", proposalId, cancellationToken)).SingleOrDefault();
+        (await QueryProposalsAsync(viewer, "id = $1 AND import_batch_id IS NOT NULL", proposalId, cancellationToken)).SingleOrDefault();
 
     public Task<IReadOnlyList<ChangeProposalRecord>> ListProposalsAsync(ViewerContext viewer, Guid batchId, CancellationToken cancellationToken) =>
         QueryProposalsAsync(viewer, "import_batch_id = $1", batchId, cancellationToken);
@@ -436,12 +436,33 @@ public sealed partial class NpgsqlIngestStore : IIngestStore
         ArgumentNullException.ThrowIfNull(proposal);
 
         await using var tx = await ViewerTransaction.BeginAsync(_dataSource, viewer, cancellationToken);
+        if (!await ApplyInTransactionAsync(tx, viewer, proposal, today, _timeProvider.GetUtcNow(), cancellationToken))
+        {
+            await tx.Transaction.RollbackAsync(cancellationToken);
+            return false;
+        }
+
+        await tx.CommitAsync(cancellationToken);
+        return true;
+    }
+
+    /// <summary>
+    /// 起案中の提案を、始めたトランザクションの中で公開側へ反映し、反映済み（決めた人は閲覧者の人）にする。起案中でなければ false（何も書かない）。
+    /// 取込の承認と直接登録（<see cref="NpgsqlFieldRegistrationStore"/>）が共有する反映の経路（ADR-0013 決定 5）。
+    /// </summary>
+    internal static async Task<bool> ApplyInTransactionAsync(
+        ViewerTransaction tx,
+        ViewerContext viewer,
+        ChangeProposalRecord proposal,
+        DateOnly today,
+        DateTimeOffset now,
+        CancellationToken cancellationToken)
+    {
         await using (var lockCommand = tx.CreateCommand("SELECT status FROM change_proposal WHERE id = $1 FOR UPDATE"))
         {
             lockCommand.Parameters.Add(P(proposal.Id));
             if (await lockCommand.ExecuteScalarAsync(cancellationToken) is not "proposed")
             {
-                await tx.Transaction.RollbackAsync(cancellationToken);
                 return false;
             }
         }
@@ -508,7 +529,6 @@ public sealed partial class NpgsqlIngestStore : IIngestStore
             throw new ProposalConflictException($"提案 {proposal.Id} を反映できません（{ex.ConstraintName ?? ex.SqlState}）: {ex.MessageText}", ex);
         }
 
-        var now = _timeProvider.GetUtcNow();
         await ExecuteAsync(
             tx,
             "UPDATE change_proposal SET status = 'applied', decided_by_person_id = $2, decided_at = $3, applied_at = $3 WHERE id = $1",
@@ -516,7 +536,6 @@ public sealed partial class NpgsqlIngestStore : IIngestStore
             P(proposal.Id),
             P(viewer.EffectivePersonId, NpgsqlDbType.Uuid),
             P(now));
-        await tx.CommitAsync(cancellationToken);
         return true;
     }
 
@@ -957,10 +976,10 @@ public sealed partial class NpgsqlIngestStore : IIngestStore
     private static DateOnly Date(string value) => DateOnly.ParseExact(value, "yyyy-MM-dd", CultureInfo.InvariantCulture);
 
     /// <summary>列挙値の DB のコード（snake_case）。</summary>
-    private static string Code<T>(T value)
+    internal static string Code<T>(T value)
         where T : struct, Enum => JsonNamingPolicy.SnakeCaseLower.ConvertName(value.ToString());
 
-    private static T Parse<T>(string code)
+    internal static T Parse<T>(string code)
         where T : struct, Enum
     {
         foreach (var value in Enum.GetValues<T>())

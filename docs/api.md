@@ -290,6 +290,38 @@ jin-ji の値の誤りを、人事パッケージで直せる人に伝える（�
 | `GET /corrections/summary` | 画面内の通知の件数 | 修正担当者・人事管理者 | `CorrectionSummaryResponse`（`open`・`new`・`stale` など） | `correction` |
 | `GET /corrections/report.csv` | レポート（`status`） | 修正担当者・人事管理者の人 | CSV（UTF-8 BOM）。上限の行数を超えたら古い順に打ち切り、`X-JinJi-Truncated: true` | `correction` |
 
+### 直接登録（現場・IT 部門。ADR-0013）
+
+管理元が `field`・`both` の領域（組織の構造・組織の拠点・所属・人の拠点・連絡先）を、範囲を持つ人（組織長・指名された担当・組織管理者・人事管理者）が承認を経ずに登録する。規則は [アーキテクチャ概要 §5.7](architecture/overview.md#57-直接登録の範囲adr-0013)。
+
+| エンドポイント | 内容 | 使える人 | 応答 | 種別 |
+| --- | --- | --- | --- | --- |
+| `GET /field/modes` | 領域ごとの管理元 | 閲覧者 | `FieldModeResponse` の配列（`domain`・`mode`: `hr` / `field` / `both`） | `field` |
+| `GET /field/settings` | 管理元の起案の一覧 | 閲覧者 | `FieldSettingResponse` の配列（新しい順） | `field` |
+| `POST /field/settings` | 管理元を起案する（`{"domain", "mode", "note"}`） | 人事管理者・組織管理者の人 | `FieldSettingResponse`。同じ領域の起案中があれば 409 | `field` |
+| `POST /field/settings/{id}/approve`・`/reject` | 起案を承認・却下する | 起案者とは別の人事管理者・組織管理者の人 | `FieldSettingResponse` | `field` |
+| `GET /field/grants` | 担当の指名の一覧（`org_unit_id`・`person_id`） | 人・AI エージェント | `FieldGrantResponse` の配列 | `field` |
+| `POST /field/grants` | 担当を指名する（`{"org_unit_id", "person_id", "from", "until"}`） | 組織長としての範囲を持つ人・組織管理者・人事管理者の人 | `FieldGrantResponse`。期間の重なりは 409 | `field` |
+| `POST /field/grants/{id}/revoke` | 指名を取り消す | 同上 | `FieldGrantResponse` | `field` |
+| `GET /field/scope` | 閲覧者の今日の範囲 | 閲覧者 | `FieldScopeResponse`（`manages_all`・登録できる組織・組織長の任免ができる組織・担当を指名できる組織） | `field` |
+| `GET /field/registrations` | 直接登録の一覧（`mine`・`status` のカンマ区切り） | 閲覧者に見える登録（自分の登録・同意した登録・自分の範囲の組織の登録） | `FieldRegistrationResponse` の配列（変更は含めない） | `field` |
+| `GET /field/registrations/{id}` | 参照 | 同上 | `FieldRegistrationResponse`（`changes` に変更提案の旧値・新値） | `field` |
+| `POST /field/registrations` | 登録する（`{"effective_date", "note", "changes": [{"kind", "target_id", "values"}]}`） | 人（範囲の中ならすぐに反映、相手側の範囲が要れば `pending_consent`）・AI エージェント（`draft`） | `FieldRegistrationResponse`。範囲の外・管理元が `hr` は 403、値の誤りは 400、対象が変わっていれば 409 | `field` |
+| `POST /field/registrations/{id}/confirm` | AI エージェントの下書きを確定する | 下書きの名義の人 | `FieldRegistrationResponse` | `field` |
+| `POST /field/registrations/{id}/consent` | 同意して反映する | 相手側の組織の範囲を持つ、登録者とは別の人 | 同上 | `field` |
+| `POST /field/registrations/{id}/withdraw` | 有効日の前に取り消す | 登録者か、登録の組織すべての範囲を持つ人 | 同上。有効日を迎えた登録は 409 | `field` |
+| `POST /field/registrations/{id}/discard` | 下書き・同意待ちを破棄する | 登録者・組織管理者・人事管理者の人 | 同上 | `field` |
+
+`changes` の `kind` と `values` のキー:
+
+| `kind` | 対象（`target_id`） | `values` のキー |
+| --- | --- | --- |
+| `assignment` | 人 | `org_unit_id`（異動先）・`position_title` |
+| `person` | 人 | `site_id`・`remote_work`（`true` / `false`）・`extension_number`・`work_mobile_phone` |
+| `org_update` | 組織 | `name`・`short_name`・`level_key`・`parent_org_unit_id`・`head_person_id`・`site_id` |
+| `org_create` | 新しい組織の ID（省略なら採番） | `code`・`name`・`parent_org_unit_id`（必須）・`short_name`・`level_key`・`head_person_id`・`site_id` |
+| `org_abolish` | 組織 | なし（所属者・配下の組織が残っていれば 400） |
+
 ### 取込（変更提案）
 
 | メソッドとパス | 用途 | 認可 | 応答の要点 | 種別 |
@@ -499,6 +531,8 @@ MCP のポート（既定 28090）の `POST /mcp`（Streamable HTTP。セッシ�
 | `suggest_review_resolution` | `jinji.propose` | `ingest` | `proposal_id`・`resolution`・`person_id`・`org_unit_id`・`confidence`・`rationale` | 要確認の提案に解決の推定を添える（作業領域だけに書く。公開側は変わらない） |
 | `list_corrections` | `jinji.read` | `correction` | `status`・`person_id`・`limit`（既定 20）・`cursor` | 修正依頼の一覧・状況（委任元に見える範囲） |
 | `report_correction` | `jinji.propose` | `correction` | `person_id`・`field`・`reason`・`suggested_value` | 修正依頼の起票（委任元の名義。jin-ji の公開データは変わらない） |
+| `list_field_registrations` | `jinji.read` | `field` | `mine`・`status` | 直接登録の一覧（委任元の登録・同意した登録・委任元の範囲の組織の登録） |
+| `draft_field_registration` | `jinji.propose` | `field` | `effective_date`・`note`・`changes` | 異動・組織の変更の下書き（委任元の名義。反映は委任元の人の確定だけ。ADR-0013） |
 
 引数の型・上限・既定値は、`tools/list` で返す入力スキーマ（JSON Schema。`additionalProperties: false`）が正。
 

@@ -64,6 +64,7 @@ public sealed class RateLimitProfile
         ["ingest"] = 60,
         ["sync"] = 30,
         ["correction"] = 30,
+        ["field"] = 60,
     };
 
     /// <summary>不正検知で自動スロットル中のクライアントのリクエスト数（クライアントの合計）。</summary>

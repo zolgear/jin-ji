@@ -43,8 +43,13 @@ public static class Roles
     /// </summary>
     public const string HrCorrector = "hr_corrector";
 
+    /// <summary>
+    /// 組織管理者（IT 部門を想定。ADR-0013）。全社の組織と人の直接登録・担当の指名・管理元の起案ができる。氏名の履歴・取込の作業領域・監査ログ・内示は人事管理者と違って見えない。
+    /// </summary>
+    public const string OrgAdmin = "org_admin";
+
     /// <summary>既知のロール。</summary>
-    public static readonly IReadOnlySet<string> Known = new HashSet<string>(StringComparer.Ordinal) { HrAdmin, HrCorrector };
+    public static readonly IReadOnlySet<string> Known = new HashSet<string>(StringComparer.Ordinal) { HrAdmin, HrCorrector, OrgAdmin };
 }
 
 /// <summary>
@@ -197,6 +202,9 @@ public sealed class ViewerContext
 
     /// <summary>修正依頼のすべてを参照できるか（人事管理者か修正担当者。AI エージェントは委任元のロール）。</summary>
     public bool HandlesCorrections => IsHrAdmin || Roles.Contains(Policy.Roles.HrCorrector);
+
+    /// <summary>全社の直接登録の範囲を持つか（人事管理者か組織管理者。AI エージェントは委任元のロール。ADR-0013）。</summary>
+    public bool ManagesAllOrgs => IsHrAdmin || Roles.Contains(Policy.Roles.OrgAdmin);
 
     /// <summary>人のユーザー。</summary>
     public static ViewerContext ForUser(

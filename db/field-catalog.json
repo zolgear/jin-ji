@@ -1674,7 +1674,7 @@
         },
         "role": {
           "category": "認可",
-          "description": "ロール名（hr_admin）"
+          "description": "ロール名（hr_admin・hr_corrector・org_admin）"
         },
         "granted_by_kind": {
           "category": "認可",
@@ -3034,6 +3034,88 @@
         "notified_at": {
           "category": "システム管理用",
           "description": "最後に通知した日時"
+        }
+      }
+    },
+    "field_domain_setting": {
+      "description": "領域ごとの管理元（人事パッケージ / jin-ji / 両方。ADR-0013）の起案と承認",
+      "columns": {
+        "id": {
+          "category": "システム管理用",
+          "description": "起案の行 ID（UUIDv7）"
+        },
+        "domain": {
+          "category": "認可",
+          "description": "領域（org_structure・org_site・assignment・person_site・person_contact）"
+        },
+        "mode": {
+          "category": "認可",
+          "description": "管理元（hr: 取込だけ / field: 直接登録だけ / both: 両方）"
+        },
+        "status": {
+          "category": "認可",
+          "description": "状態（起案中・承認済み・却下・置き換え済み）"
+        },
+        "note": {
+          "category": "認可",
+          "description": "起案の理由のメモ（任意。人事データの値を書かない）"
+        },
+        "proposed_by_person_id": {
+          "category": "認可",
+          "description": "起案した人事管理者・組織管理者"
+        },
+        "proposed_at": {
+          "category": "認可",
+          "description": "起案日時"
+        },
+        "decided_by_person_id": {
+          "category": "認可",
+          "description": "承認・却下した人事管理者・組織管理者（起案者とは別人）"
+        },
+        "decided_at": {
+          "category": "認可",
+          "description": "承認・却下の日時"
+        },
+        "superseded_at": {
+          "category": "認可",
+          "description": "同じ領域の次の承認で置き換えられた日時"
+        }
+      }
+    },
+    "org_editor_grant": {
+      "description": "組織とその配下の直接登録の担当の指名（ADR-0013）",
+      "columns": {
+        "id": {
+          "category": "システム管理用",
+          "description": "指名の行 ID（UUIDv7）"
+        },
+        "org_unit_id": {
+          "category": "認可",
+          "description": "担当する組織（配下を含む）"
+        },
+        "person_id": {
+          "category": "識別",
+          "description": "指名された人"
+        },
+        "valid_period": {
+          "category": "認可",
+          "description": "指名の期間（始まりと終わりを持つ）"
+        },
+        "granted_by_person_id": {
+          "category": "認可",
+          "description": "指名した人（組織長・組織管理者・人事管理者。自分は指名できない）"
+        },
+        "granted_at": {
+          "category": "認可",
+          "description": "指名した日時"
+        },
+        "revoked_by_person_id": {
+          "category": "認可",
+          "description": "取り消した人"
+        },
+        "revoked_at": {
+          "category": "認可",
+          "description": "取り消した日時"
         }
       }
     }

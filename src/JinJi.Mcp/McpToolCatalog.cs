@@ -38,6 +38,8 @@ public static class McpToolCatalog
         new ListFieldRegistrationsTool(),
         new ListGroupsTool(),
         new GetGroupTool(),
+        new ListPlansTool(),
+        new SavePlanTool(),
         new DraftFieldRegistrationTool(),
     ];
 

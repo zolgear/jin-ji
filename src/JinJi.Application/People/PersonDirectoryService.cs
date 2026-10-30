@@ -178,20 +178,41 @@ public sealed class PersonDirectoryService
         ViewerContext viewer,
         IReadOnlyCollection<Guid> personIds,
         string field,
+        CancellationToken cancellationToken) =>
+        (await VisibleFieldsAsync(viewer, personIds, null, cancellationToken)).Where(p => p.Value.Contains(field)).Select(p => p.Key).ToHashSet();
+
+    /// <summary>
+    /// その時点（既定は今日）に閲覧者に見える人と、その人ごとの見える項目（素案のシミュレーションで、見えない項目を出さないのに使う）。
+    /// 見えない人は含めない。値は返さず、監査ログにも残さない（呼び出し側が記録する）。
+    /// </summary>
+    public async Task<IReadOnlyDictionary<Guid, IReadOnlySet<string>>> VisibleFieldsAsync(
+        ViewerContext viewer,
+        IReadOnlyCollection<Guid> personIds,
+        DateOnly? asOf,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(viewer);
         ArgumentNullException.ThrowIfNull(personIds);
         var today = BusinessDate.Today(_timeProvider);
-        if (personIds.Count == 0)
+        var date = asOf ?? today;
+        if (personIds.Count == 0 || date > viewer.DisclosureHorizon(today))
         {
-            return new HashSet<Guid>();
+            return new Dictionary<Guid, IReadOnlySet<string>>();
         }
 
-        var (data, relations, projectionDate) = await LoadAsync(_snapshots, viewer, today, today, cancellationToken);
+        var (data, relations, projectionDate) = await LoadAsync(_snapshots, viewer, date, today, cancellationToken);
         var policies = await _policies.LoadActiveAsync(viewer, cancellationToken);
         var projector = new PersonProjector(new PolicyEvaluator(policies, new RelationEvaluator(relations)), data, projectionDate, _options.RetiredPublicDays);
-        return personIds.Where(id => projector.Project(viewer, id) is { } view && view.CanSee(field)).ToHashSet();
+        var result = new Dictionary<Guid, IReadOnlySet<string>>();
+        foreach (var id in personIds.Distinct())
+        {
+            if (projector.Project(viewer, id) is { } view)
+            {
+                result[id] = view.VisibleFields;
+            }
+        }
+
+        return result;
     }
 
     private async Task<T> RunAsync<T>(

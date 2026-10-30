@@ -21,6 +21,9 @@ public enum RetentionTarget
     UnboundLogin,
     ResetLink,
     StagingRow,
+
+    /// <summary>最後の更新から保持期限を過ぎた素案（申請版・登録の記録も一緒に消える。0023）。</summary>
+    Plan,
 }
 
 /// <summary>対象ごとの「これより前に終わった行を消す」時刻。</summary>
@@ -31,7 +34,8 @@ public sealed record RetentionCutoffs(
     DateTimeOffset ResetLinks,
     DateTimeOffset OAuthTokens,
     DateTimeOffset TokenFamilies,
-    DateTimeOffset PendingClients)
+    DateTimeOffset PendingClients,
+    DateTimeOffset Plans)
 {
     public static RetentionCutoffs From(RetentionOptions options, DateTimeOffset now)
     {
@@ -43,7 +47,8 @@ public sealed record RetentionCutoffs(
             now - options.ResetLinks,
             now - options.OAuthTokens,
             now - options.TokenFamilies,
-            now - options.PendingClients);
+            now - options.PendingClients,
+            now - options.Plans);
     }
 }
 
@@ -128,7 +133,7 @@ public sealed class RetentionService
     [
         RetentionTarget.AccessToken, RetentionTarget.RefreshToken, RetentionTarget.AuthorizationCode, RetentionTarget.TokenFamily,
         RetentionTarget.Consent, RetentionTarget.AuthorizationRequest, RetentionTarget.ClientAssertion, RetentionTarget.PendingClient,
-        RetentionTarget.UiSession, RetentionTarget.UnboundLogin, RetentionTarget.ResetLink,
+        RetentionTarget.UiSession, RetentionTarget.UnboundLogin, RetentionTarget.ResetLink, RetentionTarget.Plan,
     ];
 
     private readonly IRetentionStore _store;
@@ -223,6 +228,7 @@ public sealed class RetentionService
         RetentionTarget.UnboundLogin => "unbound_login",
         RetentionTarget.ResetLink => "account_reset_link",
         RetentionTarget.StagingRow => "staging_row",
+        RetentionTarget.Plan => "plan",
         _ => throw new ArgumentOutOfRangeException(nameof(target)),
     };
 }

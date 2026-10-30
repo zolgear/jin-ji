@@ -59,6 +59,9 @@ public sealed record RetentionOptions
     /// </summary>
     public TimeSpan PendingClients { get; init; } = TimeSpan.FromDays(30);
 
+    /// <summary>素案（最後の更新から。既定 365 日。ADR-0013 決定 8）。決める前に試す案なので、使われなくなったものを溜めない。</summary>
+    public TimeSpan Plans { get; init; } = TimeSpan.FromDays(365);
+
     /// <summary>1 回の DELETE で消す行数の上限（既定 5,000）。ロックを短くするため、上限まで消したら次の DELETE を別のトランザクションで行う。</summary>
     public int BatchSize { get; init; } = 5000;
 
@@ -79,6 +82,7 @@ public sealed record RetentionOptions
                  {
                      (nameof(UiSessions), UiSessions), (nameof(UnboundLogins), UnboundLogins), (nameof(ResetLinks), ResetLinks),
                      (nameof(OAuthTokens), OAuthTokens), (nameof(TokenFamilies), TokenFamilies), (nameof(PendingClients), PendingClients),
+                     (nameof(Plans), Plans),
                  })
         {
             // 1 日より短くしても DB の下限（0014）で消えない行があり、設定と実際が食い違うので受け付けない

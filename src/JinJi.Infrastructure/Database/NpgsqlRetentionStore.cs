@@ -59,8 +59,8 @@ public sealed class NpgsqlRetentionStore : IRetentionStore
             """
             INSERT INTO retention_run (id, trigger, outcome, started_at, finished_at, ui_session, unbound_login, account_reset_link,
                                        oauth_authorization_request, oauth_authorization_code, oauth_access_token, oauth_refresh_token,
-                                       oauth_token_family, oauth_consent, oauth_client_assertion, pending_client, staging_row)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+                                       oauth_token_family, oauth_consent, oauth_client_assertion, pending_client, staging_row, plan)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
             """);
         object[] values =
         [
@@ -69,6 +69,7 @@ public sealed class NpgsqlRetentionStore : IRetentionStore
             Count(RetentionTarget.AuthorizationRequest), Count(RetentionTarget.AuthorizationCode), Count(RetentionTarget.AccessToken),
             Count(RetentionTarget.RefreshToken), Count(RetentionTarget.TokenFamily), Count(RetentionTarget.Consent),
             Count(RetentionTarget.ClientAssertion), Count(RetentionTarget.PendingClient), Count(RetentionTarget.StagingRow),
+            Count(RetentionTarget.Plan),
         ];
         foreach (var value in values)
         {
@@ -139,6 +140,7 @@ public sealed class NpgsqlRetentionStore : IRetentionStore
             """,
             c.UnboundLogins, c.UnboundLogins),
         RetentionTarget.ResetLink => ("account_reset_link", "t.expires_at < $1 AND t.expires_at <= now()", c.ResetLinks, c.ResetLinks),
+        RetentionTarget.Plan => ("plan", "t.updated_at < $1", c.Plans, c.Plans),
         _ => throw new ArgumentOutOfRangeException(nameof(target), target, "この保存先では消さない対象です（staging は取込の保存先が消す）。"),
     };
 }

@@ -699,6 +699,111 @@ export interface components {
       position_title: string | null;
       document_number: string | null;
     };
+    PlanApprovalRequest: {
+      approved_on?: string | null; // date
+      reference?: string | null;
+    };
+    PlanApprovalResponse: {
+      id: string; // uuid
+      version_no: number; // int32
+      approved_on: string; // date
+      reference: string | null;
+      recorded_at: string; // date-time
+    };
+    PlanChangeDto: {
+      kind?: "assignment" | "person" | "org_update" | "org_create" | "org_abolish" | "group_join" | "group_leave" | null;
+      target_id?: string | null; // uuid
+      values?: {
+        [key: string]: string;
+      } | null;
+    };
+    PlanFieldChangeResponse: {
+      index: number; // int32
+      target_id: string; // uuid
+      field: string;
+      old: string | null;
+      new: string | null;
+    };
+    PlanGroupChangeResponse: {
+      index: number; // int32
+      group_id: string; // uuid
+      person_id: string; // uuid
+      join: boolean;
+      role: "owner" | "lead" | "member" | null;
+    };
+    PlanMoveResponse: {
+      index: number; // int32
+      person_id: string; // uuid
+      from_unit_id: string | null; // uuid
+      to_unit_id: string; // uuid
+      from_title: string | null;
+      to_title: string | null;
+    };
+    PlanRegistrationResponse: {
+      registration: components["schemas"]["FieldRegistrationResponse"] | null;
+      group_changes: number; // int32
+    };
+    PlanRequest: {
+      title?: string | null;
+      note?: string | null;
+      base_date?: string | null; // date
+      effective_date?: string | null; // date
+      changes?: components["schemas"]["PlanChangeDto"][] | null;
+    };
+    PlanResponse: {
+      id: string; // uuid
+      title: string;
+      note: string | null;
+      base_date: string; // date
+      effective_date: string; // date
+      changes: components["schemas"]["PlanChangeDto"][];
+      owner: string; // uuid
+      shared_with: string[];
+      created_at: string; // date-time
+      updated_at: string; // date-time
+    };
+    PlanSimulationResponse: {
+      base_date: string; // date
+      units: components["schemas"]["PlanUnitResponse"][];
+      moves: components["schemas"]["PlanMoveResponse"][];
+      person_changes: components["schemas"]["PlanFieldChangeResponse"][];
+      org_changes: components["schemas"]["PlanFieldChangeResponse"][];
+      group_changes: components["schemas"]["PlanGroupChangeResponse"][];
+      warnings: components["schemas"]["PlanWarningResponse"][];
+    };
+    PlanUnitResponse: {
+      id: string; // uuid
+      code: string;
+      name: string;
+      short_name: string | null;
+      level_key: string | null;
+      parent_id: string | null; // uuid
+      head_person_id: string | null; // uuid
+      site_id: string | null; // uuid
+      state: "unchanged" | "created" | "changed" | "abolished";
+      before: number; // int32
+      after: number; // int32
+    };
+    PlanVersionResponse: {
+      id: string; // uuid
+      plan_id: string; // uuid
+      version_no: number; // int32
+      title: string;
+      note: string | null;
+      base_date: string; // date
+      effective_date: string; // date
+      changes: components["schemas"]["PlanChangeDto"][];
+      created_by: string; // uuid
+      created_at: string; // date-time
+      approved_on: string | null; // date
+      approval_reference: string | null;
+      approval_recorded_by: string | null; // uuid
+      approval_recorded_by_client: string | null;
+    };
+    PlanWarningResponse: {
+      index: number; // int32
+      message: string;
+    };
     PresenceItemResponse: {
       person: components["schemas"]["PersonResponse"];
       seat_id: string | null; // uuid
@@ -778,6 +883,10 @@ export interface components {
       fields: string[] | null;
       mcp_tools: string[] | null;
       rate_limit_per_client: number | null; // int32
+    };
+    RegisterPlanRequest: {
+      version_no?: number | null; // int32
+      indexes?: number[] | null;
     };
     RegisterWebhookRequest: {
       url: string | null;
@@ -867,6 +976,9 @@ export interface components {
       provider: string;
       methods: string[];
       roles: string[];
+    };
+    SharePlanRequest: {
+      person_ids?: string[] | null;
     };
     SiteListResponse: {
       as_of: string; // date
@@ -1658,6 +1770,167 @@ export interface paths {
       };
       body: never;
       response: components["schemas"]["ManagerResponse"];
+    };
+  };
+  "/api/v1/plans": {
+    /** 素案の一覧（自分の素案と共有された素案。更新の新しい順）（ListPlans） */
+    get: {
+      path: Record<string, never>;
+      query: Record<string, never>;
+      body: never;
+      response: components["schemas"]["PlanResponse"][];
+    };
+    /** 素案を作る（人・AI エージェント。公開側は変わらない）（CreatePlan） */
+    post: {
+      path: Record<string, never>;
+      query: Record<string, never>;
+      body: components["schemas"]["PlanRequest"];
+      response: components["schemas"]["PlanResponse"];
+    };
+  };
+  "/api/v1/plans/{planId}": {
+    /** 素案を参照する（GetPlan） */
+    get: {
+      path: {
+        planId: string;
+      };
+      query: Record<string, never>;
+      body: never;
+      response: components["schemas"]["PlanResponse"];
+    };
+  };
+  "/api/v1/plans/{planId}/changes.csv": {
+    /** 人事へ渡す変更の一覧（CSV。UTF-8 BOM）（ExportPlanChanges） */
+    get: {
+      path: {
+        planId: string;
+      };
+      query: Record<string, never>;
+      body: never;
+      response: void;
+    };
+  };
+  "/api/v1/plans/{planId}/delete": {
+    /** 素案を消す（作成者。申請版も消える）（DeletePlan） */
+    post: {
+      path: {
+        planId: string;
+      };
+      query: Record<string, never>;
+      body: never;
+      response: void;
+    };
+  };
+  "/api/v1/plans/{planId}/register": {
+    /** 素案（か承認済みの申請版）の変更を、操作した人の範囲で直接登録にする（RegisterPlan） */
+    post: {
+      path: {
+        planId: string;
+      };
+      query: Record<string, never>;
+      body: components["schemas"]["RegisterPlanRequest"] | null;
+      response: components["schemas"]["PlanRegistrationResponse"];
+    };
+  };
+  "/api/v1/plans/{planId}/share": {
+    /** 素案を共有する人を置き換える（作成者の人。100 人まで）（SharePlan） */
+    post: {
+      path: {
+        planId: string;
+      };
+      query: Record<string, never>;
+      body: components["schemas"]["SharePlanRequest"];
+      response: components["schemas"]["PlanResponse"];
+    };
+  };
+  "/api/v1/plans/{planId}/simulation": {
+    /** 素案を基準日の組織に重ねた姿（今の姿との比較・異動・人数・警告）（SimulatePlan） */
+    get: {
+      path: {
+        planId: string;
+      };
+      query: Record<string, never>;
+      body: never;
+      response: components["schemas"]["PlanSimulationResponse"];
+    };
+  };
+  "/api/v1/plans/{planId}/update": {
+    /** 素案の中身を置き換える（作成者）（UpdatePlan） */
+    post: {
+      path: {
+        planId: string;
+      };
+      query: Record<string, never>;
+      body: components["schemas"]["PlanRequest"];
+      response: components["schemas"]["PlanResponse"];
+    };
+  };
+  "/api/v1/plans/{planId}/versions": {
+    /** 申請版の一覧（版番号の順）（ListPlanVersions） */
+    get: {
+      path: {
+        planId: string;
+      };
+      query: Record<string, never>;
+      body: never;
+      response: components["schemas"]["PlanVersionResponse"][];
+    };
+    /** 素案を固定して次の版番号の申請版にする（作成者）（CreatePlanVersion） */
+    post: {
+      path: {
+        planId: string;
+      };
+      query: Record<string, never>;
+      body: never;
+      response: components["schemas"]["PlanVersionResponse"];
+    };
+  };
+  "/api/v1/plans/{planId}/versions/{versionNo}": {
+    /** 申請版を参照する（GetPlanVersion） */
+    get: {
+      path: {
+        planId: string;
+        versionNo: number;
+      };
+      query: Record<string, never>;
+      body: never;
+      response: components["schemas"]["PlanVersionResponse"];
+    };
+  };
+  "/api/v1/plans/{planId}/versions/{versionNo}/approval": {
+    /** 申請版の承認の結果を記録する（1 回だけ）（RecordPlanVersionApproval） */
+    post: {
+      path: {
+        planId: string;
+        versionNo: number;
+      };
+      query: Record<string, never>;
+      body: components["schemas"]["PlanApprovalRequest"];
+      response: components["schemas"]["PlanApprovalResponse"];
+    };
+  };
+  "/api/v1/plans/{planId}/versions/{versionNo}/changes.csv": {
+    /** 申請版の変更の一覧（CSV。UTF-8 BOM）（ExportPlanVersionChanges） */
+    get: {
+      path: {
+        planId: string;
+        versionNo: number;
+      };
+      query: Record<string, never>;
+      body: never;
+      response: void;
+    };
+  };
+  "/api/v1/plans/{planId}/versions/{versionNo}/simulation": {
+    /** 申請版を基準日の組織に重ねた姿（提案資料の元）（SimulatePlanVersion） */
+    get: {
+      path: {
+        planId: string;
+        versionNo: number;
+      };
+      query: Record<string, never>;
+      body: never;
+      response: components["schemas"]["PlanSimulationResponse"];
     };
   };
   "/api/v1/seats": {

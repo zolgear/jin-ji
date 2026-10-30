@@ -95,6 +95,8 @@ internal sealed record McpPerson
 
     public IReadOnlyList<McpPersonnelAction>? PersonnelActions { get; init; }
 
+    public IReadOnlyList<McpGroupMembership>? Groups { get; init; }
+
     public IReadOnlyList<McpNameVersion>? NameHistory { get; init; }
 
     public static McpPerson From(PersonView view)
@@ -121,6 +123,7 @@ internal sealed record McpPerson
             Workplace = McpWorkplaceRef.From(view.Workplace),
             Seat = McpSeatRef.From(view.Seat),
             Presence = McpPresenceRef.From(view.Presence),
+            Groups = view.Groups?.Select(g => new McpGroupMembership(g.GroupId, g.Name, GroupCodes.Of(g.Kind), GroupCodes.Of(g.Role), g.Managed)).ToList(),
             EmploymentType = view.EmploymentType,
             JobType = view.JobType,
             HireDate = view.HireDate,
@@ -381,6 +384,7 @@ internal sealed record McpChange(string Type, Guid Id)
                 ChangeEntityType.Person => "person",
                 ChangeEntityType.OrgUnit => "org_unit",
                 ChangeEntityType.Site => "site",
+                ChangeEntityType.Group => "group",
                 _ => throw new ArgumentOutOfRangeException(nameof(change)),
             },
             change.EntityId);
@@ -549,3 +553,5 @@ internal sealed record McpCorrection(
             view.ClosedNote);
     }
 }
+
+internal sealed record McpGroupMembership(Guid GroupId, string Name, string Kind, string Role, bool Managed);

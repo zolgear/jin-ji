@@ -92,6 +92,9 @@ public sealed class PersonView
 
     public IReadOnlyList<PersonnelActionView>? PersonnelActions { get; internal init; }
 
+    /// <summary>所属するグループと役割（全社公開のグループだけ。メンバーだけのグループはグループの API でメンバーにだけ見せる）。</summary>
+    public IReadOnlyList<GroupMembershipView>? Groups { get; internal init; }
+
     public IReadOnlyList<NameVersionView>? NameHistory { get; internal init; }
 
     /// <summary>項目が見えるか。</summary>
@@ -99,6 +102,10 @@ public sealed class PersonView
 }
 
 public sealed record LegalEntityView(Guid Id, string Code, string Name);
+
+/// <summary>人の所属するグループ（チーム・プロジェクトなど。ADR-0014）。</summary>
+/// <param name="Managed">アクセス権の管理の対象か。</param>
+public sealed record GroupMembershipView(Guid GroupId, string Name, GroupKind Kind, GroupRole Role, bool Managed);
 
 /// <summary>拠点（拠点の情報は組織と同じく全社公開。人の拠点として見せるかは項目 site の判定による）。</summary>
 /// <param name="PrefectureCode">所在の都道府県のコード（JIS X 0401）。国外は null。</param>
@@ -342,9 +349,20 @@ public sealed class PersonProjector
             Assignments = See(PersonFields.Assignments) ? ProjectAssignments(personId, hideFuture) : null,
             Managers = See(PersonFields.Managers) ? [.. _data.DirectManagersOf(personId).Order()] : null,
             PersonnelActions = See(PersonFields.PersonnelActions) ? ProjectActions(person, viewer.IsHrAdmin) : null,
+            Groups = See(PersonFields.Groups) ? ProjectGroups(personId) : null,
             NameHistory = See(PersonFields.NameHistory) && viewer.IsHrAdmin ? ProjectNameHistory(person) : null,
         };
     }
+
+    /// <summary>所属するグループ（全社公開のグループだけ。名前の順）。</summary>
+    private IReadOnlyList<GroupMembershipView> ProjectGroups(Guid personId) =>
+    [
+        .. _data.Groups.GroupsOf(personId)
+            .Select(m => (Membership: m, Group: _data.Groups.Find(m.GroupId)!))
+            .Where(x => x.Group.Visibility == GroupVisibility.All)
+            .OrderBy(x => x.Group.Name, StringComparer.Ordinal)
+            .Select(x => new GroupMembershipView(x.Group.Id, x.Group.Name, x.Group.Kind, x.Membership.Role, x.Group.Managed)),
+    ];
 
     /// <summary>今日の所在の投影（所在の日が時点・今日と同じで、階がその時点にあるときだけ）。席は項目 seat も見えるときだけ。</summary>
     private PresenceView? ProjectPresence(Guid personId, bool seeSeat)

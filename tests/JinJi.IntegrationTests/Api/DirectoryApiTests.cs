@@ -507,7 +507,7 @@ public sealed class DirectoryApiTests(DirectoryFixtureDatabase db) : IClassFixtu
         Assert.Equal(["active", "suspended", "null"], Enum("PersonResponse", "account_status"));
         Assert.Contains("position_appointment", Enum("PersonnelActionResponse", "action_type"));
         Assert.Equal(["primary", "concurrent", "null"], Enum("PersonnelActionResponse", "assignment_type"));
-        Assert.Equal(["person", "org_unit", "site"], Enum("ChangeResponse", "type"));
+        Assert.Equal(["person", "org_unit", "site", "group"], Enum("ChangeResponse", "type"));
         Assert.Equal(SiteCodes.Types, Enum("SiteRefResponse", "type"));
         Assert.Equal(SiteCodes.Types, Enum("SiteResponse", "type"));
         Assert.Equal(["concurrent", "secondment"], Enum("OrgLinkResponse", "kind"));

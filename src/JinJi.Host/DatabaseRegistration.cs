@@ -85,6 +85,10 @@ internal static class DatabaseRegistration
         services.TryAddSingleton<Application.FieldManagement.IFieldRegistrationStore, NpgsqlFieldRegistrationStore>();
         services.TryAddSingleton<Application.FieldManagement.FieldRegistrationService>();
 
+        // グループ（チーム・プロジェクト。0022。ADR-0014）
+        services.TryAddSingleton<Application.Groups.IGroupStore, NpgsqlGroupStore>();
+        services.TryAddSingleton<Application.Groups.GroupService>();
+
         // 社内システムへの Webhook（0018。設定 JinJi:Webhooks は AddJinJiSettings が登録する）。収集と送信はワーカー、登録の管理は API の役割（OAuthRegistration）。
         // 受け手のクライアントは api_client から読む（認可サーバーを使わない構成でも読めるように、クライアントの表の読み取りだけを登録する）。
         // 署名の鍵の復号は Data Protection（人のログインの役割、またはワーカーに Data Protection の設定があるとき。WebhookRegistration）

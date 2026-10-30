@@ -17,7 +17,7 @@ public sealed record WebhookEvent(ChangeEntityType Type, Guid Id, DateOnly Effec
 ///   "events": [ { "type": "person", "id": "…", "effective_date": "2027-04-01", "withdrawn": false } ],
 ///   "changes_since": "&lt;変更フィードのカーソル&gt;" }
 /// { "id": "…", "type": "changes.summary", "created_at": "…", "client_id": "…",
-///   "summary": { "total": 4200, "person": 4000, "org_unit": 199, "site": 1, "withdrawn": 0,
+///   "summary": { "total": 4200, "person": 4000, "org_unit": 199, "site": 1, "group": 0, "withdrawn": 0,
 ///                "first_effective_date": "…", "last_effective_date": "…" },
 ///   "changes_since": "…" }
 /// { "id": "…", "type": "ping", "created_at": "…", "client_id": "…" }
@@ -69,6 +69,7 @@ public static class WebhookPayload
             writer.WriteNumber("person", events.Count(e => e.Type == ChangeEntityType.Person));
             writer.WriteNumber("org_unit", events.Count(e => e.Type == ChangeEntityType.OrgUnit));
             writer.WriteNumber("site", events.Count(e => e.Type == ChangeEntityType.Site));
+            writer.WriteNumber("group", events.Count(e => e.Type == ChangeEntityType.Group));
             writer.WriteNumber("withdrawn", events.Count(e => e.Withdrawn));
             if (events.Count > 0)
             {

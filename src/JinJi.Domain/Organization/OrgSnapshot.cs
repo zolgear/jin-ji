@@ -65,11 +65,13 @@ public sealed class OrgSnapshot
         Dictionary<Guid, IReadOnlyList<Assignment>> assignmentsByPerson,
         IReadOnlyList<OrgLevelScheme> levelSchemes,
         Dictionary<Guid, Site> sites,
-        WorkplaceMap workplace)
+        WorkplaceMap workplace,
+        GroupMap groups)
     {
         AsOf = asOf;
         _sites = sites;
         Workplace = workplace;
+        Groups = groups;
         _legalEntities = legalEntities;
         _units = units;
         _people = people;
@@ -108,10 +110,14 @@ public sealed class OrgSnapshot
     /// <summary>その時点の建物・階・配置図・人の席（建物・フロアモード。0019）。</summary>
     public WorkplaceMap Workplace { get; }
 
+    /// <summary>その時点のグループとメンバー（チーム・プロジェクト。ADR-0014）。</summary>
+    public GroupMap Groups { get; }
+
     /// <summary>スナップショットを作る。</summary>
     /// <param name="levelSchemes">有効な段の定義。既定（法人 null）は高々 1 つ、法人ごとにも高々 1 つ（重複は先のものを使う）。</param>
     /// <param name="sites">その時点で有効な拠点（省略は拠点なし）。</param>
     /// <param name="workplace">その時点の建物・階・配置図・人の席（省略は建物なし）。</param>
+    /// <param name="groups">その時点のグループとメンバー（省略はグループなし）。</param>
     public static OrgSnapshot Create(
         DateOnly asOf,
         IEnumerable<LegalEntity> legalEntities,
@@ -120,7 +126,8 @@ public sealed class OrgSnapshot
         IEnumerable<Assignment> assignments,
         IEnumerable<OrgLevelScheme> levelSchemes,
         IEnumerable<Site>? sites = null,
-        WorkplaceMap? workplace = null)
+        WorkplaceMap? workplace = null,
+        GroupMap? groups = null)
     {
         ArgumentNullException.ThrowIfNull(legalEntities);
         ArgumentNullException.ThrowIfNull(units);
@@ -136,14 +143,15 @@ public sealed class OrgSnapshot
             .ToDictionary(g => g.Key, g => (IReadOnlyList<Assignment>)[.. g.OrderBy(a => a.Type)]);
 
         return new OrgSnapshot(
-            asOf, legalEntities.ToDictionary(e => e.Id), unitMap, peopleMap, byPerson, [.. levelSchemes], (sites ?? []).ToDictionary(s => s.Id), workplace ?? WorkplaceMap.Empty);
+            asOf, legalEntities.ToDictionary(e => e.Id), unitMap, peopleMap, byPerson, [.. levelSchemes], (sites ?? []).ToDictionary(s => s.Id), workplace ?? WorkplaceMap.Empty,
+            groups ?? GroupMap.Empty);
     }
 
     /// <summary>同じ組織・人のデータで、段の定義だけを差し替えたスナップショットを作る（段の定義の変更の検査に使う）。</summary>
     public OrgSnapshot WithLevelSchemes(IEnumerable<OrgLevelScheme> levelSchemes)
     {
         ArgumentNullException.ThrowIfNull(levelSchemes);
-        return new OrgSnapshot(AsOf, _legalEntities, _units, _people, _assignmentsByPerson, [.. levelSchemes], _sites, Workplace);
+        return new OrgSnapshot(AsOf, _legalEntities, _units, _people, _assignmentsByPerson, [.. levelSchemes], _sites, Workplace, Groups);
     }
 
     /// <summary>法人に効く段の定義（法人の定義、無ければグループ共通の既定）。</summary>

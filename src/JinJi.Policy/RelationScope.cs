@@ -28,6 +28,9 @@ public enum RelationScopeKind
 
     /// <summary>対象者が閲覧者の上長系列。</summary>
     ManagersChain,
+
+    /// <summary>閲覧者と対象者が同じ管理対象のグループのメンバー（チーム・プロジェクト。ADR-0014）。</summary>
+    SameGroup,
 }
 
 /// <summary>
@@ -36,7 +39,7 @@ public enum RelationScopeKind
 /// <remarks>
 /// 課内・部内のような組織の段による範囲は固定せず、「同じ〈段〉内」= <c>same_level(段のキー)</c> で表す。段は法人ごとの段の定義で解決する。
 /// 表記（<see cref="RelationScopes.ToCode"/>）は <c>none</c>・<c>self</c>・<c>same_level(section)</c>・<c>legal_entity</c>・<c>group</c>・
-/// <c>direct_reports</c>・<c>subordinates</c>・<c>managers_chain</c>。
+/// <c>direct_reports</c>・<c>subordinates</c>・<c>managers_chain</c>・<c>same_group</c>（管理対象のグループの同じメンバー。全社公開のグループだけで判定する）。
 /// </remarks>
 public readonly record struct RelationScope
 {
@@ -64,6 +67,8 @@ public readonly record struct RelationScope
     public static RelationScope Subordinates { get; } = new(RelationScopeKind.Subordinates, null);
 
     public static RelationScope ManagersChain { get; } = new(RelationScopeKind.ManagersChain, null);
+
+    public static RelationScope SameGroup { get; } = new(RelationScopeKind.SameGroup, null);
 
     /// <summary>同じ〈段〉内。</summary>
     public static RelationScope SameLevel(string levelKey)
@@ -108,6 +113,7 @@ public static class RelationScopes
         [RelationScopeKind.DirectReports] = "direct_reports",
         [RelationScopeKind.Subordinates] = "subordinates",
         [RelationScopeKind.ManagersChain] = "managers_chain",
+        [RelationScopeKind.SameGroup] = "same_group",
     };
 
     private static readonly Dictionary<string, RelationScopeKind> KindsByCode = KindCodes.ToDictionary(p => p.Value, p => p.Key, StringComparer.Ordinal);
@@ -225,6 +231,7 @@ public sealed class RelationEvaluator
             RelationScopeKind.DirectReports => _snapshot.DirectManagersOf(targetPersonId).Contains(viewer),
             RelationScopeKind.Subordinates => _snapshot.ManagersChainOf(targetPersonId).Contains(viewer),
             RelationScopeKind.ManagersChain => _snapshot.ManagersChainOf(viewer).Contains(targetPersonId),
+            RelationScopeKind.SameGroup => _snapshot.Groups.ShareManagedGroup(viewer, targetPersonId),
             _ => false,
         };
     }

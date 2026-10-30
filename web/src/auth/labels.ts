@@ -30,6 +30,7 @@ export const FIELD_LABELS: Record<string, string> = {
   assignments: "所属・役職（主務・兼務・出向）",
   managers: "直属の上長",
   personnel_actions: "発令",
+  groups: "グループ",
   name_history: "氏名の履歴（人事管理者だけ）",
 };
 
@@ -78,6 +79,8 @@ export const MCP_TOOLS: McpToolInfo[] = [
   { name: "list_review_proposals", label: "取込の要確認の根拠", kind: "read" },
   { name: "list_corrections", label: "修正依頼の一覧（委任元に見える範囲）", kind: "read" },
   { name: "list_field_registrations", label: "組織・人の直接登録の一覧", kind: "read" },
+  { name: "list_groups", label: "チーム・プロジェクトのグループの一覧", kind: "read" },
+  { name: "get_group", label: "グループとメンバー", kind: "read" },
   { name: "suggest_review_resolution", label: "要確認への解決の推定（作業領域だけに書く）", kind: "propose" },
   { name: "report_correction", label: "値の誤りの報告（修正依頼。公開データは変えない）", kind: "propose" },
   { name: "draft_field_registration", label: "組織・人の変更の下書き（反映は委任元の確定）", kind: "propose" },

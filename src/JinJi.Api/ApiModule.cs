@@ -124,6 +124,7 @@ public static partial class ApiModule
         SyncEndpoints.Map(api);
         CorrectionEndpoints.Map(api);
         FieldEndpoints.Map(api);
+        GroupEndpoints.Map(api);
         return endpoints;
     }
 

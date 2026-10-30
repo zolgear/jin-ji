@@ -125,6 +125,7 @@ public static partial class ApiModule
         CorrectionEndpoints.Map(api);
         FieldEndpoints.Map(api);
         GroupEndpoints.Map(api);
+        PlanEndpoints.Map(api);
         return endpoints;
     }
 

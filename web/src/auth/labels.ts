@@ -81,9 +81,11 @@ export const MCP_TOOLS: McpToolInfo[] = [
   { name: "list_field_registrations", label: "組織・人の直接登録の一覧", kind: "read" },
   { name: "list_groups", label: "チーム・プロジェクトのグループの一覧", kind: "read" },
   { name: "get_group", label: "グループとメンバー", kind: "read" },
+  { name: "list_plans", label: "組織・異動の素案の一覧", kind: "read" },
   { name: "suggest_review_resolution", label: "要確認への解決の推定（作業領域だけに書く）", kind: "propose" },
   { name: "report_correction", label: "値の誤りの報告（修正依頼。公開データは変えない）", kind: "propose" },
   { name: "draft_field_registration", label: "組織・人の変更の下書き（反映は委任元の確定）", kind: "propose" },
+  { name: "save_plan", label: "組織・異動の素案の保存（公開側は変えない）", kind: "propose" },
 ];
 
 export function mcpToolLabel(name: string): string {

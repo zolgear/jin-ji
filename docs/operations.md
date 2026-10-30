@@ -50,6 +50,8 @@ jin-ji を動かし続けるための設定と保守。ポート・待ち受け�
 | `JinJi:Retention:Interval` / `InitialDelay` | `01:00:00` / `00:05:00` | 定期実行の間隔（1 分〜1 日）と、起動から最初の実行までの待ち |
 | `JinJi:Retention:UiSessions` / `UnboundLogins` / `ResetLinks` | `30.00:00:00` / `90.00:00:00` / `30.00:00:00` | セッション・未紐付けのログイン・リンクの保持期間（1 日〜3660 日。終了・最後の試行・期限から） |
 | `JinJi:Retention:OAuthTokens` / `TokenFamilies` / `PendingClients` | `7.00:00:00` / `30.00:00:00` / `30.00:00:00` | 認可の要求・コード・トークン、系列と同意、承認されないままの CIMD のクライアントの保持期間 |
+| `JinJi:Retention:Plans` | `365.00:00:00` | 素案の保持期間（最後の更新から。申請版・登録の記録も消える） |
+| `JinJi:Plans:ApprovalClients` | 空 | 申請版の承認の結果を記録できる社内システム（ワークフロー製品）のクライアント ID の配列。空なら人だけが記録する |
 | `JinJi:Retention:BatchSize` | `5000` | 1 回の DELETE で消す行数の上限（100〜100,000） |
 | `JinJi:Corrections:MaxReportsPerDay` | `20` | 修正依頼の起票・賛同の 1 人あたり 24 時間の上限（1〜1000） |
 | `JinJi:Corrections:NewWithinDays` / `StaleAfterDays` | `7` / `14` | 画面内の通知の「新しい依頼」「長く放置された依頼」の日数 |

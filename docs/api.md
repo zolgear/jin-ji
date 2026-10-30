@@ -338,6 +338,26 @@ jin-ji の値の誤りを、人事パッケージで直せる人に伝える（�
 | `POST /groups/{id}/members/{person_id}/role` | 今日から役割を変える（`{"role"}`） | 同上 | 同上 | `field` |
 | `POST /groups/{id}/members/{person_id}/remove` | 今日でメンバーから外す | 編集できる人と、本人（管理対象のグループを除く） | 同上 | `field` |
 
+### 素案・申請版（ADR-0013 決定 8・9）
+
+来期の組織・異動の計画などを、公開側を変えずに試す。見えるのは作成者と共有した人だけ。規則は [アーキテクチャ概要 §5.9](architecture/overview.md#59-素案申請版提案資料adr-0013)。
+
+| エンドポイント | 内容 | 使える人 | 応答 | 種別 |
+| --- | --- | --- | --- | --- |
+| `GET /plans` | 一覧 | 作成者・共有された人 | `PlanResponse` の配列 | `field` |
+| `POST /plans` | 作成（`{"title", "note", "base_date", "effective_date", "changes"}`） | 人・AI エージェント（委任元の名義） | `PlanResponse` | `field` |
+| `GET /plans/{id}` | 参照 | 作成者・共有された人 | `PlanResponse` | `field` |
+| `POST /plans/{id}/update` | 中身を置き換える | 作成者 | `PlanResponse` | `field` |
+| `POST /plans/{id}/share` | 共有する人を置き換える（`{"person_ids"}`。100 人まで） | 作成者の人 | `PlanResponse` | `field` |
+| `POST /plans/{id}/delete` | 消す（申請版も消える） | 作成者 | 204 | `field` |
+| `GET /plans/{id}/simulation` | 基準日の組織に重ねた姿（組織ごとの人数の増減・異動・項目の変更・グループ・警告） | 作成者・共有された人 | `PlanSimulationResponse`（人は ID だけ。閲覧者に見える項目だけ） | `field` |
+| `GET /plans/{id}/changes.csv` | 人事へ渡す変更の一覧 | 同上 | CSV（UTF-8 BOM） | `field` |
+| `POST /plans/{id}/versions` | 申請版にする（次の版番号。中身を固定） | 作成者 | `PlanVersionResponse` | `field` |
+| `GET /plans/{id}/versions`・`/versions/{no}` | 申請版の一覧・参照 | 作成者・共有された人 | `PlanVersionResponse` | `field` |
+| `GET /plans/{id}/versions/{no}/simulation`・`/changes.csv` | 申請版の提案資料の元・CSV | 同上 | 同上 | `field` |
+| `POST /plans/{id}/versions/{no}/approval` | 承認の結果を記録する（`{"approved_on", "reference"}`。1 回だけ） | 申請版の組織すべての範囲を持つ人か、`JinJi:Plans:ApprovalClients` の社内システム | `PlanApprovalResponse`（中身は返さない） | `field` |
+| `POST /plans/{id}/register` | 直接登録にする（`{"version_no", "indexes"}`） | 範囲を持つ人（申請版からは承認済みのものだけ） | `PlanRegistrationResponse` | `field` |
+
 ### 取込（変更提案）
 
 | メソッドとパス | 用途 | 認可 | 応答の要点 | 種別 |
@@ -549,6 +569,8 @@ MCP のポート（既定 28090）の `POST /mcp`（Streamable HTTP。セッシ�
 | `report_correction` | `jinji.propose` | `correction` | `person_id`・`field`・`reason`・`suggested_value` | 修正依頼の起票（委任元の名義。jin-ji の公開データは変わらない） |
 | `list_groups` | `jinji.read` | `org_read` | `kind`・`person_id`・`owner_org_unit_id` | チーム・プロジェクトのグループの一覧（委任元に見えるもの） |
 | `get_group` | `jinji.read` | `org_read` | `group_id` | グループと今日のメンバー（委任元に項目 `groups` が見える人だけ） |
+| `list_plans` | `jinji.read` | `field` | — | 素案の一覧（委任元の素案と共有された素案） |
+| `save_plan` | `jinji.propose` | `field` | `title`・`note`・`base_date`・`effective_date`・`changes` | 素案の保存（委任元の名義。公開側は変わらない） |
 | `list_field_registrations` | `jinji.read` | `field` | `mine`・`status` | 直接登録の一覧（委任元の登録・同意した登録・委任元の範囲の組織の登録） |
 | `draft_field_registration` | `jinji.propose` | `field` | `effective_date`・`note`・`changes` | 異動・組織の変更の下書き（委任元の名義。反映は委任元の人の確定だけ。ADR-0013） |
 

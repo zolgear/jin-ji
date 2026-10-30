@@ -5247,6 +5247,1227 @@
         }
       }
     },
+    "/api/v1/plans": {
+      "get": {
+        "tags": [
+          "PlanEndpoints"
+        ],
+        "summary": "素案の一覧（自分の素案と共有された素案。更新の新しい順）",
+        "operationId": "ListPlans",
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PlanResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "PlanEndpoints"
+        ],
+        "summary": "素案を作る（人・AI エージェント。公開側は変わらない）",
+        "description": "changes は直接登録と同じ形（kind: assignment / person / org_update / org_create / org_abolish）とグループの加入・脱退（group_join / group_leave。target_id はグループ、values に person_id・role）。500 件まで。",
+        "operationId": "CreatePlan",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlanRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/plans/{planId}": {
+      "get": {
+        "tags": [
+          "PlanEndpoints"
+        ],
+        "summary": "素案を参照する",
+        "operationId": "GetPlan",
+        "parameters": [
+          {
+            "name": "planId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/plans/{planId}/update": {
+      "post": {
+        "tags": [
+          "PlanEndpoints"
+        ],
+        "summary": "素案の中身を置き換える（作成者）",
+        "operationId": "UpdatePlan",
+        "parameters": [
+          {
+            "name": "planId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlanRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/plans/{planId}/share": {
+      "post": {
+        "tags": [
+          "PlanEndpoints"
+        ],
+        "summary": "素案を共有する人を置き換える（作成者の人。100 人まで）",
+        "operationId": "SharePlan",
+        "parameters": [
+          {
+            "name": "planId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SharePlanRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/plans/{planId}/delete": {
+      "post": {
+        "tags": [
+          "PlanEndpoints"
+        ],
+        "summary": "素案を消す（作成者。申請版も消える）",
+        "operationId": "DeletePlan",
+        "parameters": [
+          {
+            "name": "planId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/plans/{planId}/simulation": {
+      "get": {
+        "tags": [
+          "JinJi.IntegrationTests"
+        ],
+        "summary": "素案を基準日の組織に重ねた姿（今の姿との比較・異動・人数・警告）",
+        "operationId": "SimulatePlan",
+        "parameters": [
+          {
+            "name": "planId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanSimulationResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/plans/{planId}/changes.csv": {
+      "get": {
+        "tags": [
+          "JinJi.IntegrationTests"
+        ],
+        "summary": "人事へ渡す変更の一覧（CSV。UTF-8 BOM）",
+        "operationId": "ExportPlanChanges",
+        "parameters": [
+          {
+            "name": "planId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/plans/{planId}/versions": {
+      "post": {
+        "tags": [
+          "PlanEndpoints"
+        ],
+        "summary": "素案を固定して次の版番号の申請版にする（作成者）",
+        "operationId": "CreatePlanVersion",
+        "parameters": [
+          {
+            "name": "planId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanVersionResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "PlanEndpoints"
+        ],
+        "summary": "申請版の一覧（版番号の順）",
+        "operationId": "ListPlanVersions",
+        "parameters": [
+          {
+            "name": "planId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PlanVersionResponse"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/plans/{planId}/versions/{versionNo}": {
+      "get": {
+        "tags": [
+          "PlanEndpoints"
+        ],
+        "summary": "申請版を参照する",
+        "operationId": "GetPlanVersion",
+        "parameters": [
+          {
+            "name": "planId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "versionNo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanVersionResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/plans/{planId}/versions/{versionNo}/simulation": {
+      "get": {
+        "tags": [
+          "JinJi.IntegrationTests"
+        ],
+        "summary": "申請版を基準日の組織に重ねた姿（提案資料の元）",
+        "operationId": "SimulatePlanVersion",
+        "parameters": [
+          {
+            "name": "planId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "versionNo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanSimulationResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/plans/{planId}/versions/{versionNo}/changes.csv": {
+      "get": {
+        "tags": [
+          "JinJi.IntegrationTests"
+        ],
+        "summary": "申請版の変更の一覧（CSV。UTF-8 BOM）",
+        "operationId": "ExportPlanVersionChanges",
+        "parameters": [
+          {
+            "name": "planId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "versionNo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/plans/{planId}/versions/{versionNo}/approval": {
+      "post": {
+        "tags": [
+          "PlanEndpoints"
+        ],
+        "summary": "申請版の承認の結果を記録する（1 回だけ）",
+        "description": "記録できるのは、申請版の組織すべての範囲を持つ人か、設定で指定した社内システム（ワークフロー製品。client credentials・jinji.propose）。社内システムには申請版の中身を返さない。",
+        "operationId": "RecordPlanVersionApproval",
+        "parameters": [
+          {
+            "name": "planId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "versionNo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlanApprovalRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanApprovalResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/plans/{planId}/register": {
+      "post": {
+        "tags": [
+          "PlanEndpoints"
+        ],
+        "summary": "素案（か承認済みの申請版）の変更を、操作した人の範囲で直接登録にする",
+        "description": "version_no を指定したら、その承認済みの申請版から。indexes で変更を選べる（省略はすべて）。範囲の外は 403。",
+        "operationId": "RegisterPlan",
+        "parameters": [
+          {
+            "name": "planId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/RegisterPlanRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanRegistrationResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/auth/providers": {
       "get": {
         "tags": [
@@ -10853,6 +12074,577 @@
           }
         }
       },
+      "PlanApprovalRequest": {
+        "type": "object",
+        "properties": {
+          "approved_on": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "reference": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "PlanApprovalResponse": {
+        "required": [
+          "id",
+          "version_no",
+          "approved_on",
+          "reference",
+          "recorded_at"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "version_no": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "approved_on": {
+            "type": "string",
+            "format": "date"
+          },
+          "reference": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "recorded_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "PlanChangeDto": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "enum": [
+              "assignment",
+              "person",
+              "org_update",
+              "org_create",
+              "org_abolish",
+              "group_join",
+              "group_leave",
+              null
+            ],
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "target_id": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "values": {
+            "type": [
+              "null",
+              "object"
+            ],
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "PlanFieldChangeResponse": {
+        "required": [
+          "index",
+          "target_id",
+          "field",
+          "old",
+          "new"
+        ],
+        "type": "object",
+        "properties": {
+          "index": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "target_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "field": {
+            "type": "string"
+          },
+          "old": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "new": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "PlanGroupChangeResponse": {
+        "required": [
+          "index",
+          "group_id",
+          "person_id",
+          "join",
+          "role"
+        ],
+        "type": "object",
+        "properties": {
+          "index": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "group_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "person_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "join": {
+            "type": "boolean"
+          },
+          "role": {
+            "enum": [
+              "owner",
+              "lead",
+              "member",
+              null
+            ],
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "PlanMoveResponse": {
+        "required": [
+          "index",
+          "person_id",
+          "from_unit_id",
+          "to_unit_id",
+          "from_title",
+          "to_title"
+        ],
+        "type": "object",
+        "properties": {
+          "index": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "person_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "from_unit_id": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "to_unit_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "from_title": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "to_title": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "PlanRegistrationResponse": {
+        "required": [
+          "registration",
+          "group_changes"
+        ],
+        "type": "object",
+        "properties": {
+          "registration": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/FieldRegistrationResponse"
+              }
+            ]
+          },
+          "group_changes": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "PlanRequest": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "note": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "base_date": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "effective_date": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "changes": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/PlanChangeDto"
+            }
+          }
+        }
+      },
+      "PlanResponse": {
+        "required": [
+          "id",
+          "title",
+          "note",
+          "base_date",
+          "effective_date",
+          "changes",
+          "owner",
+          "shared_with",
+          "created_at",
+          "updated_at"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string"
+          },
+          "note": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "base_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "effective_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "changes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PlanChangeDto"
+            }
+          },
+          "owner": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "shared_with": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "PlanSimulationResponse": {
+        "required": [
+          "base_date",
+          "units",
+          "moves",
+          "person_changes",
+          "org_changes",
+          "group_changes",
+          "warnings"
+        ],
+        "type": "object",
+        "properties": {
+          "base_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "units": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PlanUnitResponse"
+            }
+          },
+          "moves": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PlanMoveResponse"
+            }
+          },
+          "person_changes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PlanFieldChangeResponse"
+            }
+          },
+          "org_changes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PlanFieldChangeResponse"
+            }
+          },
+          "group_changes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PlanGroupChangeResponse"
+            }
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PlanWarningResponse"
+            }
+          }
+        }
+      },
+      "PlanUnitResponse": {
+        "required": [
+          "id",
+          "code",
+          "name",
+          "short_name",
+          "level_key",
+          "parent_id",
+          "head_person_id",
+          "site_id",
+          "state",
+          "before",
+          "after"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "short_name": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "level_key": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "parent_id": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "head_person_id": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "site_id": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "state": {
+            "enum": [
+              "unchanged",
+              "created",
+              "changed",
+              "abolished"
+            ],
+            "type": "string"
+          },
+          "before": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "after": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "PlanVersionResponse": {
+        "required": [
+          "id",
+          "plan_id",
+          "version_no",
+          "title",
+          "note",
+          "base_date",
+          "effective_date",
+          "changes",
+          "created_by",
+          "created_at",
+          "approved_on",
+          "approval_reference",
+          "approval_recorded_by",
+          "approval_recorded_by_client"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "plan_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "version_no": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "title": {
+            "type": "string"
+          },
+          "note": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "base_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "effective_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "changes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PlanChangeDto"
+            }
+          },
+          "created_by": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "approved_on": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "approval_reference": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "approval_recorded_by": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "approval_recorded_by_client": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "PlanWarningResponse": {
+        "required": [
+          "index",
+          "message"
+        ],
+        "type": "object",
+        "properties": {
+          "index": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      },
       "PresenceItemResponse": {
         "required": [
           "person",
@@ -11384,6 +13176,28 @@
           }
         }
       },
+      "RegisterPlanRequest": {
+        "type": "object",
+        "properties": {
+          "version_no": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "indexes": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        }
+      },
       "RegisterWebhookRequest": {
         "required": [
           "url",
@@ -11874,6 +13688,21 @@
             "type": "array",
             "items": {
               "type": "string"
+            }
+          }
+        }
+      },
+      "SharePlanRequest": {
+        "type": "object",
+        "properties": {
+          "person_ids": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string",
+              "format": "uuid"
             }
           }
         }
@@ -13125,6 +14954,9 @@
     },
     {
       "name": "GroupEndpoints"
+    },
+    {
+      "name": "PlanEndpoints"
     },
     {
       "name": "auth"

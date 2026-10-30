@@ -18,7 +18,8 @@
     "認証": "人のログイン（ローカルアカウント・パスキー・外部 IdP の主体との紐付け・UI のセッション・Data Protection の鍵）と、API・MCP 向けのトークン発行（クライアント・鍵・認可コード・参照トークン・同意）。資格情報・トークンはハッシュか暗号化した値だけを持つ。ADR-0002 の表には無い追加の分類（ADR-0004）",
     "配信": "社内システムへの Webhook（変更の通知）の登録・署名の鍵（暗号化した値）・送信の待ち行列と記録。本文は種別と ID だけで、氏名などの値は持たない（受け手は自分のトークンで取り直す）。閲覧は jin-ji 自身と hr_admin の人だけ。ADR-0002 の表には無い追加の分類",
     "直接登録": "現場・IT 部門の直接登録（ADR-0013）の記録: 登録・同意・取り消し、関係者、公開側に書いた行の ID。値は変更提案（payload / diff。許可リストの項目だけ）にあり、未来日の内容は登録の関係者・org_admin・hr_admin だけが見る。ADR-0002 の表には無い追加の分類",
-    "グループ": "規程外の単位（チーム・プロジェクト・委員会。ADR-0014）の名称・種別・所管組織・公開範囲・管理対象と、メンバーと役割・期間（二つの時間軸）。組織のツリー・上長・承認ルートには入れない。ADR-0002 の表には無い追加の分類"
+    "グループ": "規程外の単位（チーム・プロジェクト・委員会。ADR-0014）の名称・種別・所管組織・公開範囲・管理対象と、メンバーと役割・期間（二つの時間軸）。組織のツリー・上長・承認ルートには入れない。ADR-0002 の表には無い追加の分類",
+    "素案": "来期の組織・異動の計画などの素案と申請版（ADR-0013 決定 8・9）。公開されない作業領域で、公開側を変えない。中身は直接登録と同じ形の変更（許可リストのキーと文字列の値だけ）で、見えるのは作成者と共有した人だけ。最後の更新から保持期限で消す。ADR-0002 の表には無い追加の分類"
   },
   "tables": {
     "legal_entity": {
@@ -2677,6 +2678,10 @@
         "staging_row": {
           "category": "システム管理用",
           "description": "取込の staging の行の削除件数（正規化結果・名寄せ候補は連鎖して消える）"
+        },
+        "plan": {
+          "category": "システム管理用",
+          "description": "消した素案の数"
         }
       }
     },
@@ -3340,6 +3345,141 @@
         "recorded_period": {
           "category": "システム管理用",
           "description": "記録期間"
+        }
+      }
+    },
+    "plan": {
+      "description": "素案（公開されない作業領域）",
+      "columns": {
+        "id": {
+          "category": "システム管理用",
+          "description": "素案の ID（UUIDv7）"
+        },
+        "title": {
+          "category": "素案",
+          "description": "題名"
+        },
+        "note": {
+          "category": "素案",
+          "description": "メモ（人事データの値を書かない）"
+        },
+        "base_date": {
+          "category": "素案",
+          "description": "基準日"
+        },
+        "effective_date": {
+          "category": "素案",
+          "description": "予定の有効日"
+        },
+        "changes": {
+          "category": "素案",
+          "description": "変更の配列（直接登録と同じ形）"
+        },
+        "owner_person_id": {
+          "category": "素案",
+          "description": "作成者"
+        },
+        "created_via": {
+          "category": "素案",
+          "description": "user / agent"
+        },
+        "shared_with": {
+          "category": "認可",
+          "description": "共有した人"
+        },
+        "created_at": {
+          "category": "システム管理用",
+          "description": "作成日時"
+        },
+        "updated_at": {
+          "category": "システム管理用",
+          "description": "最後の更新（保持期限の起点）"
+        }
+      }
+    },
+    "plan_version": {
+      "description": "申請版（素案を固定したもの）と承認の結果",
+      "columns": {
+        "id": {
+          "category": "システム管理用",
+          "description": "申請版の ID（UUIDv7）"
+        },
+        "plan_id": {
+          "category": "素案",
+          "description": "素案"
+        },
+        "version_no": {
+          "category": "素案",
+          "description": "版番号"
+        },
+        "title": {
+          "category": "素案",
+          "description": "題名"
+        },
+        "note": {
+          "category": "素案",
+          "description": "メモ"
+        },
+        "base_date": {
+          "category": "素案",
+          "description": "基準日"
+        },
+        "effective_date": {
+          "category": "素案",
+          "description": "予定の有効日"
+        },
+        "changes": {
+          "category": "素案",
+          "description": "変更の配列（固定）"
+        },
+        "created_by_person_id": {
+          "category": "素案",
+          "description": "作った人"
+        },
+        "created_at": {
+          "category": "システム管理用",
+          "description": "作った日時"
+        },
+        "approved_on": {
+          "category": "素案",
+          "description": "承認日"
+        },
+        "approval_reference": {
+          "category": "素案",
+          "description": "ワークフロー側の申請番号"
+        },
+        "approval_recorded_by_person_id": {
+          "category": "素案",
+          "description": "承認を記録した人"
+        },
+        "approval_recorded_by_client": {
+          "category": "素案",
+          "description": "承認を記録した社内システム"
+        },
+        "approval_recorded_at": {
+          "category": "システム管理用",
+          "description": "承認を記録した日時"
+        }
+      }
+    },
+    "plan_registration": {
+      "description": "素案・申請版のどの変更がどの直接登録になったか",
+      "columns": {
+        "plan_id": {
+          "category": "素案",
+          "description": "素案"
+        },
+        "plan_version_id": {
+          "category": "素案",
+          "description": "申請版（素案から直接なら空）"
+        },
+        "change_index": {
+          "category": "素案",
+          "description": "変更の番号"
+        },
+        "field_registration_id": {
+          "category": "直接登録",
+          "description": "直接登録"
         }
       }
     }

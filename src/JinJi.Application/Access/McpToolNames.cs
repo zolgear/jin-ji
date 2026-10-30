@@ -35,13 +35,15 @@ public static class McpToolNames
     public const string ListFieldRegistrations = "list_field_registrations";
     public const string ListGroups = "list_groups";
     public const string GetGroup = "get_group";
+    public const string ListPlans = "list_plans";
+    public const string SavePlan = "save_plan";
     public const string DraftFieldRegistration = "draft_field_registration";
 
     /// <summary>参照のツール（スコープ jinji.read）。</summary>
     public static readonly IReadOnlySet<string> Read = new HashSet<string>(StringComparer.Ordinal)
     {
         SearchPeople, GetPerson, GetPeople, GetApprovalRoute, GetOrg, GetOrgTree, SearchOrgs, ListSites, GetChanges, GetDirectoryInfo, ListReviewProposals, ListCorrections,
-        ListFloors, FindVacantSeats, ListFloorOccupants, ListFieldRegistrations, ListGroups, GetGroup,
+        ListFloors, FindVacantSeats, ListFloorOccupants, ListFieldRegistrations, ListGroups, GetGroup, ListPlans,
     };
 
     /// <summary>
@@ -49,7 +51,7 @@ public static class McpToolNames
     /// jin-ji の公開データは変えない。直接登録は委任元の名義の下書きまでで、反映は委任元の人の確定だけ（ADR-0013 決定 4）。
     /// 公開側の値を直接変える提案ツールは持たない（§7.3）。
     /// </summary>
-    public static readonly IReadOnlySet<string> Propose = new HashSet<string>(StringComparer.Ordinal) { SuggestReviewResolution, ReportCorrection, DraftFieldRegistration };
+    public static readonly IReadOnlySet<string> Propose = new HashSet<string>(StringComparer.Ordinal) { SuggestReviewResolution, ReportCorrection, DraftFieldRegistration, SavePlan };
 
     /// <summary>すべてのツール。</summary>
     public static readonly IReadOnlySet<string> All = Read.Union(Propose).ToHashSet(StringComparer.Ordinal);

@@ -87,6 +87,9 @@ public sealed record PersonResponse
 
     public IReadOnlyList<PersonnelActionResponse>? PersonnelActions { get; init; }
 
+    /// <summary>所属するグループと役割（全社公開のグループだけ）。</summary>
+    public IReadOnlyList<GroupMembershipResponse>? Groups { get; init; }
+
     /// <summary>氏名の履歴（人事管理者だけ）。</summary>
     public IReadOnlyList<NameVersionResponse>? NameHistory { get; init; }
 
@@ -114,6 +117,7 @@ public sealed record PersonResponse
             Workplace = WorkplaceRefResponse.From(view.Workplace),
             Seat = SeatRefResponse.From(view.Seat),
             Presence = PresenceRefResponse.From(view.Presence),
+            Groups = view.Groups?.Select(GroupMembershipResponse.From).ToList(),
             EmploymentType = view.EmploymentType,
             JobType = view.JobType,
             HireDate = view.HireDate,
@@ -439,7 +443,7 @@ public sealed record OrgTreeResponse(DateOnly AsOf, IReadOnlyList<OrgUnitRespons
 
 /// <summary>変更フィードの 1 件（種別と ID だけ）。</summary>
 /// <param name="Type">person / org_unit / site（拠点。拠点の変更は、その拠点を使う組織・人の変更としても届く）。</param>
-public sealed record ChangeResponse([property: OpenApiEnum("person", "org_unit", "site")] string Type, Guid Id)
+public sealed record ChangeResponse([property: OpenApiEnum("person", "org_unit", "site", "group")] string Type, Guid Id)
 {
     public static ChangeResponse From(ChangeEvent change)
     {
@@ -450,6 +454,7 @@ public sealed record ChangeResponse([property: OpenApiEnum("person", "org_unit",
                 ChangeEntityType.Person => "person",
                 ChangeEntityType.OrgUnit => "org_unit",
                 ChangeEntityType.Site => "site",
+                ChangeEntityType.Group => "group",
                 _ => throw new ArgumentOutOfRangeException(nameof(change)),
             },
             change.EntityId);
@@ -563,3 +568,18 @@ public sealed record MilestoneResponse(DateOnly Date, [property: OpenApiEnum(typ
 
 /// <summary>ヘルスチェックの応答。</summary>
 public sealed record HealthResponse(string Status, string Surface);
+
+/// <summary>人の所属するグループ。</summary>
+public sealed record GroupMembershipResponse(
+    Guid GroupId,
+    string Name,
+    [property: OpenApiEnum(typeof(GroupKind))] string Kind,
+    [property: OpenApiEnum(typeof(GroupRole))] string Role,
+    bool Managed)
+{
+    public static GroupMembershipResponse From(GroupMembershipView view)
+    {
+        ArgumentNullException.ThrowIfNull(view);
+        return new(view.GroupId, view.Name, GroupCodes.Of(view.Kind), GroupCodes.Of(view.Role), view.Managed);
+    }
+}

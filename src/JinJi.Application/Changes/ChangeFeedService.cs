@@ -12,6 +12,9 @@ public enum ChangeEntityType
 
     /// <summary>拠点（0017。拠点の変更は、その拠点を使う組織・人の変更としても記録される）。</summary>
     Site,
+
+    /// <summary>グループ（チーム・プロジェクト。0022。全社公開のグループだけ記録する）。</summary>
+    Group,
 }
 
 /// <summary>変更フィードの 1 件。本文は種別と ID だけ（受け手は API で取り直す。受け手ごとの項目上限が効くように。§9）。</summary>

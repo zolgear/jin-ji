@@ -11,6 +11,12 @@ export interface components {
       key_id: string | null;
       public_key_pem: string | null;
     };
+    AddGroupMemberRequest: {
+      person_id?: string | null; // uuid
+      role?: "owner" | "lead" | "member" | null;
+      from?: string | null; // date
+      until?: string | null; // date
+    };
     AgentSuggestionResponse: {
       id: string; // uuid
       resolution: "select_candidate" | "register_new" | "refer_to_correction" | "reject";
@@ -92,13 +98,16 @@ export interface components {
       rule: "employee_number" | "work_email" | "name_and_org";
       confidence: number; // double
     };
+    ChangeGroupRoleRequest: {
+      role?: "owner" | "lead" | "member" | null;
+    };
     ChangeListResponse: {
       items: components["schemas"]["ChangeResponse"][];
       next_cursor: string;
       has_more: boolean;
     };
     ChangeResponse: {
-      type: "person" | "org_unit" | "site";
+      type: "person" | "org_unit" | "site" | "group";
       id: string; // uuid
     };
     CimdDomainsResponse: {
@@ -120,6 +129,9 @@ export interface components {
     CloseCorrectionRequest: {
       status?: "resolved" | "dismissed" | null;
       note?: string | null;
+    };
+    CloseGroupRequest: {
+      date?: string | null; // date
     };
     ConsentClientResponse: {
       client_id: string;
@@ -193,7 +205,7 @@ export interface components {
     };
     CreateCorrectionRequest: {
       person_id?: string | null; // uuid
-      field?: "employee_number" | "legal_entity" | "display_name" | "family_name" | "given_name" | "family_name_kana" | "given_name_kana" | "family_name_latin" | "given_name_latin" | "work_email" | "extension_number" | "work_mobile_phone" | "site" | "remote_work" | "workplace" | "seat" | "employment_type" | "job_type" | "hire_date" | "termination_date" | "employment_status" | "account_status" | "account_suspension" | "assignments" | "managers" | "personnel_actions" | null;
+      field?: "employee_number" | "legal_entity" | "display_name" | "family_name" | "given_name" | "family_name_kana" | "given_name_kana" | "family_name_latin" | "given_name_latin" | "work_email" | "extension_number" | "work_mobile_phone" | "site" | "remote_work" | "workplace" | "seat" | "employment_type" | "job_type" | "hire_date" | "termination_date" | "employment_status" | "account_status" | "account_suspension" | "assignments" | "managers" | "personnel_actions" | "groups" | null;
       reason?: string | null;
       suggested_value?: string | null;
     };
@@ -205,6 +217,13 @@ export interface components {
       effective_date?: string | null; // date
       note?: string | null;
       changes?: components["schemas"]["FieldChangeRequest"][] | null;
+    };
+    CreateGroupRequest: {
+      name?: string | null;
+      kind?: "team" | "project" | "committee" | "other" | null;
+      owner_org_unit_id?: string | null; // uuid
+      visibility?: "all" | "members" | null;
+      valid_from?: string | null; // date
     };
     CreateLoginBindingRequest: {
       person_id: string; // uuid
@@ -383,6 +402,38 @@ export interface components {
       person_id?: string | null; // uuid
       from?: string | null; // date
       until?: string | null; // date
+    };
+    GroupDetailResponse: {
+      group: components["schemas"]["GroupResponse"];
+      members: components["schemas"]["GroupMemberResponse"][];
+    };
+    GroupMemberResponse: {
+      person_id: string; // uuid
+      role: "owner" | "lead" | "member";
+      from: string; // date
+      until: string | null; // date
+    };
+    GroupMembershipResponse: {
+      group_id: string; // uuid
+      name: string;
+      kind: "team" | "project" | "committee" | "other";
+      role: "owner" | "lead" | "member";
+      managed: boolean;
+    };
+    GroupResponse: {
+      id: string; // uuid
+      name: string;
+      kind: "team" | "project" | "committee" | "other";
+      owner_org_unit_id: string | null; // uuid
+      visibility: "all" | "members";
+      managed: boolean;
+      valid_from: string; // date
+      valid_until: string | null; // date
+      member_count: number; // int32
+    };
+    GroupSettingsRequest: {
+      visibility?: "all" | "members" | null;
+      managed?: boolean | null;
     };
     IssueClientSecretRequest: {
       lifetime_days: number | null; // int32
@@ -630,6 +681,7 @@ export interface components {
       assignments: components["schemas"]["AssignmentResponse"][] | null;
       managers: string[] | null;
       personnel_actions: components["schemas"]["PersonnelActionResponse"][] | null;
+      groups: components["schemas"]["GroupMembershipResponse"][] | null;
       name_history: components["schemas"]["NameVersionResponse"][] | null;
     };
     PersonSearchResponse: {
@@ -937,6 +989,12 @@ export interface components {
       mcp_tools: string[] | null;
       rate_limit_per_client: number | null; // int32
       clear_rate_limit: boolean | null;
+    };
+    UpdateGroupRequest: {
+      name?: string | null;
+      kind?: "team" | "project" | "committee" | "other" | null;
+      owner_org_unit_id?: string | null; // uuid
+      clear_owner_org_unit?: boolean | null;
     };
     UpdateWebhookRequest: {
       url: string | null;
@@ -1329,6 +1387,106 @@ export interface paths {
       query: Record<string, never>;
       body: never;
       response: components["schemas"]["FloorPresenceResponse"];
+    };
+  };
+  "/api/v1/groups": {
+    /** グループの一覧（今日有効な、閲覧者に見えるもの。名前の順）（ListGroups） */
+    get: {
+      path: Record<string, never>;
+      query: {
+        kind?: string;
+        person_id?: string;
+        owner_org_unit_id?: string;
+        managed?: string;
+      };
+      body: never;
+      response: components["schemas"]["GroupResponse"][];
+    };
+    /** グループを作る（人。作成者が最初のオーナー）（CreateGroup） */
+    post: {
+      path: Record<string, never>;
+      query: Record<string, never>;
+      body: components["schemas"]["CreateGroupRequest"];
+      response: components["schemas"]["GroupDetailResponse"];
+    };
+  };
+  "/api/v1/groups/{groupId}": {
+    /** グループと今日のメンバーを参照する（GetGroup） */
+    get: {
+      path: {
+        groupId: string;
+      };
+      query: Record<string, never>;
+      body: never;
+      response: components["schemas"]["GroupDetailResponse"];
+    };
+  };
+  "/api/v1/groups/{groupId}/close": {
+    /** その日（既定は今日）でグループを終える（CloseGroup） */
+    post: {
+      path: {
+        groupId: string;
+      };
+      query: Record<string, never>;
+      body: components["schemas"]["CloseGroupRequest"] | null;
+      response: components["schemas"]["GroupDetailResponse"];
+    };
+  };
+  "/api/v1/groups/{groupId}/members": {
+    /** メンバーを加える（AddGroupMember） */
+    post: {
+      path: {
+        groupId: string;
+      };
+      query: Record<string, never>;
+      body: components["schemas"]["AddGroupMemberRequest"];
+      response: components["schemas"]["GroupDetailResponse"];
+    };
+  };
+  "/api/v1/groups/{groupId}/members/{personId}/remove": {
+    /** 今日でメンバーから外す（本人は自分を外せる。管理対象のグループを除く）（RemoveGroupMember） */
+    post: {
+      path: {
+        groupId: string;
+        personId: string;
+      };
+      query: Record<string, never>;
+      body: never;
+      response: components["schemas"]["GroupDetailResponse"];
+    };
+  };
+  "/api/v1/groups/{groupId}/members/{personId}/role": {
+    /** 今日からメンバーの役割を変える（ChangeGroupMemberRole） */
+    post: {
+      path: {
+        groupId: string;
+        personId: string;
+      };
+      query: Record<string, never>;
+      body: components["schemas"]["ChangeGroupRoleRequest"];
+      response: components["schemas"]["GroupDetailResponse"];
+    };
+  };
+  "/api/v1/groups/{groupId}/settings": {
+    /** 公開範囲（all / members）・管理対象を変える（SetGroupSettings） */
+    post: {
+      path: {
+        groupId: string;
+      };
+      query: Record<string, never>;
+      body: components["schemas"]["GroupSettingsRequest"];
+      response: components["schemas"]["GroupDetailResponse"];
+    };
+  };
+  "/api/v1/groups/{groupId}/update": {
+    /** 今日から名称・種別・所管組織を変える（UpdateGroup） */
+    post: {
+      path: {
+        groupId: string;
+      };
+      query: Record<string, never>;
+      body: components["schemas"]["UpdateGroupRequest"];
+      response: components["schemas"]["GroupDetailResponse"];
     };
   };
   "/api/v1/ingest/proposals/{proposalId}": {

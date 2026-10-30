@@ -322,6 +322,22 @@ jin-ji の値の誤りを、人事パッケージで直せる人に伝える（�
 | `org_create` | 新しい組織の ID（省略なら採番） | `code`・`name`・`parent_org_unit_id`（必須）・`short_name`・`level_key`・`head_person_id`・`site_id` |
 | `org_abolish` | 組織 | なし（所属者・配下の組織が残っていれば 400） |
 
+### グループ（チーム・プロジェクト。ADR-0014）
+
+規程上の組織とは別の、チーム・プロジェクト・委員会などの単位。組織のツリー・上長・承認ルートには入らない。規則は [アーキテクチャ概要 §5.8](architecture/overview.md#58-グループadr-0014)。
+
+| エンドポイント | 内容 | 使える人 | 応答 | 種別 |
+| --- | --- | --- | --- | --- |
+| `GET /groups` | 一覧（`kind`・`person_id`・`owner_org_unit_id`・`managed`） | 閲覧者に見えるグループ（全社公開と、自分がメンバーのメンバー限定のもの） | `GroupResponse` の配列（名前の順） | `org_read` |
+| `GET /groups/{id}` | 参照（今日のメンバー） | 同上。メンバーは項目 `groups` が見える人だけ | `GroupDetailResponse` | `org_read` |
+| `POST /groups` | 作成（`{"name", "kind", "owner_org_unit_id", "visibility", "valid_from"}`） | 人（作成者が最初のオーナー） | `GroupDetailResponse` | `field` |
+| `POST /groups/{id}/update` | 今日から名称・種別・所管組織を変える | オーナー・所管組織の範囲を持つ人・組織管理者・人事管理者（所管組織の変更はオーナーを除く） | 同上 | `field` |
+| `POST /groups/{id}/close` | その日でグループを終える（`{"date"}`） | 同上 | 同上 | `field` |
+| `POST /groups/{id}/settings` | 公開範囲（`all` / `members`）・管理対象を変える | 編集できる人（管理対象は組織管理者・人事管理者だけ） | 同上 | `field` |
+| `POST /groups/{id}/members` | メンバーを加える（`{"person_id", "role", "from", "until"}`） | 編集できる人（管理対象のグループのオーナーの指名は、所管組織の範囲を持つ人・組織管理者・人事管理者だけ） | 同上。期間の重なりは 409 | `field` |
+| `POST /groups/{id}/members/{person_id}/role` | 今日から役割を変える（`{"role"}`） | 同上 | 同上 | `field` |
+| `POST /groups/{id}/members/{person_id}/remove` | 今日でメンバーから外す | 編集できる人と、本人（管理対象のグループを除く） | 同上 | `field` |
+
 ### 取込（変更提案）
 
 | メソッドとパス | 用途 | 認可 | 応答の要点 | 種別 |
@@ -531,6 +547,8 @@ MCP のポート（既定 28090）の `POST /mcp`（Streamable HTTP。セッシ�
 | `suggest_review_resolution` | `jinji.propose` | `ingest` | `proposal_id`・`resolution`・`person_id`・`org_unit_id`・`confidence`・`rationale` | 要確認の提案に解決の推定を添える（作業領域だけに書く。公開側は変わらない） |
 | `list_corrections` | `jinji.read` | `correction` | `status`・`person_id`・`limit`（既定 20）・`cursor` | 修正依頼の一覧・状況（委任元に見える範囲） |
 | `report_correction` | `jinji.propose` | `correction` | `person_id`・`field`・`reason`・`suggested_value` | 修正依頼の起票（委任元の名義。jin-ji の公開データは変わらない） |
+| `list_groups` | `jinji.read` | `org_read` | `kind`・`person_id`・`owner_org_unit_id` | チーム・プロジェクトのグループの一覧（委任元に見えるもの） |
+| `get_group` | `jinji.read` | `org_read` | `group_id` | グループと今日のメンバー（委任元に項目 `groups` が見える人だけ） |
 | `list_field_registrations` | `jinji.read` | `field` | `mine`・`status` | 直接登録の一覧（委任元の登録・同意した登録・委任元の範囲の組織の登録） |
 | `draft_field_registration` | `jinji.propose` | `field` | `effective_date`・`note`・`changes` | 異動・組織の変更の下書き（委任元の名義。反映は委任元の人の確定だけ。ADR-0013） |
 

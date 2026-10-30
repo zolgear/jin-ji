@@ -342,6 +342,7 @@ public static partial class CorrectionFields
         [PersonFields.Assignments] = ("所属・役職", CorrectionValueKind.None),
         [PersonFields.Managers] = ("上長", CorrectionValueKind.None),
         [PersonFields.PersonnelActions] = ("発令", CorrectionValueKind.None),
+        [PersonFields.Groups] = ("グループ", CorrectionValueKind.None),
     };
 
     /// <summary>報告できる項目。</summary>

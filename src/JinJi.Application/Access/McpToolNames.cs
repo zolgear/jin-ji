@@ -33,13 +33,15 @@ public static class McpToolNames
     public const string ListCorrections = "list_corrections";
     public const string ReportCorrection = "report_correction";
     public const string ListFieldRegistrations = "list_field_registrations";
+    public const string ListGroups = "list_groups";
+    public const string GetGroup = "get_group";
     public const string DraftFieldRegistration = "draft_field_registration";
 
     /// <summary>参照のツール（スコープ jinji.read）。</summary>
     public static readonly IReadOnlySet<string> Read = new HashSet<string>(StringComparer.Ordinal)
     {
         SearchPeople, GetPerson, GetPeople, GetApprovalRoute, GetOrg, GetOrgTree, SearchOrgs, ListSites, GetChanges, GetDirectoryInfo, ListReviewProposals, ListCorrections,
-        ListFloors, FindVacantSeats, ListFloorOccupants, ListFieldRegistrations,
+        ListFloors, FindVacantSeats, ListFloorOccupants, ListFieldRegistrations, ListGroups, GetGroup,
     };
 
     /// <summary>

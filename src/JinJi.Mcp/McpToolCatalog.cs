@@ -36,6 +36,8 @@ public static class McpToolCatalog
         new ListCorrectionsTool(),
         new ReportCorrectionTool(),
         new ListFieldRegistrationsTool(),
+        new ListGroupsTool(),
+        new GetGroupTool(),
         new DraftFieldRegistrationTool(),
     ];
 

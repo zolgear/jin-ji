@@ -125,6 +125,7 @@ public sealed class NpgsqlChangeFeedStore : IChangeFeedStore
                     "person" => ChangeEntityType.Person,
                     "org_unit" => ChangeEntityType.OrgUnit,
                     "site" => ChangeEntityType.Site,
+                    "group" => ChangeEntityType.Group,
                     var other => throw new InvalidOperationException($"DB に未知の変更の種別があります: {other}"),
                 },
                 reader.GetGuid(3),

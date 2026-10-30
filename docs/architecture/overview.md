@@ -470,6 +470,46 @@ ADR-0002「拠点とリモートワーク」の実装の規則。コードでは
 - 世代で検知できない変更に備え、最長保持時間（`MaxAge`、既定 10 分）を過ぎたら必ず読み直す
 - メモリの目安: 1 万人・組織 1,000・人あたり属性の版 1〜3・発令 5 件の合成データで、スナップショット 1 つあたり約 20〜30 MB。区分 2 つで約 50〜60 MB、読み直しの間は一時的に最大その 2 倍
 
+### 5.7 直接登録の範囲（ADR-0013）
+
+[ADR-0013](../adr/0013-field-managed-changes.md) の管理元・担当の指名・範囲の判定・直接登録の実装の規則。コードでは `JinJi.Domain.Organization.FieldManagement`（`FieldDomain`・`FieldManagementMode`・`OrgEditorGrant`・`RegistrationScope`）、`JinJi.Application.FieldManagement`（`FieldManagementService`・`FieldRegistrationService`・`FieldRegistrationPlanner`）、`JinJi.Infrastructure.Database`（`NpgsqlFieldManagementStore`・`NpgsqlFieldRegistrationStore`）、`JinJi.Ingest.FieldModeFilter`、REST の `/api/v1/field`（`JinJi.Api.FieldEndpoints`）、MCP の `draft_field_registration`・`list_field_registrations`、`db/migrations/0020_field_management.sql`・`0021_field_registration.sql` に対応する。
+
+- ロール `org_admin`（組織管理者。IT 部門を想定）を足した。全社の範囲を持ち、管理元の起案・承認と担当の指名ができる。人事管理者と違い、氏名の履歴・取込の作業領域・監査ログ・内示は見えない。付与は `hr_corrector` と同じ流儀（管理 CLI `grant-role --role org_admin`。自分には付与できない）
+- 管理元（`field_domain_setting`）: 領域（`org_structure`・`org_site`・`assignment`・`person_site`・`person_contact`）ごとに `hr` / `field` / `both`。承認済みの行が無い領域は `hr`（`jinji_field_domain_mode()`）。起案 → 別人の承認で反映し、同じ領域の承認済みの行を置き換える（先行提供の日数と同じ形。起案者 ≠ 承認者は CHECK 制約、状態の遷移と中身の不変はトリガー）。起案・承認は人事管理者か `org_admin` の「人」だけ（AI エージェントは不可。アプリと RLS）。参照は閲覧者なら誰でも（設定データで、人事データの値ではない）
+- 担当の指名（`org_editor_grant`）: 組織に結び付け、期間（始まりと終わり。今日以降に始まり 366 日まで）を持つ。指名・取り消しは、その組織の組織長としての範囲（上位の組織長を含む）か、人事管理者・`org_admin` の「人」。担当としての範囲では指名できない（再指名の禁止）。自分は指名できない（CHECK 制約）。同じ組織・同じ人の有効な指名の期間は重ならない（排他制約）。参照は人の閲覧者（AI エージェントは委任元）と jin-ji 自身で、社内システムには見せない
+- 範囲（`RegistrationScope`・RLS の `jinji_viewer_scope_covers(組織, 日付, 担当を含めるか)`）: 人事管理者・`org_admin` は全社。それ以外は、その日の組織の祖先（自分を含む）のいずれかで組織長か、有効な担当の指名を持つこと。AI エージェントは委任元の範囲。権限を生む変更（組織長の任免・上位組織の付け替え）は一つ上の組織の範囲を要し（`CoversParentOf`）、最上位の組織は全社の範囲だけ。アプリと RLS は同じ規則で、テストで両方を突き合わせる
+- RLS の線: 将来の組織の版は人事管理者以外に見えないので、将来の日付の範囲は（人事管理者・`org_admin` を除き）今日の組織の構造で判定される。指名の表の書き込みの方針だけが範囲の関数を呼び、参照の方針は呼ばない（方針の再帰を作らない）
+- 監査ログ: `field.domain.propose`・`field.domain.approve`・`field.domain.reject`・`field.editor.grant`・`field.editor.revoke`・`field.registration.register`・`field.registration.confirm`・`field.registration.consent`・`field.registration.withdraw`・`field.registration.discard`（拒否・失敗も）
+
+**直接登録（`field_registration`）**
+
+- 登録は変更提案（`change_proposal.field_registration_id`。取込単位は持たない）をまとめたもので、反映は取込の承認と同じ `NpgsqlIngestStore.ApplyInTransactionAsync` を、登録の提案ごとに 1 トランザクションの中で呼ぶ（旧値の照合・段の検査・発令・変更フィード・Webhook・同期計画が同じに効く）。職務分掌の CHECK（反映者 ≠ 起案者）は直接登録の提案だけ外す。取込の承認・却下の API からは直接登録の提案を扱えない
+- 変更の種類は `assignment`（主務の異動・役職）・`person`（拠点・リモートワーク・内線・社用携帯）・`org_update`・`org_create`・`org_abolish`。旧値は有効日の組織スナップショット（登録者の見え方）から取り、反映時に DB の行と照合する。反映の順は 組織の新設 → 組織の変更 → 所属 → 人 → 組織の廃止（新しい組織への異動・異動で空にした組織の廃止を 1 回で登録できる）
+- 範囲: 今日の範囲で判定する。異動・上位組織の付け替えは出し側と受け側の両方を要し、片側しか持たなければもう片側を「同意が要る組織」にして同意待ち（`pending_consent`）にする（どちらも持たなければ 403）。同意は登録者とは別の、同意が要る組織すべての範囲を持つ人の 1 回の操作で、同意者として記録してから反映する。組織長の任免・上位組織の付け替えは元の上位組織の範囲を要し、同意では補えない
+- 有効日は今日以降（遡及は `org_admin`・人事管理者）。変える人は 50 人まで（同じく除く）。下書き・同意待ちは 14 日で期限切れ（参照のときに期限切れにする）。取り消しは有効日の前だけで、登録者か、登録の組織すべての範囲を持つ人
+- AI エージェントの登録は委任元の名義の下書き（`draft`）で、反映は委任元の人の確定（`confirm`）だけ。確定のときに範囲を見直す
+- DB の線（0021）: 公開側の表（組織・組織の版・人の版・所属・発令・変更フィード）の書き込みの方針に、人事管理者の方針と OR で直接登録の方針を足した。「人」の閲覧者で、領域の管理元が `hr` でなく、書く行の組織（人の版は主務の組織、所属・発令は所属先）が範囲に入ること（`jinji_field_covers_path`・`jinji_field_covers_unit`・`jinji_field_covers_person`）。範囲はトランザクションの開始時点の記録で判定し、登録が自分で書いた組織長・上位組織で自分の権限を広げられないようにする。同意で反映するときは同意者と登録者の範囲の和（GUC `jinji.field_registration` が指す同意待ちの登録に、閲覧者が同意者として記録されているときだけ）
+- DB のトリガー: 組織長・上位組織の変更は一つ上の組織の範囲を要する（`jinji_guard_field_org_version`。人事管理者・`org_admin` は対象外）。人の版は、同じトランザクションで閉じた版を写し、管理元が `hr` でない領域の列（拠点・リモートワーク・内線・社用携帯）だけを変えられる（`jinji_guard_field_person_version`。氏名・在籍・雇用区分は直接登録の対象外）
+- 未来日の行の秘匿: 反映の間は GUC `jinji.field_registration` を設定し、トリガーが書いた行を `field_registration_row` に記録する。未来日の行（内示と同じに人事管理者以外に見せない行）は、その登録の関係者（`field_registration_viewer`: 登録者・同意者・取り消した人）と `org_admin` にだけ見せる。対象の本人には見せない。関係者の表の参照の方針は範囲の関数を使わない（公開側の表の参照の方針から読まれるので、方針の再帰を作らない）
+- 取り消し: 登録が追加した行の記録期間を閉じ、閉じた行を写して戻す（同じ登録で追加して閉じた途中の行は差し引きで何もしない）。登録の後に同じ行が変わっていれば 409
+- 登録の参照: 人事管理者・`org_admin`・登録者・同意者と、関係する組織の範囲を持つ人（AI エージェントは委任元）
+- 取込との関係（`FieldModeFilter`）: 管理元が `field` の領域の差分は承認できない要確認（`basis.code = field_managed`。「人事パッケージとの差」）にする。人の版・組織の版は項目の領域で分け、`hr` の領域の分だけを起案中に残す。`both` の領域で、今日有効な値を直接登録が書いた対象の差分は、起案中のまま `field_registered` の印を付ける（承認するまで上書きしない）
+
+### 5.8 グループ（ADR-0014）
+
+[ADR-0014](../adr/0014-informal-groups.md) のチーム・プロジェクトなど規程外の単位の実装の規則。コードでは `JinJi.Domain.Organization.Groups`（`OrgGroup`・`GroupMembership`・`GroupMap`）、`JinJi.Application.Groups.GroupService`、`JinJi.Infrastructure.Database.NpgsqlGroupStore`、REST の `/api/v1/groups`、MCP の `list_groups`・`get_group`、`db/migrations/0022_groups.sql` に対応する。
+
+- 表: `org_group`（不変 ID と今の設定: 公開範囲・管理対象・今日以降に有効なメンバーの一覧）、`org_group_version`（名称・種別・所管組織。bitemporal）、`org_group_member`（人・役割・加えた人・期間。bitemporal）。組織のツリー・上長・承認ルート・`same_level`・人の拠点の既定・Entra ID の部署には影響させない
+- 作成と変更は承認なしで反映する。作成は「人」なら誰でもでき、作成者が最初のオーナー。変更はオーナー・所管組織の範囲を持つ人（§5.7）・`org_admin`・人事管理者。メンバーは自分を外せる（管理対象のグループを除く）。AI エージェント・社内システムは参照だけ
+- 管理対象（`managed`）にするのは `org_admin`・人事管理者だけ（トリガー）。管理対象のグループのオーナーの指名は、所管組織の範囲を持つ人・`org_admin`・人事管理者だけ（オーナーが別の人をオーナーにして権限を広げられないように）
+- 公開範囲: `all`（既定）は閲覧者なら誰でも、`members` はメンバー（`org_group.member_ids`）・`org_admin`・人事管理者だけが存在を見られる。`member_ids` はメンバーの書き込みでトリガーが作り直す（期間が終わったメンバーは、次にメンバーを書き込むまで残る）。メンバーの表の参照の方針はグループの表を、グループの表の参照の方針は自分の列だけを読む（方針の再帰を作らない）
+- 編集できる人の判定（`jinji_viewer_may_edit_group`）はトランザクションの開始時点の版・メンバーで行う（同じ変更で自分をオーナーにして権限を作らない）
+- 人の項目 `groups`: 所属するグループと役割。全社公開のグループだけを返し、ポリシー・クライアントの項目上限で狭められる。グループの API のメンバーの一覧も、項目 `groups` が見える人だけを返す。修正依頼の項目にも足した
+- 関係スコープ `same_group`: 閲覧者と対象者が同じ管理対象のグループのメンバー。組織スナップショットのグループ（共有の区分では全社公開のグループだけ）で判定する。メンバー限定の管理対象のグループは判定に使わない（狭い側）
+- 変更フィード・Webhook の種別 `group`（全社公開のグループだけ記録する）。スナップショットの世代にグループの表を足した
+- 監査ログ: `group.read`・`group.create`・`group.update`・`group.close`・`group.settings`・`group.member.add`・`group.member.change`・`group.member.remove`（拒否・失敗も）
+- Entra ID のグループへの同期（ADR-0014 決定 8）は ADR-0010 の見直しで決める（未実装）
+
 ## 6. 認証とトークン
 
 導入先は、M365 テナントと Entra ID を持つ日本企業を主に想定する。**Keycloak などの追加の認証基盤を前提にしない**（導入・保守の負担が増えるため）。jin-ji は、既存の IdP にログインを委ねる側（OIDC RP）として動き、必要なトークンだけを自分で発行する。
@@ -840,7 +880,9 @@ MCP サーバー本体（参照ツール → 提案ツール）で決めた規�
 | `suggest_review_resolution` | `ingest` | `ProposalSuggestionService.SuggestAsync` |
 | `list_corrections` | `correction` | `CorrectionRequestService.ListAsync` |
 | `report_correction` | `correction` | `CorrectionRequestService.ReportAsync` |
-- 公開側の値を直接変える提案ツールは持たない。公開側の正は人事パッケージで、jin-ji の公開側を変えるのは取込の提案の承認だけ。エージェントが書けるのは、要確認の提案への推定（作業領域）と、修正依頼の起票（人事パッケージで直せる人への情報提供。jin-ji の公開データは変えない。§8「修正依頼の実装の規則」）だけ
+| `list_field_registrations` | `field` | `FieldRegistrationService.ListAsync` |
+| `draft_field_registration` | `field` | `FieldRegistrationService.RegisterAsync`（AI エージェントは下書きだけ） |
+- 公開側の値を直接変える提案ツールは持たない。公開側を変えるのは取込の提案の承認と、人の直接登録（ADR-0013）だけ。エージェントが書けるのは、要確認の提案への推定（作業領域）、修正依頼の起票（人事パッケージで直せる人への情報提供。jin-ji の公開データは変えない。§8「修正依頼の実装の規則」）、直接登録の下書き（反映は委任元の人の確定。§5.7）だけ
 
 - 人・組織・変更はすべて REST API と同じ Application 層のサービスを通し、人は `PersonView` を写すだけ（MCP だけの抜け道を作らない）。人の項目の名前と値は REST の人の応答と同じで、値の無い項目は省略する（REST は `null`。トークンを節約するため）。同じ委任元・同じクライアントなら REST と同じ人・同じ値になることをテストで突き合わせる
 - 組織長の表示名は、組織図の部分木には載せない（REST の組織ツリーと同じ理由: 返却人数の制限を通らずに全組織長の氏名を取れてしまうため）。`get_org` は 1 組織の組織長を人として返し、返却人数に 1 人と数える
@@ -868,7 +910,8 @@ MCP サーバー本体（参照ツール → 提案ツール）で決めた規�
 
 **提案のツール（§7.1 の境界）**
 
-- 公開される情報（在籍者・組織・所属・連絡先）を変える提案のツールは作らない。公開側の値の正は人事パッケージで、jin-ji の公開側を変えるのは取込の変更提案の承認だけ（§1・§8）。エージェントが公開側の値の変更を起案する口を足すと、取込のたびに差分が出て正の所在が二重になるため。jin-ji の誤りの多くは取込の要確認として現れるので、提案のツールはそこと、正の側（人事パッケージ）で直してもらうための修正依頼の起票（`report_correction`）に絞る
+- 公開される情報（在籍者・組織・所属・連絡先）を変える提案のツールは作らない。管理元が人事パッケージ（`hr`）の領域では、jin-ji の公開側を変えるのは取込の変更提案の承認だけ（§1・§8）。エージェントが公開側の値の変更を起案する口を足すと、取込のたびに差分が出て正の所在が二重になるため。jin-ji の誤りの多くは取込の要確認として現れるので、提案のツールはそこと、正の側（人事パッケージ）で直してもらうための修正依頼の起票（`report_correction`）に絞る
+- `draft_field_registration`: 管理元が `field`・`both` の領域（ADR-0013）で、委任元の名義の直接登録の「下書き」を作る。下書きは公開側を変えず、反映するのは委任元の人の確定だけ（ADR-0009 の「公開に至る変更は人が承認する」を保つ）。範囲・管理元・値の検査は人の登録と同じ（§5.7）
 - `report_correction`: 委任元の名義で、委任元に見える人の見える項目について、現在の値が誤っている理由（と任意の値の提案）を起票する。公開されない作業領域（`correction_request`）への書き込みで、公開側は変わらない。同じ人・項目の未対応の依頼があれば賛同として数え、自分の重ねての起票は何もしない（`already_reported`）。状態の更新（対応済み・対応不要）はエージェントには無い（人だけ）。規則は §8「修正依頼の実装の規則」
 - `suggest_review_resolution`: 要確認の提案に、解決の推定（人の解決と同じ 4 つ: 候補から選ぶ・新規として登録・修正依頼に回す・却下、確信度、理由）を添える。公開されない作業領域（`proposal_agent_suggestion`。追記専用）への自動の書き込みで、承認は要らない。提案の状態・値は変えない。人事管理者がこれを参考に解決し、解決者とも取込の実行者とも別の人事管理者が承認したときだけ公開側に出る（§8「要確認の解決」）。エージェントが解決・承認する経路は無い（アプリ・DB とも、解決と承認は人だけ）
 - 選べるのは提案の候補（名寄せの候補・組織の候補・LLM が順位を付けた候補・提案の対象）だけ。要確認でない提案は `conflict`。理由は 500 文字まで、制御文字（改行を含む）は空白にする（DB の CHECK 制約でも縛る）。推定は REST の提案の参照（`GET /api/v1/ingest/proposals/{id}` の `agent_suggestions`）で人が見る
@@ -1424,6 +1467,6 @@ jin-ji/
 | 5 | MCP サーバー（参照ツール → 提案ツール） | 実装済み |
 | 6 | Entra ID 同期の計画・スクリプト出力・直接反映（既定は無効） | 実装済み（[同期計画の評価](../reports/sync-plan.md)）。実テナントでの検証は未実施 |
 | 7 | Web UI（組織図・3D 俯瞰・人の詳細・検索・修正依頼・認証の画面） | 一部。発令のタイムライン・ポリシーのプレビューは未実装 |
-| 8 | 現場・IT 部門の直接登録（管理元・範囲・`org_admin`）、素案・申請版・提案資料、チーム・プロジェクトのグループ（[ADR-0013](../adr/0013-field-managed-changes.md)・[ADR-0014](../adr/0014-informal-groups.md)） | 未着手 |
+| 8 | 現場・IT 部門の直接登録（管理元・範囲・`org_admin`）、素案・申請版・提案資料、チーム・プロジェクトのグループ（[ADR-0013](../adr/0013-field-managed-changes.md)・[ADR-0014](../adr/0014-informal-groups.md)） | 一部。管理元・担当の指名・範囲の判定・直接登録（登録・同意・取り消し・AI エージェントの下書き・取込の振り分け。[§5.7](#57-直接登録の範囲adr-0013)）。グループ（[§5.8](#58-グループadr-0014)。Entra ID への同期を除く）。素案・画面は未実装 |
 
 まだ無いもの: REST API からの取込の起動と、取込の変更提案の承認の REST API・画面（今はサービス・テスト・評価から使う）、アプリのコンテナイメージと Compose のサービス定義、リバースプロキシの選定（§3）、CI と依存の自動更新（ADR-0001）、実クライアントでの相互接続の受け入れ試験と外部のセキュリティレビュー（ADR-0004）。各節の「未解決」も参照。

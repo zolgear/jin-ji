@@ -485,6 +485,7 @@ public sealed class CorrectionRequestService
             PersonFields.RemoteWork => v.RemoteWork switch { true => "true", false => "false", null => "\0null" },
             PersonFields.Workplace => v.Workplace is { } w ? string.Join('|', w.FloorId.ToString("D"), w.ZoneKey?.ToString("D") ?? "\0null") : "\0null",
             PersonFields.Seat => S(v.Seat?.SeatId.ToString("D")),
+            PersonFields.Groups => v.Groups is { } groups ? string.Join('|', groups.Select(g => $"{g.GroupId:D}:{GroupCodes.Of(g.Role)}")) : "\0null",
             PersonFields.EmploymentType => S(v.EmploymentType),
             PersonFields.JobType => S(v.JobType),
             PersonFields.HireDate => D(v.HireDate),

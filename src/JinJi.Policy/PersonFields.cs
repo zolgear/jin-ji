@@ -62,6 +62,9 @@ public static class PersonFields
     /// <summary>発令。人事管理者以外には発令日が到来したものだけを返す（内示の秘匿）。</summary>
     public const string PersonnelActions = "personnel_actions";
 
+    /// <summary>所属するグループ（チーム・プロジェクトなど規程外の単位と役割。ADR-0014）。全社公開のグループだけ。</summary>
+    public const string Groups = "groups";
+
     /// <summary>氏名の履歴。人事管理者だけ（ポリシーでは指定できない）。</summary>
     public const string NameHistory = "name_history";
 
@@ -71,7 +74,7 @@ public static class PersonFields
         EmployeeNumber, LegalEntity, DisplayName, FamilyName, GivenName, FamilyNameKana, GivenNameKana,
         FamilyNameLatin, GivenNameLatin, WorkEmail, ExtensionNumber, WorkMobilePhone, Site, RemoteWork, Workplace, Seat, Presence,
         EmploymentType, JobType, HireDate, TerminationDate, EmploymentStatus, AccountStatus, AccountSuspension,
-        Assignments, Managers, PersonnelActions, NameHistory,
+        Assignments, Managers, PersonnelActions, Groups, NameHistory,
     };
 
     /// <summary>人事管理者だけが見られる項目。ポリシーの対象外で、本人にも見せない。</summary>

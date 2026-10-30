@@ -93,6 +93,7 @@ public static class WebhookCodes
         ChangeEntityType.Person => "person",
         ChangeEntityType.OrgUnit => "org_unit",
         ChangeEntityType.Site => "site",
+        ChangeEntityType.Group => "group",
         _ => throw new ArgumentOutOfRangeException(nameof(type)),
     };
 
@@ -101,6 +102,7 @@ public static class WebhookCodes
         "person" => ChangeEntityType.Person,
         "org_unit" => ChangeEntityType.OrgUnit,
         "site" => ChangeEntityType.Site,
+        "group" => ChangeEntityType.Group,
         _ => throw new ArgumentException($"未知の変更の種別です: {code}", nameof(code)),
     };
 }

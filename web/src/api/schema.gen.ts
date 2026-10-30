@@ -11,6 +11,12 @@ export interface components {
       key_id: string | null;
       public_key_pem: string | null;
     };
+    AddGroupMemberRequest: {
+      person_id?: string | null; // uuid
+      role?: "owner" | "lead" | "member" | null;
+      from?: string | null; // date
+      until?: string | null; // date
+    };
     AgentSuggestionResponse: {
       id: string; // uuid
       resolution: "select_candidate" | "register_new" | "refer_to_correction" | "reject";
@@ -92,13 +98,16 @@ export interface components {
       rule: "employee_number" | "work_email" | "name_and_org";
       confidence: number; // double
     };
+    ChangeGroupRoleRequest: {
+      role?: "owner" | "lead" | "member" | null;
+    };
     ChangeListResponse: {
       items: components["schemas"]["ChangeResponse"][];
       next_cursor: string;
       has_more: boolean;
     };
     ChangeResponse: {
-      type: "person" | "org_unit" | "site";
+      type: "person" | "org_unit" | "site" | "group";
       id: string; // uuid
     };
     CimdDomainsResponse: {
@@ -120,6 +129,9 @@ export interface components {
     CloseCorrectionRequest: {
       status?: "resolved" | "dismissed" | null;
       note?: string | null;
+    };
+    CloseGroupRequest: {
+      date?: string | null; // date
     };
     ConsentClientResponse: {
       client_id: string;
@@ -193,13 +205,25 @@ export interface components {
     };
     CreateCorrectionRequest: {
       person_id?: string | null; // uuid
-      field?: "employee_number" | "legal_entity" | "display_name" | "family_name" | "given_name" | "family_name_kana" | "given_name_kana" | "family_name_latin" | "given_name_latin" | "work_email" | "extension_number" | "work_mobile_phone" | "site" | "remote_work" | "workplace" | "seat" | "employment_type" | "job_type" | "hire_date" | "termination_date" | "employment_status" | "account_status" | "account_suspension" | "assignments" | "managers" | "personnel_actions" | null;
+      field?: "employee_number" | "legal_entity" | "display_name" | "family_name" | "given_name" | "family_name_kana" | "given_name_kana" | "family_name_latin" | "given_name_latin" | "work_email" | "extension_number" | "work_mobile_phone" | "site" | "remote_work" | "workplace" | "seat" | "employment_type" | "job_type" | "hire_date" | "termination_date" | "employment_status" | "account_status" | "account_suspension" | "assignments" | "managers" | "personnel_actions" | "groups" | null;
       reason?: string | null;
       suggested_value?: string | null;
     };
     CreateCorrectionResponse: {
       outcome: "created" | "endorsed" | "already_reported";
       correction: components["schemas"]["CorrectionResponse"];
+    };
+    CreateFieldRegistrationRequest: {
+      effective_date?: string | null; // date
+      note?: string | null;
+      changes?: components["schemas"]["FieldChangeRequest"][] | null;
+    };
+    CreateGroupRequest: {
+      name?: string | null;
+      kind?: "team" | "project" | "committee" | "other" | null;
+      owner_org_unit_id?: string | null; // uuid
+      visibility?: "all" | "members" | null;
+      valid_from?: string | null; // date
     };
     CreateLoginBindingRequest: {
       person_id: string; // uuid
@@ -246,6 +270,78 @@ export interface components {
       value: string;
       label: string;
       count: number; // int32
+    };
+    FieldChangeRequest: {
+      kind?: "assignment" | "person" | "org_update" | "org_create" | "org_abolish" | null;
+      target_id?: string | null; // uuid
+      values?: {
+        [key: string]: string;
+      } | null;
+    };
+    FieldGrantResponse: {
+      id: string; // uuid
+      org_unit_id: string; // uuid
+      person_id: string; // uuid
+      from: string; // date
+      until: string; // date
+      granted_by: string; // uuid
+      granted_at: string; // date-time
+      revoked_by: string | null; // uuid
+      revoked_at: string | null; // date-time
+    };
+    FieldModeResponse: {
+      domain: "org_structure" | "org_site" | "assignment" | "person_site" | "person_contact";
+      mode: "hr" | "field" | "both";
+    };
+    FieldRegistrationChangeResponse: {
+      id: string; // uuid
+      target_kind: "person" | "person_version" | "org_unit" | "org_unit_version" | "assignment" | "personnel_action" | "account_suspension" | "external_identity" | "site" | "site_version" | "building" | "building_version" | "floor" | "floor_version" | "floor_layout" | "workplace_assignment";
+      operation: "create" | "correct" | "change" | "review" | "supplement" | "abolish" | "end";
+      target_id: string | null; // uuid
+      status: "proposed" | "needs_review" | "applied" | "rejected" | "resolved";
+      payload: {
+        [key: string]: string;
+      };
+      diff: {
+        [key: string]: components["schemas"]["ProposalDiffResponse"];
+      };
+    };
+    FieldRegistrationResponse: {
+      id: string; // uuid
+      status: "draft" | "pending_consent" | "applied" | "withdrawn" | "discarded" | "expired";
+      effective_date: string; // date
+      note: string | null;
+      registered_by: string; // uuid
+      registered_via: "user" | "agent";
+      created_at: string; // date-time
+      expires_at: string; // date-time
+      org_unit_ids: string[];
+      person_ids: string[];
+      consent_org_unit_ids: string[];
+      consented_by: string | null; // uuid
+      consented_at: string | null; // date-time
+      applied_by: string | null; // uuid
+      applied_at: string | null; // date-time
+      withdrawn_by: string | null; // uuid
+      withdrawn_at: string | null; // date-time
+      changes: components["schemas"]["FieldRegistrationChangeResponse"][] | null;
+    };
+    FieldScopeResponse: {
+      manages_all: boolean;
+      org_unit_ids: string[];
+      parent_scope_org_unit_ids: string[];
+      grantable_org_unit_ids: string[];
+    };
+    FieldSettingResponse: {
+      id: string; // uuid
+      domain: "org_structure" | "org_site" | "assignment" | "person_site" | "person_contact";
+      mode: "hr" | "field" | "both";
+      status: "proposed" | "approved" | "rejected" | "superseded";
+      note: string | null;
+      proposed_by: string; // uuid
+      proposed_at: string; // date-time
+      decided_by: string | null; // uuid
+      decided_at: string | null; // date-time
     };
     FixtureResponse: {
       kind: "core" | "room" | "void";
@@ -300,6 +396,44 @@ export interface components {
       occupied_count: number; // int32
       vacant_count: number; // int32
       unavailable_count: number; // int32
+    };
+    GrantFieldEditorRequest: {
+      org_unit_id?: string | null; // uuid
+      person_id?: string | null; // uuid
+      from?: string | null; // date
+      until?: string | null; // date
+    };
+    GroupDetailResponse: {
+      group: components["schemas"]["GroupResponse"];
+      members: components["schemas"]["GroupMemberResponse"][];
+    };
+    GroupMemberResponse: {
+      person_id: string; // uuid
+      role: "owner" | "lead" | "member";
+      from: string; // date
+      until: string | null; // date
+    };
+    GroupMembershipResponse: {
+      group_id: string; // uuid
+      name: string;
+      kind: "team" | "project" | "committee" | "other";
+      role: "owner" | "lead" | "member";
+      managed: boolean;
+    };
+    GroupResponse: {
+      id: string; // uuid
+      name: string;
+      kind: "team" | "project" | "committee" | "other";
+      owner_org_unit_id: string | null; // uuid
+      visibility: "all" | "members";
+      managed: boolean;
+      valid_from: string; // date
+      valid_until: string | null; // date
+      member_count: number; // int32
+    };
+    GroupSettingsRequest: {
+      visibility?: "all" | "members" | null;
+      managed?: boolean | null;
     };
     IssueClientSecretRequest: {
       lifetime_days: number | null; // int32
@@ -547,6 +681,7 @@ export interface components {
       assignments: components["schemas"]["AssignmentResponse"][] | null;
       managers: string[] | null;
       personnel_actions: components["schemas"]["PersonnelActionResponse"][] | null;
+      groups: components["schemas"]["GroupMembershipResponse"][] | null;
       name_history: components["schemas"]["NameVersionResponse"][] | null;
     };
     PersonSearchResponse: {
@@ -594,6 +729,10 @@ export interface components {
       detail?: string | null;
       instance?: string | null;
     };
+    ProposalDiffResponse: {
+      old: string | null;
+      new: string | null;
+    };
     ProposalResponse: {
       id: string; // uuid
       batch_id: string; // uuid
@@ -616,6 +755,11 @@ export interface components {
     ProposeDisclosureLeadRequest: {
       lead_days: number | null; // int32
       note: string | null;
+    };
+    ProposeFieldSettingRequest: {
+      domain?: "org_structure" | "org_site" | "assignment" | "person_site" | "person_contact" | null;
+      mode?: "hr" | "field" | "both" | null;
+      note?: string | null;
     };
     RecoveryCodesResponse: {
       recovery_codes: string[];
@@ -846,6 +990,12 @@ export interface components {
       rate_limit_per_client: number | null; // int32
       clear_rate_limit: boolean | null;
     };
+    UpdateGroupRequest: {
+      name?: string | null;
+      kind?: "team" | "project" | "committee" | "other" | null;
+      owner_org_unit_id?: string | null; // uuid
+      clear_owner_org_unit?: boolean | null;
+    };
     UpdateWebhookRequest: {
       url: string | null;
       status: "active" | "disabled" | null;
@@ -1039,6 +1189,166 @@ export interface paths {
       response: components["schemas"]["CorrectionResponse"];
     };
   };
+  "/api/v1/field/grants": {
+    /** 担当の指名の一覧（取り消し済みを含む。新しい順）（ListFieldEditorGrants） */
+    get: {
+      path: Record<string, never>;
+      query: {
+        org_unit_id?: string;
+        person_id?: string;
+      };
+      body: never;
+      response: components["schemas"]["FieldGrantResponse"][];
+    };
+    /** 組織の担当を指名する（組織長としての範囲を持つ人・組織管理者・人事管理者）（GrantFieldEditor） */
+    post: {
+      path: Record<string, never>;
+      query: Record<string, never>;
+      body: components["schemas"]["GrantFieldEditorRequest"];
+      response: components["schemas"]["FieldGrantResponse"];
+    };
+  };
+  "/api/v1/field/grants/{grantId}/revoke": {
+    /** 担当の指名を取り消す（RevokeFieldEditor） */
+    post: {
+      path: {
+        grantId: string;
+      };
+      query: Record<string, never>;
+      body: never;
+      response: components["schemas"]["FieldGrantResponse"];
+    };
+  };
+  "/api/v1/field/modes": {
+    /** 領域ごとの管理元（hr / field / both）（GetFieldModes） */
+    get: {
+      path: Record<string, never>;
+      query: Record<string, never>;
+      body: never;
+      response: components["schemas"]["FieldModeResponse"][];
+    };
+  };
+  "/api/v1/field/registrations": {
+    /** 直接登録の一覧（自分の登録・同意した登録・自分の範囲の組織の登録。新しい順）（ListFieldRegistrations） */
+    get: {
+      path: Record<string, never>;
+      query: {
+        mine?: string;
+        status?: string;
+      };
+      body: never;
+      response: components["schemas"]["FieldRegistrationResponse"][];
+    };
+    /** 直接登録する（範囲の中ならすぐに反映。AI エージェントは下書き）（CreateFieldRegistration） */
+    post: {
+      path: Record<string, never>;
+      query: Record<string, never>;
+      body: components["schemas"]["CreateFieldRegistrationRequest"];
+      response: components["schemas"]["FieldRegistrationResponse"];
+    };
+  };
+  "/api/v1/field/registrations/{registrationId}": {
+    /** 直接登録を参照する（変更を含む）（GetFieldRegistration） */
+    get: {
+      path: {
+        registrationId: string;
+      };
+      query: Record<string, never>;
+      body: never;
+      response: components["schemas"]["FieldRegistrationResponse"];
+    };
+  };
+  "/api/v1/field/registrations/{registrationId}/confirm": {
+    /** AI エージェントの下書きを確定する（下書きの名義の人）（ConfirmFieldRegistration） */
+    post: {
+      path: {
+        registrationId: string;
+      };
+      query: Record<string, never>;
+      body: never;
+      response: components["schemas"]["FieldRegistrationResponse"];
+    };
+  };
+  "/api/v1/field/registrations/{registrationId}/consent": {
+    /** 同意待ちの登録に同意して反映する（相手側の組織の範囲を持つ、登録者とは別の人）（ConsentFieldRegistration） */
+    post: {
+      path: {
+        registrationId: string;
+      };
+      query: Record<string, never>;
+      body: never;
+      response: components["schemas"]["FieldRegistrationResponse"];
+    };
+  };
+  "/api/v1/field/registrations/{registrationId}/discard": {
+    /** 下書き・同意待ちの登録を破棄する（登録者か、組織管理者・人事管理者）（DiscardFieldRegistration） */
+    post: {
+      path: {
+        registrationId: string;
+      };
+      query: Record<string, never>;
+      body: never;
+      response: components["schemas"]["FieldRegistrationResponse"];
+    };
+  };
+  "/api/v1/field/registrations/{registrationId}/withdraw": {
+    /** 反映済みの登録を有効日の前に取り消す（登録者か、登録の組織すべての範囲を持つ人）（WithdrawFieldRegistration） */
+    post: {
+      path: {
+        registrationId: string;
+      };
+      query: Record<string, never>;
+      body: never;
+      response: components["schemas"]["FieldRegistrationResponse"];
+    };
+  };
+  "/api/v1/field/scope": {
+    /** 閲覧者の直接登録の範囲（今日。組織の ID の一覧）（GetFieldScope） */
+    get: {
+      path: Record<string, never>;
+      query: Record<string, never>;
+      body: never;
+      response: components["schemas"]["FieldScopeResponse"];
+    };
+  };
+  "/api/v1/field/settings": {
+    /** 管理元の起案の一覧（新しい順）（ListFieldSettings） */
+    get: {
+      path: Record<string, never>;
+      query: Record<string, never>;
+      body: never;
+      response: components["schemas"]["FieldSettingResponse"][];
+    };
+    /** 管理元を起案する（人事管理者・組織管理者の人）（ProposeFieldSetting） */
+    post: {
+      path: Record<string, never>;
+      query: Record<string, never>;
+      body: components["schemas"]["ProposeFieldSettingRequest"];
+      response: components["schemas"]["FieldSettingResponse"];
+    };
+  };
+  "/api/v1/field/settings/{settingId}/approve": {
+    /** 管理元の起案を承認する（起案者とは別の人事管理者・組織管理者の人）（ApproveFieldSetting） */
+    post: {
+      path: {
+        settingId: string;
+      };
+      query: Record<string, never>;
+      body: never;
+      response: components["schemas"]["FieldSettingResponse"];
+    };
+  };
+  "/api/v1/field/settings/{settingId}/reject": {
+    /** 管理元の起案を却下する（起案者とは別の人事管理者・組織管理者の人）（RejectFieldSetting） */
+    post: {
+      path: {
+        settingId: string;
+      };
+      query: Record<string, never>;
+      body: never;
+      response: components["schemas"]["FieldSettingResponse"];
+    };
+  };
   "/api/v1/floors/{id}/layout": {
     /** その日の配置図（外形・固定の部分・ゾーン・席の置き場所と状態）（GetFloorLayout） */
     get: {
@@ -1077,6 +1387,106 @@ export interface paths {
       query: Record<string, never>;
       body: never;
       response: components["schemas"]["FloorPresenceResponse"];
+    };
+  };
+  "/api/v1/groups": {
+    /** グループの一覧（今日有効な、閲覧者に見えるもの。名前の順）（ListGroups） */
+    get: {
+      path: Record<string, never>;
+      query: {
+        kind?: string;
+        person_id?: string;
+        owner_org_unit_id?: string;
+        managed?: string;
+      };
+      body: never;
+      response: components["schemas"]["GroupResponse"][];
+    };
+    /** グループを作る（人。作成者が最初のオーナー）（CreateGroup） */
+    post: {
+      path: Record<string, never>;
+      query: Record<string, never>;
+      body: components["schemas"]["CreateGroupRequest"];
+      response: components["schemas"]["GroupDetailResponse"];
+    };
+  };
+  "/api/v1/groups/{groupId}": {
+    /** グループと今日のメンバーを参照する（GetGroup） */
+    get: {
+      path: {
+        groupId: string;
+      };
+      query: Record<string, never>;
+      body: never;
+      response: components["schemas"]["GroupDetailResponse"];
+    };
+  };
+  "/api/v1/groups/{groupId}/close": {
+    /** その日（既定は今日）でグループを終える（CloseGroup） */
+    post: {
+      path: {
+        groupId: string;
+      };
+      query: Record<string, never>;
+      body: components["schemas"]["CloseGroupRequest"] | null;
+      response: components["schemas"]["GroupDetailResponse"];
+    };
+  };
+  "/api/v1/groups/{groupId}/members": {
+    /** メンバーを加える（AddGroupMember） */
+    post: {
+      path: {
+        groupId: string;
+      };
+      query: Record<string, never>;
+      body: components["schemas"]["AddGroupMemberRequest"];
+      response: components["schemas"]["GroupDetailResponse"];
+    };
+  };
+  "/api/v1/groups/{groupId}/members/{personId}/remove": {
+    /** 今日でメンバーから外す（本人は自分を外せる。管理対象のグループを除く）（RemoveGroupMember） */
+    post: {
+      path: {
+        groupId: string;
+        personId: string;
+      };
+      query: Record<string, never>;
+      body: never;
+      response: components["schemas"]["GroupDetailResponse"];
+    };
+  };
+  "/api/v1/groups/{groupId}/members/{personId}/role": {
+    /** 今日からメンバーの役割を変える（ChangeGroupMemberRole） */
+    post: {
+      path: {
+        groupId: string;
+        personId: string;
+      };
+      query: Record<string, never>;
+      body: components["schemas"]["ChangeGroupRoleRequest"];
+      response: components["schemas"]["GroupDetailResponse"];
+    };
+  };
+  "/api/v1/groups/{groupId}/settings": {
+    /** 公開範囲（all / members）・管理対象を変える（SetGroupSettings） */
+    post: {
+      path: {
+        groupId: string;
+      };
+      query: Record<string, never>;
+      body: components["schemas"]["GroupSettingsRequest"];
+      response: components["schemas"]["GroupDetailResponse"];
+    };
+  };
+  "/api/v1/groups/{groupId}/update": {
+    /** 今日から名称・種別・所管組織を変える（UpdateGroup） */
+    post: {
+      path: {
+        groupId: string;
+      };
+      query: Record<string, never>;
+      body: components["schemas"]["UpdateGroupRequest"];
+      response: components["schemas"]["GroupDetailResponse"];
     };
   };
   "/api/v1/ingest/proposals/{proposalId}": {

@@ -36,6 +36,9 @@ public enum RequestKind
 
     /// <summary>修正依頼（起票・一覧・状態の更新・レポート）。一時停止中のクライアントは使えない（管理操作の例外に含めない）。</summary>
     Correction,
+
+    /// <summary>現場・IT 部門の直接登録（管理元・担当の指名・範囲・登録。ADR-0013）とグループの変更（ADR-0014）。一時停止中のクライアントは使えない。</summary>
+    Field,
 }
 
 /// <summary>エンドポイントのメタデータ: 種別。</summary>
@@ -57,6 +60,7 @@ public static class RequestKinds
         RequestKind.Ingest => "ingest",
         RequestKind.Sync => "sync",
         RequestKind.Correction => "correction",
+        RequestKind.Field => "field",
         _ => throw new ArgumentOutOfRangeException(nameof(kind)),
     };
 }

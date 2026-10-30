@@ -276,7 +276,7 @@ public sealed record CreateCorrectionRequest
         "employee_number", "legal_entity", "display_name", "family_name", "given_name", "family_name_kana", "given_name_kana",
         "family_name_latin", "given_name_latin", "work_email", "extension_number", "work_mobile_phone", "site", "remote_work", "workplace", "seat",
         "employment_type", "job_type", "hire_date", "termination_date", "employment_status", "account_status", "account_suspension",
-        "assignments", "managers", "personnel_actions")]
+        "assignments", "managers", "personnel_actions", "groups")]
     public string? Field { get; init; }
 
     /// <summary>現在の値が誤っている理由（500 文字まで。保持しない情報を書かない）。</summary>

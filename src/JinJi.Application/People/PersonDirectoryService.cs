@@ -170,6 +170,30 @@ public sealed class PersonDirectoryService
         return personIds.Where(id => projector.Project(viewer, id) is not null).ToHashSet();
     }
 
+    /// <summary>
+    /// 今日、閲覧者にその項目が見える人（グループのメンバーの一覧を項目 groups で狭めるのに使う。ADR-0014）。値は返さず、監査ログにも残さない
+    /// （呼び出し側がグループの参照として記録する）。
+    /// </summary>
+    public async Task<IReadOnlySet<Guid>> WithVisibleFieldAsync(
+        ViewerContext viewer,
+        IReadOnlyCollection<Guid> personIds,
+        string field,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(viewer);
+        ArgumentNullException.ThrowIfNull(personIds);
+        var today = BusinessDate.Today(_timeProvider);
+        if (personIds.Count == 0)
+        {
+            return new HashSet<Guid>();
+        }
+
+        var (data, relations, projectionDate) = await LoadAsync(_snapshots, viewer, today, today, cancellationToken);
+        var policies = await _policies.LoadActiveAsync(viewer, cancellationToken);
+        var projector = new PersonProjector(new PolicyEvaluator(policies, new RelationEvaluator(relations)), data, projectionDate, _options.RetiredPublicDays);
+        return personIds.Where(id => projector.Project(viewer, id) is { } view && view.CanSee(field)).ToHashSet();
+    }
+
     private async Task<T> RunAsync<T>(
         ViewerContext viewer,
         Request request,

@@ -157,6 +157,7 @@ public sealed class NpgsqlOrgSnapshotProvider : IOrgSnapshotProvider
             (Id: r.GetGuid(0), LegalEntityId: r.GetGuid(1), EmployeeNumber: r.GetString(2)), cancellationToken);
 
         var workplace = await LoadWorkplaceAsync(tx, asOf, cancellationToken);
+        var groups = await LoadGroupsAsync(tx, asOf, cancellationToken);
 
         await tx.CommitAsync(cancellationToken);
 
@@ -183,7 +184,46 @@ public sealed class NpgsqlOrgSnapshotProvider : IOrgSnapshotProvider
             });
         }
 
-        return OrgSnapshot.Create(asOf, legalEntities, units, records, assignments, schemes, sites, workplace);
+        return OrgSnapshot.Create(asOf, legalEntities, units, records, assignments, schemes, sites, workplace, groups);
+    }
+
+    /// <summary>その時点のグループとメンバー（RLS により、閲覧者に見えるグループだけ。共有のスナップショットは全社公開のグループだけ）。</summary>
+    private static async Task<GroupMap> LoadGroupsAsync(ViewerTransaction tx, DateOnly asOf, CancellationToken cancellationToken)
+    {
+        object[] date = [asOf];
+        var groups = await ReadAllAsync(
+            tx,
+            """
+            SELECT v.group_id, v.name, v.kind, v.owner_org_unit_id, g.visibility, g.managed
+            FROM org_group_version v JOIN org_group g ON g.id = v.group_id
+            WHERE upper_inf(v.recorded_period) AND v.valid_period @> $1
+            """,
+            date,
+            r => new OrgGroup(
+                r.GetGuid(0),
+                r.GetString(1),
+                GroupCodes.ParseKind(r.GetString(2)),
+                NullableGuid(r, 3),
+                r.GetString(4) == "members" ? GroupVisibility.Members : GroupVisibility.All,
+                r.GetBoolean(5)),
+            cancellationToken);
+        if (groups.Count == 0)
+        {
+            return GroupMap.Empty;
+        }
+
+        var members = await ReadAllAsync(
+            tx,
+            "SELECT group_id, person_id, role, lower(valid_period), upper(valid_period) FROM org_group_member WHERE upper_inf(recorded_period) AND valid_period @> $1",
+            date,
+            r => new GroupMembership(
+                r.GetGuid(0),
+                r.GetGuid(1),
+                GroupCodes.ParseRole(r.GetString(2)),
+                r.GetFieldValue<DateOnly>(3),
+                r.IsDBNull(4) ? null : r.GetFieldValue<DateOnly>(4)),
+            cancellationToken);
+        return new GroupMap(groups, members);
     }
 
     /// <summary>その時点の建物・階・配置図・人の席・組織のエリア（同じトランザクションで読む）。</summary>

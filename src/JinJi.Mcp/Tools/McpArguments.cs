@@ -31,6 +31,9 @@ internal sealed class McpArguments
     private bool TryGet(string name, out JsonElement value) =>
         _values.TryGetValue(name, out value) && value.ValueKind is not (JsonValueKind.Null or JsonValueKind.Undefined);
 
+    /// <summary>引数の JSON（省略・null なら null）。形の検査は呼び出し側が行う。</summary>
+    public JsonElement? Raw(string name) => TryGet(name, out var value) ? value : null;
+
     /// <summary>文字列（省略・null なら null）。前後の空白は除き、空なら null。</summary>
     public string? String(string name, int maxLength)
     {

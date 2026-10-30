@@ -35,6 +35,10 @@ public static class McpToolCatalog
         new SuggestReviewResolutionTool(),
         new ListCorrectionsTool(),
         new ReportCorrectionTool(),
+        new ListFieldRegistrationsTool(),
+        new ListGroupsTool(),
+        new GetGroupTool(),
+        new DraftFieldRegistrationTool(),
     ];
 
     private static readonly Dictionary<string, McpTool> ByName = Tools.ToDictionary(t => t.Name, StringComparer.Ordinal);

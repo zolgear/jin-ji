@@ -16,7 +16,9 @@
     "取込作業領域": "取り込みの作業領域（取込単位・staging・正規化結果・名寄せ候補・変更提案・修正依頼）。公開されない作業領域（§7.1）で、閲覧は hr_admin とバッチの実行者だけ。staging の値は許可リストの項目に限る。ADR-0002 の表には無い追加の分類",
     "同期作業領域": "Entra ID などへの同期計画・承認・実行結果（作業領域）。値は全社公開レベルの項目（氏名・部署・役職・会社名・勤務地・社員番号・上長・アカウントの有効/無効）だけで、閲覧は hr_admin だけ。ADR-0002 の表には無い追加の分類",
     "認証": "人のログイン（ローカルアカウント・パスキー・外部 IdP の主体との紐付け・UI のセッション・Data Protection の鍵）と、API・MCP 向けのトークン発行（クライアント・鍵・認可コード・参照トークン・同意）。資格情報・トークンはハッシュか暗号化した値だけを持つ。ADR-0002 の表には無い追加の分類（ADR-0004）",
-    "配信": "社内システムへの Webhook（変更の通知）の登録・署名の鍵（暗号化した値）・送信の待ち行列と記録。本文は種別と ID だけで、氏名などの値は持たない（受け手は自分のトークンで取り直す）。閲覧は jin-ji 自身と hr_admin の人だけ。ADR-0002 の表には無い追加の分類"
+    "配信": "社内システムへの Webhook（変更の通知）の登録・署名の鍵（暗号化した値）・送信の待ち行列と記録。本文は種別と ID だけで、氏名などの値は持たない（受け手は自分のトークンで取り直す）。閲覧は jin-ji 自身と hr_admin の人だけ。ADR-0002 の表には無い追加の分類",
+    "直接登録": "現場・IT 部門の直接登録（ADR-0013）の記録: 登録・同意・取り消し、関係者、公開側に書いた行の ID。値は変更提案（payload / diff。許可リストの項目だけ）にあり、未来日の内容は登録の関係者・org_admin・hr_admin だけが見る。ADR-0002 の表には無い追加の分類",
+    "グループ": "規程外の単位（チーム・プロジェクト・委員会。ADR-0014）の名称・種別・所管組織・公開範囲・管理対象と、メンバーと役割・期間（二つの時間軸）。組織のツリー・上長・承認ルートには入れない。ADR-0002 の表には無い追加の分類"
   },
   "tables": {
     "legal_entity": {
@@ -1186,6 +1188,10 @@
         "resolution": {
           "category": "取込作業領域",
           "description": "要確認の提案の解決の種別（selected_candidate / registered_new / referred_to_correction）"
+        },
+        "field_registration_id": {
+          "category": "直接登録",
+          "description": "直接登録の提案なら、その登録（取込単位は持たない）"
         }
       }
     },
@@ -1674,7 +1680,7 @@
         },
         "role": {
           "category": "認可",
-          "description": "ロール名（hr_admin）"
+          "description": "ロール名（hr_admin・hr_corrector・org_admin）"
         },
         "granted_by_kind": {
           "category": "認可",
@@ -3034,6 +3040,306 @@
         "notified_at": {
           "category": "システム管理用",
           "description": "最後に通知した日時"
+        }
+      }
+    },
+    "field_domain_setting": {
+      "description": "領域ごとの管理元（人事パッケージ / jin-ji / 両方。ADR-0013）の起案と承認",
+      "columns": {
+        "id": {
+          "category": "システム管理用",
+          "description": "起案の行 ID（UUIDv7）"
+        },
+        "domain": {
+          "category": "認可",
+          "description": "領域（org_structure・org_site・assignment・person_site・person_contact）"
+        },
+        "mode": {
+          "category": "認可",
+          "description": "管理元（hr: 取込だけ / field: 直接登録だけ / both: 両方）"
+        },
+        "status": {
+          "category": "認可",
+          "description": "状態（起案中・承認済み・却下・置き換え済み）"
+        },
+        "note": {
+          "category": "認可",
+          "description": "起案の理由のメモ（任意。人事データの値を書かない）"
+        },
+        "proposed_by_person_id": {
+          "category": "認可",
+          "description": "起案した人事管理者・組織管理者"
+        },
+        "proposed_at": {
+          "category": "認可",
+          "description": "起案日時"
+        },
+        "decided_by_person_id": {
+          "category": "認可",
+          "description": "承認・却下した人事管理者・組織管理者（起案者とは別人）"
+        },
+        "decided_at": {
+          "category": "認可",
+          "description": "承認・却下の日時"
+        },
+        "superseded_at": {
+          "category": "認可",
+          "description": "同じ領域の次の承認で置き換えられた日時"
+        }
+      }
+    },
+    "org_editor_grant": {
+      "description": "組織とその配下の直接登録の担当の指名（ADR-0013）",
+      "columns": {
+        "id": {
+          "category": "システム管理用",
+          "description": "指名の行 ID（UUIDv7）"
+        },
+        "org_unit_id": {
+          "category": "認可",
+          "description": "担当する組織（配下を含む）"
+        },
+        "person_id": {
+          "category": "識別",
+          "description": "指名された人"
+        },
+        "valid_period": {
+          "category": "認可",
+          "description": "指名の期間（始まりと終わりを持つ）"
+        },
+        "granted_by_person_id": {
+          "category": "認可",
+          "description": "指名した人（組織長・組織管理者・人事管理者。自分は指名できない）"
+        },
+        "granted_at": {
+          "category": "認可",
+          "description": "指名した日時"
+        },
+        "revoked_by_person_id": {
+          "category": "認可",
+          "description": "取り消した人"
+        },
+        "revoked_at": {
+          "category": "認可",
+          "description": "取り消した日時"
+        }
+      }
+    },
+    "field_registration": {
+      "description": "現場・IT 部門の直接登録（ADR-0013）。変更提案をまとめ、登録者か同意者が承認を経ずに反映する",
+      "columns": {
+        "id": {
+          "category": "システム管理用",
+          "description": "登録の行 ID（UUIDv7）"
+        },
+        "status": {
+          "category": "直接登録",
+          "description": "状態（draft / pending_consent / applied / withdrawn / discarded / expired）"
+        },
+        "effective_date": {
+          "category": "直接登録",
+          "description": "有効日（今日以降。遡及は org_admin・人事管理者だけ）"
+        },
+        "note": {
+          "category": "直接登録",
+          "description": "登録の理由のメモ（任意。人事データの値を書かない）"
+        },
+        "registered_by_person_id": {
+          "category": "直接登録",
+          "description": "登録者（AI エージェントの下書きは委任元）"
+        },
+        "registered_via": {
+          "category": "直接登録",
+          "description": "user（人）/ agent（AI エージェントの下書き）"
+        },
+        "registered_via_client_id": {
+          "category": "直接登録",
+          "description": "下書きを作った AI エージェントのクライアント"
+        },
+        "created_at": {
+          "category": "直接登録",
+          "description": "登録した日時"
+        },
+        "expires_at": {
+          "category": "直接登録",
+          "description": "下書き・同意待ちの期限"
+        },
+        "org_unit_ids": {
+          "category": "直接登録",
+          "description": "登録が関係する組織（範囲を持つ人の一覧の判定）"
+        },
+        "person_ids": {
+          "category": "直接登録",
+          "description": "登録で変える人（人数の上限・監査）"
+        },
+        "consent_org_unit_ids": {
+          "category": "直接登録",
+          "description": "登録者の範囲の外で、相手側の同意が要る組織"
+        },
+        "consented_by_person_id": {
+          "category": "直接登録",
+          "description": "同意した人"
+        },
+        "consented_at": {
+          "category": "直接登録",
+          "description": "同意した日時"
+        },
+        "applied_by_person_id": {
+          "category": "直接登録",
+          "description": "反映した人（登録者か同意者）"
+        },
+        "applied_at": {
+          "category": "直接登録",
+          "description": "反映した日時"
+        },
+        "withdrawn_by_person_id": {
+          "category": "直接登録",
+          "description": "取り消した人"
+        },
+        "withdrawn_at": {
+          "category": "直接登録",
+          "description": "取り消した日時"
+        },
+        "closed_by_person_id": {
+          "category": "直接登録",
+          "description": "破棄した人（期限切れは空）"
+        },
+        "closed_at": {
+          "category": "直接登録",
+          "description": "破棄・期限切れにした日時"
+        }
+      }
+    },
+    "field_registration_viewer": {
+      "description": "直接登録の関係者（登録者・同意者・取り消した人）。登録が書いた未来日の行をこの人たちに見せる",
+      "columns": {
+        "registration_id": {
+          "category": "直接登録",
+          "description": "登録"
+        },
+        "person_id": {
+          "category": "直接登録",
+          "description": "関係者"
+        }
+      }
+    },
+    "field_registration_row": {
+      "description": "直接登録が公開側に追加した行・記録期間を閉じた行の ID（値は持たない）",
+      "columns": {
+        "registration_id": {
+          "category": "直接登録",
+          "description": "登録"
+        },
+        "table_name": {
+          "category": "システム管理用",
+          "description": "公開側の表の名前"
+        },
+        "row_id": {
+          "category": "システム管理用",
+          "description": "公開側の行 ID"
+        },
+        "operation": {
+          "category": "システム管理用",
+          "description": "insert（追加）/ close（記録期間を閉じた）"
+        }
+      }
+    },
+    "org_group": {
+      "description": "グループの不変 ID と今の設定（公開範囲・管理対象）",
+      "columns": {
+        "id": {
+          "category": "システム管理用",
+          "description": "グループの不変 ID（UUIDv7）"
+        },
+        "visibility": {
+          "category": "認可",
+          "description": "公開範囲（all / members）"
+        },
+        "managed": {
+          "category": "認可",
+          "description": "アクセス権の管理の対象か（関係スコープ same_group）"
+        },
+        "member_ids": {
+          "category": "認可",
+          "description": "今日以降に有効なメンバー（公開範囲 members の判定）"
+        },
+        "created_by_person_id": {
+          "category": "グループ",
+          "description": "作成者"
+        },
+        "created_at": {
+          "category": "グループ",
+          "description": "作成日時"
+        },
+        "changed_at": {
+          "category": "システム管理用",
+          "description": "設定を最後に変えた日時（スナップショットの世代）"
+        }
+      }
+    },
+    "org_group_version": {
+      "description": "グループの版（bitemporal）",
+      "columns": {
+        "id": {
+          "category": "システム管理用",
+          "description": "版の行 ID（UUIDv7）"
+        },
+        "group_id": {
+          "category": "グループ",
+          "description": "グループ"
+        },
+        "name": {
+          "category": "グループ",
+          "description": "名称"
+        },
+        "kind": {
+          "category": "グループ",
+          "description": "種別（team / project / committee / other）"
+        },
+        "owner_org_unit_id": {
+          "category": "グループ",
+          "description": "所管組織（任意）"
+        },
+        "valid_period": {
+          "category": "システム管理用",
+          "description": "有効期間"
+        },
+        "recorded_period": {
+          "category": "システム管理用",
+          "description": "記録期間"
+        }
+      }
+    },
+    "org_group_member": {
+      "description": "グループのメンバー（bitemporal）",
+      "columns": {
+        "id": {
+          "category": "システム管理用",
+          "description": "行 ID（UUIDv7）"
+        },
+        "group_id": {
+          "category": "グループ",
+          "description": "グループ"
+        },
+        "person_id": {
+          "category": "識別",
+          "description": "メンバーの人"
+        },
+        "role": {
+          "category": "グループ",
+          "description": "役割（owner / lead / member）"
+        },
+        "added_by_person_id": {
+          "category": "グループ",
+          "description": "加えた人"
+        },
+        "valid_period": {
+          "category": "システム管理用",
+          "description": "メンバーの期間"
+        },
+        "recorded_period": {
+          "category": "システム管理用",
+          "description": "記録期間"
         }
       }
     }

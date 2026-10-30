@@ -2,7 +2,7 @@
 
 - ステータス: **承認**
 - 日付: 2026-10-18
-- 関連: [ADR-0002](0002-data-scope.md)、[ADR-0008](0008-authorization-model.md)（内示の秘匿）、[アーキテクチャ概要 §4.1〜§4.3](../architecture/overview.md#41-二つの時間軸bitemporal)
+- 関連: [ADR-0002](0002-data-scope.md)、[ADR-0008](0008-authorization-model.md)（内示の秘匿）、[アーキテクチャ概要 §4.1〜§4.3](../architecture/overview.md#41-二つの時間軸bitemporal)、[ADR-0013（提案）](0013-field-managed-changes.md)（現場の直接登録。決定 3 の見直し）
 
 ## 決定
 

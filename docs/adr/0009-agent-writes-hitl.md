@@ -2,7 +2,7 @@
 
 - ステータス: **承認**
 - 日付: 2026-10-18
-- 関連: [ADR-0004](0004-authentication.md)、[ADR-0006](0006-mcp-sdk.md)、[ADR-0008](0008-authorization-model.md)、[アーキテクチャ概要 §7.1・§7.3](../architecture/overview.md#71-ai-エージェントによる書き込み)
+- 関連: [ADR-0004](0004-authentication.md)、[ADR-0006](0006-mcp-sdk.md)、[ADR-0008](0008-authorization-model.md)、[アーキテクチャ概要 §7.1・§7.3](../architecture/overview.md#71-ai-エージェントによる書き込み)、[ADR-0013（提案）](0013-field-managed-changes.md)（現場の直接登録。決定 2 の見直し）
 
 ## 決定
 

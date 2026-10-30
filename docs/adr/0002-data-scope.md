@@ -2,7 +2,7 @@
 
 - ステータス: **承認**
 - 日付: 2026-10-18
-- 関連: [ADR-0001](0001-language-and-runtime.md)、[ADR-0012（提案）](0012-workplace-and-seat-data.md)（建物・階・座席）、[アーキテクチャ概要](../architecture/overview.md)、[建物・フロアモードの仕様](../design/building-floor-mode.md)
+- 関連: [ADR-0001](0001-language-and-runtime.md)、[ADR-0012（提案）](0012-workplace-and-seat-data.md)（建物・階・座席）、[アーキテクチャ概要](../architecture/overview.md)、[建物・フロアモードの仕様](../design/building-floor-mode.md)、[ADR-0013（提案）](0013-field-managed-changes.md)（現場の直接登録。決定 1 の見直し）
 
 ## 決定
 

@@ -2,7 +2,7 @@
 
 - ステータス: **承認**
 - 日付: 2026-10-18
-- 関連: [ADR-0002](0002-data-scope.md)、[ADR-0004](0004-authentication.md)、[ADR-0007](0007-bitemporal-model.md)、[アーキテクチャ概要 §5](../architecture/overview.md#5-認可モデル公開範囲)
+- 関連: [ADR-0002](0002-data-scope.md)、[ADR-0004](0004-authentication.md)、[ADR-0007](0007-bitemporal-model.md)、[ADR-0014](0014-informal-groups.md)（関係スコープ `same_group`）、[アーキテクチャ概要 §5](../architecture/overview.md#5-認可モデル公開範囲)
 
 ## 決定
 

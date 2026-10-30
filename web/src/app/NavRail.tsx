@@ -11,9 +11,16 @@ import { useFormatDate } from "../lib/dateStyle";
 import { formatHash, useRoute, type View } from "../lib/router";
 import { useNav } from "./nav";
 
-export const VIEW_LABEL: Record<View, string> = { "org-chart": "組織図", "overview-3d": "3D 表示", search: "検索", corrections: "修正依頼", settings: "設定" };
+export const VIEW_LABEL: Record<View, string> = {
+  "org-chart": "組織図",
+  "overview-3d": "3D 表示",
+  search: "検索",
+  changes: "組織の変更",
+  corrections: "修正依頼",
+  settings: "設定",
+};
 /** レールの上の段に並べる画面（設定は下の段）。 */
-const RAIL_VIEWS: Array<Exclude<View, "settings">> = ["org-chart", "overview-3d", "search", "corrections"];
+const RAIL_VIEWS: Array<Exclude<View, "settings">> = ["org-chart", "overview-3d", "search", "changes", "corrections"];
 
 /** 画面を切り替えるときに引き継ぐ引数（修正依頼の画面は日付・選択を持たず、他の画面は修正依頼の絞り込みを、検索の画面以外は検索の条件を持たない）。 */
 function paramsFor(view: View, current: URLSearchParams): URLSearchParams {
@@ -21,11 +28,12 @@ function paramsFor(view: View, current: URLSearchParams): URLSearchParams {
   if (view === "settings") return sourceOnly(current);
   const params = new URLSearchParams(current);
   for (const k of ["date"]) params.delete(k);
-  if (view === "corrections") {
-    for (const k of ["org", "person", "as_of", ...SEARCH_PARAM_KEYS]) params.delete(k);
+  if (view === "corrections" || view === "changes") {
+    for (const k of ["org", "person", "as_of", view === "changes" ? "status" : "tab", ...SEARCH_PARAM_KEYS]) params.delete(k);
     return params;
   }
   params.delete("status");
+  params.delete("tab");
   if (view === "search") params.delete("org");
   else for (const k of SEARCH_PARAM_KEYS) params.delete(k);
   return params;
@@ -68,6 +76,15 @@ const VIEW_ICON: Record<Exclude<View, "settings">, ReactNode> = {
     <Svg>
       <circle cx="10.5" cy="10.5" r="6.2" />
       <path d="m15.2 15.2 5.3 5.3" />
+    </Svg>
+  ),
+  // 組織の変更（箱の配置を矢印で組み替える）
+  changes: (
+    <Svg>
+      <rect x="3" y="4" width="7" height="5" rx="1.2" />
+      <rect x="14" y="15" width="7" height="5" rx="1.2" />
+      <path d="M6.5 9v3.5c0 .8.7 1.5 1.5 1.5h6M12 11.5l2.5 2.5-2.5 2.5" />
+      <path d="M17.5 4.5v5M15 7h5" />
     </Svg>
   ),
   // 受け箱（届いた依頼）

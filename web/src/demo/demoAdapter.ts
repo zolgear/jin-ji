@@ -3,6 +3,7 @@
 import type { DirectoryAdapter } from "../data/types";
 import demoData from "./demo-data.json";
 import { createDemoCorrections } from "./demoCorrections";
+import { createDemoField } from "./demoField";
 import { demoMe } from "./demoViewer";
 import { createDemoWorkplaceAdapter, DemoWorkplaceService } from "./demoWorkplace";
 import { DemoDirectory } from "./directory";
@@ -53,6 +54,7 @@ export function createDemoAdapterFrom(data: DemoDataset, label = DEMO_LABEL): Di
     canViewFuture: false,
     corrections: createDemoCorrections(dir),
     workplace: createDemoWorkplaceAdapter(workplace, later),
+    field: createDemoField(dir, later),
     getOrgTree: (asOf) => later(() => dir.orgTree(asOf)),
     getOrgStats: (asOf) => later(() => dir.stats(asOf)),
     listOrgMembers: (orgId, q) =>

@@ -3,8 +3,8 @@
 import { useCallback, useSyncExternalStore } from "react";
 
 // 設定の画面だけは、項目をパスの 2 段目に持つ（#/settings/display）。
-export type View = "org-chart" | "overview-3d" | "search" | "corrections" | "settings";
-export const VIEWS: View[] = ["org-chart", "overview-3d", "search", "corrections", "settings"];
+export type View = "org-chart" | "overview-3d" | "search" | "changes" | "corrections" | "settings";
+export const VIEWS: View[] = ["org-chart", "overview-3d", "search", "changes", "corrections", "settings"];
 
 export interface Route {
   view: View;

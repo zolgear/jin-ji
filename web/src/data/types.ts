@@ -2,6 +2,7 @@
 // 型の元は OpenAPI から生成した schema.gen.ts。UI 側で値を足したり、見えない項目を推測したりしない。
 import type { Schemas } from "../api/schema.gen";
 import type { CorrectionAdapter } from "./corrections";
+import type { FieldAdapter } from "./field";
 import type { WorkplaceAdapter } from "./workplace";
 
 // 建物・階・席・当日の所在の型（data/workplace.ts）
@@ -172,6 +173,8 @@ export interface DirectoryAdapter {
   readonly corrections: CorrectionAdapter;
   /** 建物・階・席と当日の所在（data/workplace.ts）。 */
   readonly workplace: WorkplaceAdapter;
+  /** 直接登録・グループ・素案（data/field.ts。ADR-0013・0014）。 */
+  readonly field: FieldAdapter;
 }
 
 /** API の Problem Details を伴うエラー。 */

@@ -313,3 +313,15 @@ body {
     stroke: CanvasText;
   }
 }
+
+/* 提案資料（features/field/PlanChart.tsx）: 開いている間の印刷では、画面の本体を隠して提案資料だけを出す */
+@media print {
+  body.printing > #root {
+    display: none !important;
+  }
+
+  body.printing .print-doc {
+    position: static;
+    overflow: visible;
+  }
+}

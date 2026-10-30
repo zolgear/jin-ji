@@ -125,6 +125,26 @@ public sealed class FieldRegistrationTests : IAsyncLifetime
         Assert.Null(await _db.Store.FindProposalAsync(_db.HrUser("hr1"), proposal.Id, Ct));
     }
 
+    [Fact(DisplayName = "秘匿: 登録者・組織管理者が読み込んだ今日のスナップショットのキャッシュに、未来日の発令は入らない")]
+    public async Task Cache_DoesNotShareRegistrantsFutureRows()
+    {
+        await EnableAllAsync();
+        var date = Today.AddDays(7);
+        await _service.RegisterAsync(Head, Transfer("takahashi", "S2", date), Ct);
+
+        // 登録者には（キャッシュを通さない読み込みで）自分の登録の未来日の発令が見える
+        Assert.Contains((await _db.Snapshots.LoadAsync(Head, Today, Today, Ct)).FindPerson(_db.Id("takahashi"))!.Actions, a => a.EffectiveDate == date);
+
+        foreach (var first in new[] { Head, OrgAdmin })
+        {
+            using var cache = new JinJi.Application.Organization.OrgSnapshotCache(
+                _db.Snapshots, new NpgsqlOrgDataVersionSource(_db.DataSource), TimeProvider.System);
+            await cache.LoadAsync(first, Today, Today, Ct);
+            var shared = await cache.LoadAsync(_db.User("member"), Today, Today, Ct);
+            Assert.DoesNotContain(shared.FindPerson(_db.Id("takahashi"))!.Actions, a => a.EffectiveDate == date);
+        }
+    }
+
     [Fact(DisplayName = "登録: 管理元が hr の領域は直接登録できない（アプリと RLS）")]
     public async Task Register_RequiresFieldMode()
     {

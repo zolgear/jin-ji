@@ -45,8 +45,9 @@ public sealed record OrgSnapshotCacheOptions
 /// <list type="bullet">
 /// <item>キャッシュするのは「組織・属性の基準日がどちらも今日の業務日付」の読み込みだけ。時点指定（過去・未来）は毎回読み込む。
 /// 業務日付が変わると前日の分は使わない（内示の発令日の到来で見える行が変わるため）</item>
-/// <item>閲覧者の区分（人事管理者かどうか）ごとに 1 つ持つ。RLS（0002）が見せる行は「hr_admin かどうか」だけで決まり、
-/// 閲覧者個人には依存しないので、区分内の誰が読み込んでも同じ内容になる。RLS の規則を閲覧者個人に依存させる変更をしたら、ここのキーを見直すこと。
+/// <item>閲覧者の区分（人事管理者かどうか）ごとに 1 つ持つ。RLS（0002）が見せる行は「hr_admin かどうか」で決まる。
+/// ただし 0021 の直接登録で、登録の関係者と org_admin には登録が書いた未来日の行（発令・人の版）も見える（閲覧者個人に依存する）。
+/// 区分内で共有する一般の区分は、閲覧者本人ではなく、ロールも先行提供も持たない社内システムの閲覧者で読み込む（誰の登録の未来日の行も含めない）
 /// 0016 の先行提供（社内システムごとの日数）は RLS を閲覧者のクライアントに依存させるが、今日の読み込みは先行提供を外した閲覧者で行う
 /// （<see cref="ViewerContext.WithoutDisclosureLead"/>）ので、区分は変わらない</item>
 /// <item>同一プロセス内の人事データの書き込みは <see cref="NotifyChanged"/> で即座に捨てる</item>
@@ -60,6 +61,9 @@ public sealed class OrgSnapshotCache : IOrgSnapshotProvider, IOrgDataChangeNotif
 {
     private const int GeneralSlot = 0;
     private const int HrAdminSlot = 1;
+
+    /// <summary>一般の区分の共有の読み込みの閲覧者のクライアント ID（DB には記録しない）。</summary>
+    private const string SharedClientId = "jinji-snapshot";
 
     private readonly IOrgSnapshotProvider _inner;
     private readonly IOrgDataVersionSource _versions;
@@ -122,7 +126,7 @@ public sealed class OrgSnapshotCache : IOrgSnapshotProvider, IOrgDataChangeNotif
                 return entry.Snapshot;
             }
 
-            var snapshot = await _inner.LoadAsync(viewer, today, today, cancellationToken);
+            var snapshot = await _inner.LoadAsync(slot == HrAdminSlot ? viewer : SharedViewer(viewer), today, today, cancellationToken);
 
             // 読み込み中に同一プロセスの書き込みがあったら、この結果はキャッシュしない（この要求には返してよい）
             if (Interlocked.Read(ref _epoch) == epoch)
@@ -137,6 +141,9 @@ public sealed class OrgSnapshotCache : IOrgSnapshotProvider, IOrgDataChangeNotif
             _locks[slot].Release();
         }
     }
+
+    /// <summary>一般の区分の共有の読み込みに使う閲覧者（ロールも先行提供も持たない社内システム。登録の関係者・org_admin だけに見える行を含めない）。</summary>
+    private static ViewerContext SharedViewer(ViewerContext viewer) => ViewerContext.ForService(SharedClientId, FieldLimit.Unrestricted, viewer.RequestId);
 
     /// <summary>同一プロセス内で人事データを書き込んだ（コミット後に呼ぶ）。キャッシュを捨てる。</summary>
     public void NotifyChanged()

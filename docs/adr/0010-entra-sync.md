@@ -2,7 +2,7 @@
 
 - ステータス: **承認**
 - 日付: 2026-10-18
-- 関連: [ADR-0001](0001-language-and-runtime.md)（外向き通信）、[ADR-0007](0007-bitemporal-model.md)、[ADR-0008](0008-authorization-model.md)（職務分掌）、[アーキテクチャ概要 §8「同期の実装上の規則」](../architecture/overview.md#同期の実装上の規則)
+- 関連: [ADR-0001](0001-language-and-runtime.md)（外向き通信）、[ADR-0007](0007-bitemporal-model.md)、[ADR-0008](0008-authorization-model.md)（職務分掌）、[ADR-0014](0014-informal-groups.md)（管理対象のグループの同期）、[アーキテクチャ概要 §8「同期の実装上の規則」](../architecture/overview.md#同期の実装上の規則)
 
 ## 決定
 

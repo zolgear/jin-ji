@@ -1,4 +1,4 @@
-// 素案ボードの横の欄: 選んだ人・組織の操作（ドラッグの代わりにもなる）、人を探して組織図へ連れてくる、変更の一覧（1 件ずつ取り消せる）。
+// 編集のボードの横の欄: 選んだ人・組織の操作（ドラッグの代わりにもなる）、人を探して組織図へ連れてくる、変更の一覧（1 件ずつ取り消せる）。
 import { useEffect, useId, useMemo, useState } from "react";
 import { Button } from "../../../auth/ui";
 import { personName } from "../../../components/ui";
@@ -128,7 +128,7 @@ function SelectedPerson({
         </dd>
         {move && (
           <>
-            <dt className="text-muted">素案</dt>
+            <dt className="text-muted">変更後</dt>
             <dd className="m-0 font-bold">
               {nameOf(to)}
               {title ? `・${title}` : ""}

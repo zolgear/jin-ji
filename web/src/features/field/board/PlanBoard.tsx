@@ -1,7 +1,7 @@
-// 素案ボード: 組織図の札に所属する人を並べ、人を別の札へドラッグして異動、札のつまみをドラッグして上位組織の付け替えをする。
+// 編集のボード: 組織図の札に所属する人を並べ、人を別の札へドラッグして異動、札のつまみをドラッグして上位組織の付け替えをする。
 // 新設・変更・廃止した組織と、動かした人は印を付ける（動かした人は元の札にも薄く残す）。
 // ドラッグできない環境（キーボード・読み上げ）では、人や札を選んで横の欄から同じ操作ができる（BoardSidebar）。
-import { useCallback, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 import { useAdapter } from "../../../data/adapterContext";
 import type { PlanChange } from "../../../data/field";
 import { useQuery } from "../../../data/query";
@@ -14,7 +14,9 @@ import { primaryOf, type BoardData } from "./useBoard";
 export type BoardSelection = { kind: "person"; personId: string; name: string; from: { org: string | null; title: string | null } } | { kind: "unit"; unitId: string };
 
 const MEMBER_LIMIT = 8;
-const ZOOMS = [0.4, 0.55, 0.7, 0.85, 1, 1.15];
+const ZOOM_MIN = 0.3;
+const ZOOM_MAX = 1.5;
+const ZOOM_STEP = 1.2;
 
 const STATE_LABEL: Record<BoardUnit["state"], string> = { unchanged: "", created: "新設", changed: "変更", abolished: "廃止" };
 
@@ -27,7 +29,7 @@ interface BoardProps {
   onSelect: (s: BoardSelection | null) => void;
   /** 横の欄（ドラッグの元にもなるので、同じドラッグの範囲に置く）。 */
   aside?: ReactNode;
-  /** 図の上に重ねる操作（今・素案の切り替えなど）。 */
+  /** 図の上に重ねる操作（変更後・今の組織の切り替えなど）。 */
   overlay?: ReactNode;
 }
 
@@ -66,7 +68,44 @@ export function PlanBoard(props: BoardProps) {
 }
 
 function Canvas({ data, changes, onChange, selection, onSelect, scroller }: BoardProps & { scroller: React.RefObject<HTMLDivElement | null> }) {
-  const [zoom, setZoom] = useState(3);
+  const [zoom, setZoomState] = useState(0.85);
+  // 拡大・縮小の中心（図の上の点を、画面の同じ位置に保つ）
+  const anchor = useRef<{ x: number; y: number; cx: number; cy: number } | null>(null);
+  const setZoom = useCallback(
+    (next: (z: number) => number, at?: { x: number; y: number }) => {
+      const el = scroller.current;
+      setZoomState((z) => {
+        const n = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, next(z)));
+        if (el && n !== z) {
+          const x = at?.x ?? el.clientWidth / 2;
+          const y = at?.y ?? el.clientHeight / 2;
+          anchor.current = { x, y, cx: (el.scrollLeft + x) / z, cy: (el.scrollTop + y) / z };
+        }
+        return n;
+      });
+    },
+    [scroller],
+  );
+  useLayoutEffect(() => {
+    const el = scroller.current;
+    const a = anchor.current;
+    if (!el || !a) return;
+    anchor.current = null;
+    el.scrollTo(a.cx * zoom - a.x, a.cy * zoom - a.y);
+  }, [zoom, scroller]);
+  // ホイールで拡大・縮小（組織図の画面と同じ）。React の onWheel は passive なので自分で付ける
+  useEffect(() => {
+    const el = scroller.current;
+    if (!el) return;
+    const wheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const r = el.getBoundingClientRect();
+      const factor = Math.exp(-Math.max(-100, Math.min(100, e.deltaMode === 1 ? e.deltaY * 33 : e.deltaY)) / 500);
+      setZoom((z) => z * factor, { x: e.clientX - r.left, y: e.clientY - r.top });
+    };
+    el.addEventListener("wheel", wheel, { passive: false });
+    return () => el.removeEventListener("wheel", wheel);
+  }, [scroller, setZoom]);
   const [open, setOpen] = useState<Map<string, boolean>>(new Map());
   // 変更のある組織とその祖先は開く（自分で閉じたものは閉じたまま）
   const touched = useMemo(() => {
@@ -114,7 +153,7 @@ function Canvas({ data, changes, onChange, selection, onSelect, scroller }: Boar
   return (
     <div className="relative size-full">
       <div ref={scroller} onPointerDown={pan} className="size-full cursor-grab overflow-auto bg-bg [background-image:radial-gradient(var(--border)_1px,transparent_1px)] [background-size:20px_20px]">
-        <div className="plan-tree inline-flex min-w-full justify-center px-8 pt-16 pb-16" style={{ zoom: ZOOMS[zoom] }}>
+        <div className="plan-tree inline-flex min-w-full justify-center px-8 pt-16 pb-16" style={{ zoom }}>
           <ul className="row root">
             {roots.map((u) => (
               <Branch key={u.id} unit={u} data={data} changes={changes} onChange={onChange} selection={selection} onSelect={onSelect} isOpen={isOpen} toggle={toggle} />
@@ -123,11 +162,11 @@ function Canvas({ data, changes, onChange, selection, onSelect, scroller }: Boar
         </div>
       </div>
       <div className="absolute bottom-3 left-3 flex overflow-hidden rounded-md border border-border bg-surface shadow-sm">
-        <button type="button" aria-label="縮小" disabled={zoom === 0} onClick={() => setZoom(zoom - 1)} className="h-8 w-8 hover:bg-surface-2 disabled:opacity-40">
+        <button type="button" aria-label="縮小" disabled={zoom <= ZOOM_MIN} onClick={() => setZoom((z) => z / ZOOM_STEP)} className="h-8 w-8 hover:bg-surface-2 disabled:opacity-40">
           −
         </button>
-        <span className="flex h-8 w-12 items-center justify-center border-x border-border text-xs tabular">{Math.round(ZOOMS[zoom]! * 100)}%</span>
-        <button type="button" aria-label="拡大" disabled={zoom === ZOOMS.length - 1} onClick={() => setZoom(zoom + 1)} className="h-8 w-8 hover:bg-surface-2 disabled:opacity-40">
+        <span className="flex h-8 w-12 items-center justify-center border-x border-border text-xs tabular">{Math.round(zoom * 100)}%</span>
+        <button type="button" aria-label="拡大" disabled={zoom >= ZOOM_MAX} onClick={() => setZoom((z) => z * ZOOM_STEP)} className="h-8 w-8 hover:bg-surface-2 disabled:opacity-40">
           ＋
         </button>
       </div>
@@ -171,7 +210,7 @@ interface Chip {
   name: string;
   title: string | null;
   from: { org: string | null; title: string | null };
-  /** in: 素案で入ってくる人。out: 素案で出ていく人（元の札に薄く残す）。 */
+  /** in: 変更で入ってくる人。out: 変更で出ていく人（元の札に薄く残す）。 */
   mark: "none" | "in" | "out" | "title";
   /** in なら元の組織、out なら行き先。 */
   other: string | null;

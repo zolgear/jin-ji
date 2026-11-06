@@ -1,4 +1,4 @@
-// 素案ボードのドラッグ＆ドロップ。HTML の drag & drop はタッチで動かないので、ポインタイベントで作る。
+// 編集のボードのドラッグ＆ドロップ。HTML の drag & drop はタッチで動かないので、ポインタイベントで作る。
 // 落とし先は data-drop-unit を持つ要素（組織の札）で、ポインタの下の要素から探す（拡大・縮小やスクロールに関係なく決まる）。
 // 少し動かすまではドラッグにしない（押して離しただけなら、呼ぶ側の onClick がそのまま働く）。
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";

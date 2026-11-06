@@ -1,4 +1,4 @@
-// 素案ボードのデータ: 基準日の組織ツリー、変更を重ねた木、異動する人の名前と元の所属。
+// 編集のボードのデータ: 基準日の組織ツリー、変更を重ねた木、異動する人の名前と元の所属。
 import { useMemo } from "react";
 import { usePersonNames } from "../../../app/hooks";
 import { personName } from "../../../components/ui";

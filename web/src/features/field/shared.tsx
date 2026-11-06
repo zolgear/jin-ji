@@ -1,4 +1,4 @@
-// 組織の変更の画面（素案・登録・グループ・管理）で共有する部品: 組織の選択・人の選択・名前の解決・変更の追加と説明。
+// 組織の変更の画面（編集・計画・反映の記録・グループ・管理）で共有する部品: 組織の選択・人の選択・名前の解決・変更の追加と説明。
 import { useEffect, useId, useMemo, useState } from "react";
 import { Button } from "../../auth/ui";
 import { useAdapter } from "../../data/adapterContext";
@@ -56,7 +56,7 @@ export function OrgSelect({
   asOf: string;
   value: string;
   onChange: (id: string) => void;
-  /** 同じ素案で新設する組織（選択肢の最後に足す）。 */
+  /** 同じ編集で新設する組織（選択肢の最後に足す）。 */
   extra?: Array<{ id: string; name: string }>;
 }) {
   const units = useOrgUnits(asOf);
@@ -220,7 +220,7 @@ export function ChangeAdder({
   onAdd,
 }: {
   asOf: string;
-  /** 同じ素案で新設する組織。 */
+  /** 同じ編集で新設する組織。 */
   created: Array<{ id: string; name: string }>;
   groups: Group[];
   allowGroups: boolean;

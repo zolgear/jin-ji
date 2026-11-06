@@ -197,7 +197,7 @@ export function describeChange(
   }
 }
 
-type AdderKind = "assignment" | "org_create" | "org_rename" | "org_parent" | "org_head" | "org_abolish" | "contact" | "group_join";
+export type AdderKind = "assignment" | "org_create" | "org_rename" | "org_parent" | "org_head" | "org_abolish" | "contact" | "group_join";
 
 const ADDER_LABEL: Record<AdderKind, string> = {
   assignment: "異動・役職",
@@ -216,6 +216,7 @@ export function ChangeAdder({
   created,
   groups,
   allowGroups,
+  only,
   onAdd,
 }: {
   asOf: string;
@@ -223,9 +224,12 @@ export function ChangeAdder({
   created: Array<{ id: string; name: string }>;
   groups: Group[];
   allowGroups: boolean;
+  /** 出す種類を絞る（組織図の上で操作できる種類を除くとき）。 */
+  only?: AdderKind[];
   onAdd: (change: PlanChange) => void;
 }) {
-  const [kind, setKind] = useState<AdderKind>("assignment");
+  const kinds = (Object.keys(ADDER_LABEL) as AdderKind[]).filter((k) => (allowGroups || k !== "group_join") && (!only || only.includes(k)));
+  const [kind, setKind] = useState<AdderKind>(kinds[0] ?? "assignment");
   const [person, setPerson] = useState("");
   const [org, setOrg] = useState("");
   const [other, setOther] = useState("");
@@ -240,7 +244,6 @@ export function ChangeAdder({
     setText("");
     setCode("");
   };
-  const kinds = (Object.keys(ADDER_LABEL) as AdderKind[]).filter((k) => allowGroups || k !== "group_join");
 
   const build = (): PlanChange | null => {
     switch (kind) {

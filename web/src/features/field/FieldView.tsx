@@ -33,7 +33,7 @@ export function FieldView() {
   const canManage = adapter.kind === "demo" || managesAllOrgs(session?.session);
 
   return (
-    <div className="flex h-full flex-col overflow-y-auto">
+    <div className="flex h-full flex-col">
       <div role="tablist" aria-label="組織の変更" className="flex gap-1 border-b border-border px-4 pt-3">
         {TABS.map((t) => (
           <button
@@ -41,18 +41,27 @@ export function FieldView() {
             type="button"
             role="tab"
             aria-selected={t.id === tab}
-            onClick={() => navigate({ params: { tab: t.id === "plans" ? null : t.id } })}
+            onClick={() => navigate({ params: { tab: t.id === "plans" ? null : t.id, plan: null } })}
             className="-mb-px rounded-t-md border border-transparent px-4 py-2 text-sm font-bold text-muted aria-selected:border-border aria-selected:border-b-surface aria-selected:bg-surface aria-selected:text-fg"
           >
             {t.label}
           </button>
         ))}
       </div>
-      <div role="tabpanel" className="p-4">
+      {/* 素案と登録は組織図の上で組み立てるので、余白を付けず画面の高さいっぱいに使う */}
+      <div role="tabpanel" className="min-h-0 flex-1 overflow-y-auto">
         {tab === "plans" && <PlansTab groups={groups ?? []} />}
         {tab === "registrations" && <RegistrationsTab groups={groups ?? []} />}
-        {tab === "groups" && <GroupsTab groups={groups} onChanged={reloadGroups} />}
-        {tab === "admin" && <AdminTab canManage={canManage} />}
+        {tab === "groups" && (
+          <div className="p-4">
+            <GroupsTab groups={groups} onChanged={reloadGroups} />
+          </div>
+        )}
+        {tab === "admin" && (
+          <div className="p-4">
+            <AdminTab canManage={canManage} />
+          </div>
+        )}
       </div>
     </div>
   );

@@ -170,6 +170,7 @@ function Chart() {
   // 線を出す対象: 指している組織を優先し、無ければ選んでいる組織
   const activeId = hoveredId ?? orgId;
   const flow = useReactFlow();
+  const { navigate } = useRoute();
   const forest = useMemo(() => (tree.data ? buildForest(tree.data, stats.data ?? null) : null), [tree.data, stats.data]);
   // 拠点で分ける（区画の中だけで組み直した木を描く。開閉・祖先を開く・線の寄せ先はこの木の上で決める）
   const [splitMode, setSplitMode] = useSiteSplitMode();
@@ -547,6 +548,8 @@ function Chart() {
               すべて開く
             </ToolbarButton>
             <ToolbarButton onClick={() => setExpanded(new Map())}>既定に戻す</ToolbarButton>
+            {/* 素案ボード（組織の変更の画面）で、この組織図の上で異動・新設・改廃を組み立てる */}
+            <ToolbarButton onClick={() => navigate({ view: "changes", params: { tab: null, plan: "new", org: null, dir: null } })}>素案を作る</ToolbarButton>
             <HelpTip label="図の見方">
               <p className="m-0 flex items-center gap-2">
                 <svg aria-hidden="true" width="18" height="8" className="line-key">

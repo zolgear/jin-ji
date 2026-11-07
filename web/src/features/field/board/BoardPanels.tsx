@@ -3,7 +3,9 @@
 import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
 import { Button } from "../../../auth/ui";
 import { personName } from "../../../components/ui";
+import { usePerson } from "../../../app/hooks";
 import { useAdapter } from "../../../data/adapterContext";
+import { PersonDetail } from "../../person/PersonPanel";
 import { CHANGE_KIND_LABEL, type Group, type PlanChange } from "../../../data/field";
 import { ChangeAdder, describeChange, inputClass, newUuid, useNamers } from "../shared";
 import { useBoardDrag } from "./drag";
@@ -34,11 +36,11 @@ function unitOptions(tree: BoardTree, exclude?: string) {
 }
 
 /** 図の上に浮かべる箱。PC は右上、スマホは下に出す。 */
-export function FloatingCard({ label, title, onClose, children }: { label: string; title: ReactNode; onClose: () => void; children: ReactNode }) {
+export function FloatingCard({ label, title, onClose, children, wide = false }: { label: string; title: ReactNode; onClose: () => void; children: ReactNode; wide?: boolean }) {
   return (
     <section
       aria-label={label}
-      className="absolute inset-x-3 bottom-3 z-10 flex max-h-[55%] flex-col overflow-hidden rounded-lg border border-border bg-surface/75 text-sm shadow-xl backdrop-blur-sm sm:inset-x-auto sm:top-16 sm:right-3 sm:bottom-auto sm:max-h-[calc(100%-5rem)] sm:w-80"
+      className={`absolute inset-x-3 bottom-3 z-10 flex max-h-[55%] flex-col overflow-hidden rounded-lg border border-border bg-surface/75 text-sm shadow-xl backdrop-blur-sm sm:inset-x-auto sm:top-16 sm:right-3 sm:bottom-auto sm:max-h-[calc(100%-5rem)] ${wide ? "sm:w-96" : "sm:w-80"}`}
     >
       <div className="flex items-center gap-2 border-b border-border/60 px-3 py-2">
         <div className="min-w-0 flex-1 font-bold">{title}</div>
@@ -126,6 +128,7 @@ function SelectedPerson({
   const shift = useMoveInUnit(changes, to, selection.personId);
   return (
     <FloatingCard
+      wide
       label="選んだ人"
       onClose={() => onSelect(null)}
       title={
@@ -206,7 +209,19 @@ function SelectedPerson({
           </div>
         </>
       )}
+      <PersonDetails personId={selection.personId} asOf={data.baseDate} />
     </FloatingCard>
+  );
+}
+
+/** 選んだ人の詳細（人の詳細パネルと同じ中身。閲覧者の公開範囲で見える項目だけ）。 */
+function PersonDetails({ personId, asOf }: { personId: string; asOf: string }) {
+  const person = usePerson(personId, asOf);
+  if (!person.data) return null;
+  return (
+    <section aria-label="人の詳細" className="border-t border-border/60 pt-3">
+      <PersonDetail person={person.data} />
+    </section>
   );
 }
 

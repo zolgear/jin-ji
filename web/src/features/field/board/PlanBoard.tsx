@@ -33,6 +33,8 @@ interface BoardProps {
   floating?: ReactNode;
   /** この組織の札まで図を動かす（祖先を開く）。n を変えると同じ組織でも動かし直す。 */
   focus?: { unitId: string; n: number } | null;
+  /** 図の何もないところを押した（動かさずに離した）。浮かべた箱を閉じるのに使う。 */
+  onBackground?: () => void;
   /** 図の上に重ねる操作（変更後・今の組織の切り替えなど）。 */
   overlay?: ReactNode;
   /** この組織から下だけを描く（無い・見つからなければ全体）。 */
@@ -103,7 +105,7 @@ export function PlanBoard(props: BoardProps) {
   );
 }
 
-function Canvas({ data, changes, onChange, selection, onSelect, scroller, root, focus }: BoardProps & { scroller: React.RefObject<HTMLDivElement | null> }) {
+function Canvas({ data, changes, onChange, selection, onSelect, scroller, root, focus, onBackground }: BoardProps & { scroller: React.RefObject<HTMLDivElement | null> }) {
   const [zoom, setZoomState] = useState(0.85);
   // 拡大・縮小の中心（図の上の点を、画面の同じ位置に保つ）
   const anchor = useRef<{ x: number; y: number; cx: number; cy: number } | null>(null);
@@ -210,9 +212,11 @@ function Canvas({ data, changes, onChange, selection, onSelect, scroller, root, 
     if (!el) return;
     const start = { x: e.clientX, y: e.clientY, left: el.scrollLeft, top: el.scrollTop };
     const move = (ev: PointerEvent) => el.scrollTo(start.left - (ev.clientX - start.x), start.top - (ev.clientY - start.y));
-    const up = () => {
+    const up = (ev: PointerEvent) => {
       window.removeEventListener("pointermove", move);
       window.removeEventListener("pointerup", up);
+      // 動かさずに離したら、何もないところを押したことにする
+      if (Math.hypot(ev.clientX - start.x, ev.clientY - start.y) < 5) onBackground?.();
     };
     window.addEventListener("pointermove", move);
     window.addEventListener("pointerup", up);

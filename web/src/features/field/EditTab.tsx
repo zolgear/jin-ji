@@ -390,6 +390,10 @@ function Editor({
             </>
           }
           focus={focus}
+          onBackground={() => {
+            setSelection(null);
+            setPanel(null);
+          }}
           floating={
             selection ? (
               <SelectionCard data={board} changes={shownChanges} onChange={setChanges} selection={selection} onSelect={select} />

@@ -1,4 +1,4 @@
-// 組織の変更の画面（素案・登録・グループ・管理）で共有する部品: 組織の選択・人の選択・名前の解決・変更の追加と説明。
+// 組織の変更の画面（編集・計画・反映の記録・グループ・管理）で共有する部品: 組織の選択・人の選択・名前の解決・変更の追加と説明。
 import { useEffect, useId, useMemo, useState } from "react";
 import { Button } from "../../auth/ui";
 import { useAdapter } from "../../data/adapterContext";
@@ -56,7 +56,7 @@ export function OrgSelect({
   asOf: string;
   value: string;
   onChange: (id: string) => void;
-  /** 同じ素案で新設する組織（選択肢の最後に足す）。 */
+  /** 同じ編集で新設する組織（選択肢の最後に足す）。 */
   extra?: Array<{ id: string; name: string }>;
 }) {
   const units = useOrgUnits(asOf);
@@ -190,6 +190,10 @@ export function describeChange(
         .join("・")}`;
     case "org_abolish":
       return `${names.org(change.target_id)} を廃止`;
+    case "member_order": {
+      const ids = (v.person_ids ?? "").split(",").filter(Boolean);
+      return `${names.org(change.target_id)}: ${ids.slice(0, 3).map((id) => names.person(id)).join("・")}${ids.length > 3 ? ` ほか ${ids.length - 3} 名` : ""} の順`;
+    }
     case "group_join":
       return `${names.person(v.person_id)} を ${names.group?.(change.target_id) ?? "グループ"} に加える（${GROUP_ROLE_LABEL[(v.role as GroupRole) ?? "member"] ?? ""}）`;
     case "group_leave":
@@ -197,7 +201,7 @@ export function describeChange(
   }
 }
 
-type AdderKind = "assignment" | "org_create" | "org_rename" | "org_parent" | "org_head" | "org_abolish" | "contact" | "group_join";
+export type AdderKind = "assignment" | "org_create" | "org_rename" | "org_parent" | "org_head" | "org_abolish" | "contact" | "group_join";
 
 const ADDER_LABEL: Record<AdderKind, string> = {
   assignment: "異動・役職",
@@ -216,16 +220,20 @@ export function ChangeAdder({
   created,
   groups,
   allowGroups,
+  only,
   onAdd,
 }: {
   asOf: string;
-  /** 同じ素案で新設する組織。 */
+  /** 同じ編集で新設する組織。 */
   created: Array<{ id: string; name: string }>;
   groups: Group[];
   allowGroups: boolean;
+  /** 出す種類を絞る（組織図の上で操作できる種類を除くとき）。 */
+  only?: AdderKind[];
   onAdd: (change: PlanChange) => void;
 }) {
-  const [kind, setKind] = useState<AdderKind>("assignment");
+  const kinds = (Object.keys(ADDER_LABEL) as AdderKind[]).filter((k) => (allowGroups || k !== "group_join") && (!only || only.includes(k)));
+  const [kind, setKind] = useState<AdderKind>(kinds[0] ?? "assignment");
   const [person, setPerson] = useState("");
   const [org, setOrg] = useState("");
   const [other, setOther] = useState("");
@@ -240,7 +248,6 @@ export function ChangeAdder({
     setText("");
     setCode("");
   };
-  const kinds = (Object.keys(ADDER_LABEL) as AdderKind[]).filter((k) => allowGroups || k !== "group_join");
 
   const build = (): PlanChange | null => {
     switch (kind) {
@@ -383,6 +390,8 @@ export function useNamers(asOf: string, changes: PlanChange[], groups: Group[], 
     ...(c.kind === "assignment" || c.kind === "person" ? [c.target_id ?? ""] : []),
     c.values.head_person_id ?? "",
     c.values.person_id ?? "",
+    // 並び順は先頭の数人だけ名前で出す
+    ...(c.kind === "member_order" ? (c.values.person_ids ?? "").split(",").slice(0, 3) : []),
   ]).filter(Boolean);
   const people = usePeopleNames(personIds, asOf);
   return useMemo(() => {

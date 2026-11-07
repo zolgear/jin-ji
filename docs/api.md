@@ -233,7 +233,7 @@ RFC 9457 Problem Details（`application/problem+json`）。`type` は `urn:jinji
 | `site`・`site_type`・`prefecture`・`remote_work` | 拠点の ID・拠点の種別・都道府県のコード（01〜47）・リモートワークの有無（`true` / `false`） |
 | `hired_from`・`hired_to` | 入社年月日の範囲（両端を含む） |
 | `employment_status`・`account_status` | 在籍状態（`active` / `terminated`）・アカウント状態（`active` / `suspended`） |
-| `sort` | `id`（既定）/ `kana` / `org`（主務の組織の組織図の順）/ `hire_date` / `hire_date_desc` / `site`（拠点ごと）/ `remote_work`（対象者が先） |
+| `sort` | `id`（既定）/ `kana` / `org`（主務の組織の組織図の順）/ `hire_date` / `hire_date_desc` / `site`（拠点ごと）/ `remote_work`（対象者が先）/ `member`（`org` で絞り込んだ組織の中の並び順。並べていない人はフリガナの順で後ろ） |
 | `facets` | `true` で、一致した人数（`total`）と条件ごとの件数（`facets`）を付ける。最初のページ（`cursor` なし）だけ |
 | `as_of`・`cursor`・`limit` | 時点・続き・1 ページの人数（1〜100、既定 50） |
 
@@ -246,7 +246,7 @@ RFC 9457 Problem Details（`application/problem+json`）。`type` は `urn:jinji
 | メソッドとパス | 用途 | 主なパラメータ | 応答の要点 | 種別 |
 | --- | --- | --- | --- | --- |
 | `GET /orgs/{id}` | 組織の参照 | `as_of` | `OrgUnitResponse`（法人・コード・名前・略称・段・`parent_id`・`head_person_id`・拠点）。組織長の ID は閲覧者にその人が見えるときだけ | `org_read` |
-| `GET /orgs/{id}/members` | 組織の所属者 | `include_descendants`・`as_of`・`cursor`・`limit` | `PersonListResponse`（`items`・`next_cursor`）。所属の項目が見えない人は含めない | `person_list` |
+| `GET /orgs/{id}/members` | 組織の所属者 | `include_descendants`・`as_of`・`cursor`・`limit` | `PersonListResponse`（`items`・`next_cursor`）。所属の項目が見えない人は含めない。並びは組織の中の並び順（`member_order` で決めた順。並べていない人はフリガナの順で後ろ） | `person_list` |
 | `GET /orgs/tree` | 組織ツリー | `as_of` | `OrgTreeResponse`（`parent_id` で木を組める平らな一覧）。組織長の表示名は含めない（ID で一括取得する） | `org_read` |
 | `GET /orgs` | 組織の検索 | `query`・`as_of`・`limit` | `OrgSearchResponse`（`items`・`has_more`）。組織名・略称は組織名の正規化表記（異体字・全角半角・「第一」と「1」をそろえる）、組織コードは検索用の正規化表記の部分一致。完全一致・前方一致・部分一致の順。1 文字の語も受け付ける | `org_read` |
 | `GET /orgs/stats` | 組織ごとの人数と兼務・出向の集計 | `as_of` | `OrgStatsResponse`（`units`: `primary` 主務・`primary_total` 配下を含む主務・`concurrent` 兼務・`secondment` 出向、`links`: 主務の組織 → 兼務・出向の組織の組ごとの人数）。閲覧者に見える人だけを数える。人は返さない | `org_stats` |
@@ -321,6 +321,7 @@ jin-ji の値の誤りを、人事パッケージで直せる人に伝える（�
 | `org_update` | 組織 | `name`・`short_name`・`level_key`・`parent_org_unit_id`・`head_person_id`・`site_id` |
 | `org_create` | 新しい組織の ID（省略なら採番） | `code`・`name`・`parent_org_unit_id`（必須）・`short_name`・`level_key`・`head_person_id`・`site_id` |
 | `org_abolish` | 組織 | なし（所属者・配下の組織が残っていれば 400） |
+| `member_order` | 組織 | `person_ids`（並べた人の jin-ji ID をカンマでつなぐ。有効日にその組織の主務の所属者か、同じ登録で異動してくる人。500 人まで）。組織の範囲が要る（同意では補えない）。並べなかった人の並び順は変えない。発令は作らない |
 
 ### グループ（チーム・プロジェクト。ADR-0014）
 

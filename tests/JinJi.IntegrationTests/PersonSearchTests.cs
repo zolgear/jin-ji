@@ -208,6 +208,7 @@ public sealed class PersonSearchTests
     [InlineData(PersonSort.Org)]
     [InlineData(PersonSort.HireDate)]
     [InlineData(PersonSort.HireDateDesc)]
+    [InlineData(PersonSort.Member)]
     public async Task Sort_PagesAreConsistent(PersonSort sort)
     {
         var viewer = F.User("sec1_head");
@@ -234,6 +235,27 @@ public sealed class PersonSearchTests
                 Assert.Equal(F.Person("president"), views[0].PersonId);
                 break;
         }
+    }
+
+    [Fact(DisplayName = "並べ替え: 組織の中の並び順（member）は、絞り込んだ組織で並べた主務の人が先、並べていない人はフリガナの順で後ろに続く")]
+    public async Task Sort_MemberFollowsOrderInUnit()
+    {
+        var admin = F.HrAdmin();
+        var snapshot = await _snapshots.LoadAsync(admin, F.Today, F.Today, Ct);
+        var (unitId, members) = snapshot.Units
+            .Select(u => (u.Id, Members: snapshot.People
+                .Where(p => snapshot.AssignmentsOf(p.Id).Any(a => a.OrgUnitId == u.Id && a.Type == AssignmentType.Primary))
+                .Select(p => p.Id)
+                .ToList()))
+            .First(x => x.Members.Count >= 3);
+
+        // ID の逆順に並べ、1 人は並べない
+        var ordered = members.OrderDescending().Take(members.Count - 1).ToList();
+        var directory = new PersonDirectoryService(new OrderedSnapshotProvider(_snapshots, unitId, ordered), _policies, new AuditWriter(_audit, _time), _time);
+        var items = (await directory.SearchPeopleAsync(admin, new PersonSearch { OrgUnitId = unitId, Sort = PersonSort.Member, Limit = 100 }, null, Ct))!.Items;
+
+        Assert.Equal(ordered, items.Take(ordered.Count).Select(v => v.PersonId));
+        Assert.Contains(members.Except(ordered).Single(), items.Skip(ordered.Count).Select(v => v.PersonId));
     }
 
     [Fact(DisplayName = "検査: 件数は最初のページだけ・入社年月日の範囲の逆転・知らない状態・多すぎる値は拒否する。絞り込みがあれば全社横断の一覧ではない")]
@@ -307,6 +329,18 @@ public sealed class PersonSearchTests
     private static Dictionary<string, int> ToDictionary(IEnumerable<FacetValue> values) => values.ToDictionary(v => v.Value, v => v.Count, StringComparer.Ordinal);
 
     /// <summary>フィクスチャのスナップショットに、検索の条件に使う属性を足して返す。</summary>
+    /// <summary>1 つの組織の主務の所属に並び順を付けたスナップショット。</summary>
+    private sealed class OrderedSnapshotProvider(IOrgSnapshotProvider inner, Guid unitId, List<Guid> ordered) : IOrgSnapshotProvider
+    {
+        public async Task<OrgSnapshot> LoadAsync(ViewerContext viewer, DateOnly asOf, DateOnly attributesAsOf, CancellationToken cancellationToken)
+        {
+            var s = await inner.LoadAsync(viewer, asOf, attributesAsOf, cancellationToken);
+            var assignments = s.People.SelectMany(p => s.AssignmentsOf(p.Id)).Select(a =>
+                a.OrgUnitId == unitId && a.Type == AssignmentType.Primary && ordered.IndexOf(a.PersonId) is var i and >= 0 ? a with { SortOrder = i } : a);
+            return OrgSnapshot.Create(s.AsOf, s.LegalEntities, s.Units, s.People, assignments, s.LevelSchemes, s.Sites);
+        }
+    }
+
     private sealed class EnrichedSnapshotProvider(OrgFixture fixture) : IOrgSnapshotProvider
     {
         public Task<OrgSnapshot> LoadAsync(ViewerContext viewer, DateOnly asOf, DateOnly attributesAsOf, CancellationToken cancellationToken)

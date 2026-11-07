@@ -121,7 +121,7 @@ public sealed class NpgsqlOrgSnapshotProvider : IOrgSnapshotProvider
         var assignments = await ReadAllAsync(
             tx,
             """
-            SELECT person_id, org_unit_id, assignment_type, position_title, secondment_type, lower(valid_period), upper(valid_period)
+            SELECT person_id, org_unit_id, assignment_type, position_title, secondment_type, lower(valid_period), upper(valid_period), sort_order
             FROM assignment
             WHERE upper_inf(recorded_period) AND valid_period @> $1
             """,
@@ -133,7 +133,8 @@ public sealed class NpgsqlOrgSnapshotProvider : IOrgSnapshotProvider
                 NullableString(r, 3),
                 DbCodes.ParseSecondmentType(r.GetString(4)),
                 r.GetFieldValue<DateOnly>(5),
-                NullableDate(r, 6)),
+                NullableDate(r, 6),
+                r.IsDBNull(7) ? null : r.GetInt32(7)),
             cancellationToken);
 
         // 段の定義: 有効な（承認済みの）定義。範囲（法人・既定）ごとに高々 1 つ（0004 の排他制約）

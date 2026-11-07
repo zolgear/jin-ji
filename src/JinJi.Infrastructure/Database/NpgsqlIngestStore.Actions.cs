@@ -127,6 +127,12 @@ public sealed partial class NpgsqlIngestStore
             ["personnel_action_id"] = actionId.ToString("D"),
             ["supersedes_id"] = id.ToString("D"),
         };
+        if (newOrg != currentOrg)
+        {
+            // 異動すると組織の中の並び順は外れる（0024）
+            overrides["sort_order"] = null;
+        }
+
         await SplitAsync(tx, "assignment", AssignmentColumns, id, from, until, date, overrides, new Dictionary<string, string?> { ["supersedes_id"] = id.ToString("D") }, cancellationToken);
     }
 

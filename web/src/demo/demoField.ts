@@ -92,6 +92,10 @@ export function simulateDemo(dir: DemoDirectory, baseDate: string, changes: Plan
         }
         if (unit.state === "unchanged") unit.state = "changed";
         return;
+      case "member_order":
+        // 並び順は人数・組織図を変えない
+        if (!unit) break;
+        return;
       case "org_abolish":
         if (!unit) break;
         unit.state = "abolished";
@@ -343,7 +347,7 @@ export function createDemoField(dir: DemoDirectory, later: <T>(fn: () => T) => P
       const plan = findPlan(id);
       const version = no === null ? null : versions.get(id)?.find((v) => v.version_no === no);
       if (no !== null && !version) throw notFound();
-      if (version && !version.approved_on) throw new ApiError(409, "承認の結果を記録した申請版だけを登録できます。");
+      if (version && !version.approved_on) throw new ApiError(409, "承認の結果を記録した申請版だけを反映できます。");
       const list = toChanges((version ?? plan).changes);
       const field = list.filter((c) => c.kind !== "group_join" && c.kind !== "group_leave");
       const registration = field.length > 0 ? await registerFromPlan(field, (version ?? plan).effective_date) : null;

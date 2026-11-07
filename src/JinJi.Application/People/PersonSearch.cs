@@ -39,6 +39,12 @@ public enum PersonSort
 
     /// <summary>リモートワークの対象者が先（見えない人は最後）、同じ区分の中はフリガナの順。</summary>
     RemoteWork,
+
+    /// <summary>
+    /// 組織の中の並び順（0024。絞り込んだ組織の主務の所属の並び順）。並べていない人・その組織の主務でない人は後ろに、フリガナの順で続く。
+    /// 組織で絞り込まないときはフリガナの順と同じ。
+    /// </summary>
+    Member,
 }
 
 /// <summary>検索の条件・並び順のコード値（REST・MCP の引数と応答の値）。</summary>
@@ -46,7 +52,7 @@ public static class PersonSearchCodes
 {
     public static readonly IReadOnlyList<string> AssignmentKinds = ["primary", "concurrent", "secondment"];
 
-    public static readonly IReadOnlyList<string> Sorts = ["id", "kana", "org", "hire_date", "hire_date_desc", "site", "remote_work"];
+    public static readonly IReadOnlyList<string> Sorts = ["id", "kana", "org", "hire_date", "hire_date_desc", "site", "remote_work", "member"];
 
     /// <summary>拠点の種別（<see cref="Domain.Organization.SiteCodes.Types"/>）。</summary>
     public static IReadOnlyList<string> SiteTypes => Domain.Organization.SiteCodes.Types;
@@ -92,6 +98,7 @@ public static class PersonSearchCodes
         PersonSort.HireDateDesc => "hire_date_desc",
         PersonSort.Site => "site",
         PersonSort.RemoteWork => "remote_work",
+        PersonSort.Member => "member",
         _ => throw new ArgumentOutOfRangeException(nameof(sort)),
     };
 
@@ -106,6 +113,7 @@ public static class PersonSearchCodes
             "hire_date_desc" => (true, PersonSort.HireDateDesc),
             "site" => (true, PersonSort.Site),
             "remote_work" => (true, PersonSort.RemoteWork),
+            "member" => (true, PersonSort.Member),
             _ => (false, PersonSort.Id),
         };
         return ok;

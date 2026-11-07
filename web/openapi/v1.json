@@ -892,7 +892,7 @@
           "OrgEndpoints"
         ],
         "summary": "組織の所属者を参照する",
-        "description": "主務・兼務・出向で所属する人（include_descendants で配下の組織も）。所属の項目が見えない人は含めない。limit は 1〜100。",
+        "description": "主務・兼務・出向で所属する人（include_descendants で配下の組織も）。所属の項目が見えない人は含めない。並びは組織の中の並び順（並べていない人はフリガナの順）。limit は 1〜100。",
         "operationId": "ListOrgMembers",
         "parameters": [
           {
@@ -9576,6 +9576,7 @@
               "org_update",
               "org_create",
               "org_abolish",
+              "member_order",
               null
             ],
             "type": [
@@ -12136,6 +12137,7 @@
               "org_update",
               "org_create",
               "org_abolish",
+              "member_order",
               "group_join",
               "group_leave",
               null

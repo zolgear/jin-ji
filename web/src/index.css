@@ -325,3 +325,110 @@ body {
     overflow: visible;
   }
 }
+
+/* 素案ボード（features/field/board/PlanBoard.tsx）の組織の木。親の下に配下を横一列（row）、配下がすべて末端なら縦に積む（stack）。
+   線は札の間の余白に疑似要素で描く。 */
+.plan-tree ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.plan-tree li {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.plan-tree li.has-stack {
+  align-items: flex-start;
+}
+.plan-tree .row {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  padding-top: 20px;
+}
+.plan-tree .row.root {
+  padding-top: 0;
+  gap: 48px;
+}
+.plan-tree .row > li {
+  padding: 20px 8px 0;
+}
+.plan-tree .row.root > li {
+  padding: 0;
+}
+.plan-tree .row > li::before,
+.plan-tree .row > li::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  width: 50%;
+  height: 20px;
+  border-top: 1px solid var(--edge);
+}
+.plan-tree .row > li::before {
+  right: 50%;
+}
+.plan-tree .row > li::after {
+  left: 50%;
+  border-left: 1px solid var(--edge);
+}
+.plan-tree .row > li:first-child::before,
+.plan-tree .row > li:last-child::after {
+  border-top: 0;
+}
+.plan-tree .row > li:last-child::before {
+  border-right: 1px solid var(--edge);
+}
+.plan-tree .row > li:only-child::before {
+  display: none;
+}
+.plan-tree .row > li:only-child::after {
+  border-top: 0;
+}
+.plan-tree .row.root > li::before,
+.plan-tree .row.root > li::after {
+  display: none;
+}
+.plan-tree li:not(.has-stack) > .row::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  height: 20px;
+  border-left: 1px solid var(--edge);
+}
+.plan-tree .stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px 0 0 36px;
+}
+.plan-tree .stack > li::before {
+  content: "";
+  position: absolute;
+  left: -20px;
+  top: -10px;
+  width: 20px;
+  height: 26px;
+  border-left: 1px solid var(--edge);
+  border-bottom: 1px solid var(--edge);
+}
+.plan-tree .stack > li:first-child::before {
+  top: -18px;
+  height: 34px;
+}
+.plan-tree .stack > li:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  left: -20px;
+  top: 0;
+  bottom: -10px;
+  border-left: 1px solid var(--edge);
+}
+body.board-dragging,
+body.board-dragging * {
+  cursor: grabbing !important;
+  user-select: none;
+}

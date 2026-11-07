@@ -1,4 +1,4 @@
-// 素案の組織図（字下げの木を SVG で描く）と提案資料。提案資料は、今の組織図と素案の組織図を並べ、変更の一覧と人数の増減を添える。
+// 変更後の組織図（字下げの木を SVG で描く）と提案資料。提案資料は、今の組織図と変更後の組織図を並べ、変更の一覧と人数の増減を添える。
 // 印刷（ブラウザの印刷で PDF）と SVG の保存ができる。新しい依存は足さない（ADR-0001）。
 import { useEffect, useMemo, useRef, type RefObject } from "react";
 import { createPortal } from "react-dom";
@@ -14,7 +14,7 @@ export interface ChartNode {
   parentId: string | null;
   state: PlanUnit["state"];
   count: number;
-  /** 増減（素案の図だけ）。 */
+  /** 増減（変更後の図だけ）。 */
   delta?: number;
 }
 
@@ -92,7 +92,7 @@ export function beforeNodes(units: OrgUnit[], sim: PlanSimulation): ChartNode[] 
   });
 }
 
-/** 素案を適用した組織図（廃止した組織を除く。増減を添える）。 */
+/** 変更を適用した組織図（廃止した組織を除く。増減を添える）。 */
 export function afterNodes(sim: PlanSimulation): ChartNode[] {
   return sim.units
     .filter((u) => u.state !== "abolished")
@@ -149,7 +149,7 @@ export function ProposalDocument({
           印刷・PDF
         </Button>
         <Button onClick={() => downloadSvg(beforeRef.current, "jinji-org-before.svg")}>今の組織図の SVG</Button>
-        <Button onClick={() => downloadSvg(afterRef.current, "jinji-org-after.svg")}>素案の組織図の SVG</Button>
+        <Button onClick={() => downloadSvg(afterRef.current, "jinji-org-after.svg")}>変更後の組織図の SVG</Button>
         <Button onClick={onCsv}>変更の一覧の CSV</Button>
         <Button variant="ghost" className="ml-auto" onClick={onClose}>
           閉じる
@@ -168,7 +168,7 @@ export function ProposalDocument({
           <PlanChart title="今の組織" nodes={beforeNodes(baseUnits, simulation)} svgRef={beforeRef} />
         </div>
         <div className="overflow-x-auto rounded-md border border-border p-2">
-          <PlanChart title="素案の組織" nodes={afterNodes(simulation)} svgRef={afterRef} />
+          <PlanChart title="変更後の組織" nodes={afterNodes(simulation)} svgRef={afterRef} />
         </div>
       </section>
       <section className="mb-6 break-inside-avoid">
@@ -186,7 +186,7 @@ export function ProposalDocument({
             <tr className="border-b border-border text-left">
               <th className="py-1">組織</th>
               <th className="py-1 text-right">今</th>
-              <th className="py-1 text-right">素案</th>
+              <th className="py-1 text-right">変更後</th>
               <th className="py-1 text-right">増減</th>
             </tr>
           </thead>

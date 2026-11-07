@@ -211,6 +211,9 @@ public static class PlanSimulator
                     }
 
                     break;
+                case PlanChangeKind.MemberOrder when c.TargetId is { } unitId && units.ContainsKey(unitId):
+                    // 並び順は人数・組織図を変えない
+                    break;
                 default:
                     warnings.Add(new PlanWarning(i, "対象が見つからないか、適用できない変更です。"));
                     break;

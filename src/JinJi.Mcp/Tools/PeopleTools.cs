@@ -33,7 +33,7 @@ internal sealed class SearchPeopleTool : McpTool
             "hired_to": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$", "description": "入社年月日の範囲の終了（yyyy-MM-dd、この日を含む）" },
             "employment_statuses": { "type": "array", "items": { "type": "string", "enum": ["active", "terminated"] }, "maxItems": 2, "uniqueItems": true, "description": "在籍状態" },
             "account_statuses": { "type": "array", "items": { "type": "string", "enum": ["active", "suspended"] }, "maxItems": 2, "uniqueItems": true, "description": "アカウント状態（suspended は一時停止中。理由は持たない）" },
-            "sort": { "type": "string", "enum": ["id", "kana", "org", "hire_date", "hire_date_desc", "site", "remote_work"], "default": "id", "description": "並び順（id・フリガナ・組織図の順・入社年月日の古い順・新しい順・拠点ごと・リモートワークの対象者が先。見えない値の人は最後）" },
+            "sort": { "type": "string", "enum": ["id", "kana", "org", "hire_date", "hire_date_desc", "site", "remote_work", "member"], "default": "id", "description": "並び順（id・フリガナ・組織図の順・入社年月日の古い順・新しい順・拠点ごと・リモートワークの対象者が先・組織の中の並び順（org_unit_id と使う）。見えない値の人は最後）" },
             "include_facets": { "type": "boolean", "default": false, "description": "true なら一致した人数（total）と条件ごとの件数（facets）も返す。最初のページだけ（cursor と併用不可）" },
             "as_of": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$", "description": "{{McpTexts.AsOf}}" },
             "limit": { "type": "integer", "minimum": 1, "maximum": {{PersonSearch.MaxLimit}}, "default": {{DefaultLimit}}, "description": "1 ページの人数" },

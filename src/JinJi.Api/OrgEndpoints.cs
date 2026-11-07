@@ -49,7 +49,7 @@ internal static class OrgEndpoints
         api.MapGet("/orgs/{id}/members", GetMembersAsync)
             .WithName("ListOrgMembers")
             .WithSummary("組織の所属者を参照する")
-            .WithDescription($"主務・兼務・出向で所属する人（include_descendants で配下の組織も）。所属の項目が見えない人は含めない。limit は 1〜{PersonSearch.MaxLimit}。")
+            .WithDescription($"主務・兼務・出向で所属する人（include_descendants で配下の組織も）。所属の項目が見えない人は含めない。並びは組織の中の並び順（並べていない人はフリガナの順）。limit は 1〜{PersonSearch.MaxLimit}。")
             .WithMetadata(new RequestKindMetadata(RequestKind.PersonList, true))
             .Produces<PersonListResponse>()
             .ProducesProblem(StatusCodes.Status404NotFound);
@@ -166,7 +166,8 @@ internal static class OrgEndpoints
             return Task.FromResult(Problems.BadRequest(http, "include_descendants は true / false で指定してください。"));
         }
 
-        var criteria = new PersonSearch { OrgUnitId = unitId, IncludeDescendants = descendants };
+        // 所属者は組織の中の並び順（0024。並べていない人はフリガナの順）
+        var criteria = new PersonSearch { OrgUnitId = unitId, IncludeDescendants = descendants, Sort = PersonSort.Member };
         return PeopleEndpoints.SearchAsync(http, people, cursors, criteria, asOf, cursor, limit, notFoundWhenOrgMissing: true, detailed: false, cancellationToken);
     }
 }

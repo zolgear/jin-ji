@@ -106,6 +106,22 @@ public sealed class PlanTests : IAsyncLifetime
             null, "SELECT org_unit_id FROM assignment WHERE person_id = $1 AND assignment_type = 'primary' AND upper_inf(recorded_period)", Ct, _db.Id("takahashi"))).Single());
     }
 
+    [Fact(DisplayName = "並び順: 素案に組織の中の並び順を入れられ（人の一覧は 200 文字を超えてよい。アプリと DB）、シミュレーションの警告にならない")]
+    public async Task MemberOrder_IsSavedAndSimulated()
+    {
+        var ids = new[] { _db.Id("hr2"), _db.Id("hr1") }.Concat(Enumerable.Range(0, 5).Select(_ => Guid.NewGuid())).Select(id => id.ToString("D"));
+        var order = new PlanChange(PlanChangeKind.MemberOrder, _db.Id("HR"), new Dictionary<string, string?> { ["person_ids"] = string.Join(",", ids) });
+        Assert.True(order.Values["person_ids"]!.Length > 200);
+
+        var plan = await _service.CreateAsync(_db.User("member"), Input(order), Ct);
+        Assert.Equal(PlanChangeKind.MemberOrder, Assert.Single((await _service.GetAsync(_db.User("member"), plan.Id, Ct)).Changes).Kind);
+        Assert.Empty((await _service.SimulateAsync(_db.User("member"), plan.Id, null, Ct)).Warnings);
+
+        // 他の項目の上限は 200 文字のまま
+        var tooLong = new PlanChange(PlanChangeKind.OrgUpdate, _db.Id("HR"), new Dictionary<string, string?> { ["name"] = new string('長', 201) });
+        Assert.Equal(PlanError.Invalid, await ErrorOfAsync(() => _service.CreateAsync(_db.User("member"), Input(tooLong), Ct)));
+    }
+
     [Fact(DisplayName = "申請版: 固定した中身は変わらず、承認の記録は範囲を持つ人か指定の社内システムが 1 回だけ。承認済みの版から範囲で登録する")]
     public async Task Version_ApprovalAndRegistration()
     {

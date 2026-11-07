@@ -7,6 +7,7 @@ import { SiteIcon, SiteValue } from "../../components/site";
 import { Badge, ErrorNote, LineKey, personKana, personName, Spinner } from "../../components/ui";
 import { useAdapter } from "../../data/adapterContext";
 import { describeError, type OrgLink, type Person } from "../../data/types";
+import { useRoute } from "../../lib/router";
 import { ancestorsOf, buildForest, crossSummary, type CrossCounts, type OrgForest } from "../../lib/orgTree";
 
 const PAGE = 50;
@@ -156,6 +157,7 @@ function CrossTable({ forest, links, orgId, hasChildren }: { forest: OrgForest; 
 
 export function OrgPanel({ orgId, onClose }: { orgId: string; onClose: () => void }) {
   const { asOf, selectOrg, openPerson, showSitePeople } = useNav();
+  const { navigate } = useRoute();
   const tree = useOrgTree(asOf);
   const stats = useOrgStats(asOf);
   const [includeDescendants, setIncludeDescendants] = useState(false);
@@ -209,9 +211,19 @@ export function OrgPanel({ orgId, onClose }: { orgId: string; onClose: () => voi
             <span>組織コード: {node.code || "未設定"}</span>
           </div>
         </div>
-        <button type="button" onClick={onClose} className="shrink-0 rounded-sm border border-border px-2 py-0.5 text-xs hover:bg-surface-2">
-          閉じる
-        </button>
+        <div className="flex shrink-0 gap-1">
+          {/* 組織の変更の画面の編集を、この組織から下だけで開く */}
+          <button
+            type="button"
+            onClick={() => navigate({ view: "changes", params: { tab: null, plan: null, org: null, person: null, dir: null, root: node.id } })}
+            className="rounded-sm border border-border px-2 py-0.5 text-xs hover:bg-surface-2"
+          >
+            編集
+          </button>
+          <button type="button" onClick={onClose} className="rounded-sm border border-border px-2 py-0.5 text-xs hover:bg-surface-2">
+            閉じる
+          </button>
+        </div>
       </div>
 
       <dl className="m-0 grid grid-cols-2 gap-2 text-xs">

@@ -1,7 +1,8 @@
 // 編集のタブ: 組織図の上で人・組織をドラッグして変更を組み立て、目的に応じて「計画として保存」か「変更を反映」する。
+// 横の固定の欄は持たず、選んだ人・組織や変更の一覧・メモ・申請と共有は図の上に浮かべる箱で開く（図を広く使う）。
 // 開いている計画は URL の plan に、組織図で選んだ組織から下だけを描くときはその組織を root に持つ（無ければ新しい編集・全体）。保存・反映の前の変更は drafts に覚え、タブを移っても消さない。
 // 計画は公開されない作業領域で、保存しても公開されている組織・人の情報は変わらない（ADR-0013 決定 8・9）。
-// 反映は範囲の中の直接登録（部をまたぐ異動は相手側の同意で反映）。申請版・承認の記録・共有・提案資料は、ボードの横の欄と上の帯から行う。
+// 反映は範囲の中の直接登録（部をまたぐ異動は相手側の同意で反映）。申請版・承認の記録・共有・提案資料は、図の上の帯から行う。
 import { useCallback, useEffect, useId, useMemo, useState, type ReactNode } from "react";
 import { Button, Notice } from "../../auth/ui";
 import { HelpTip, Popover } from "../../components/popover";
@@ -11,8 +12,9 @@ import type { FieldDownload, Group, Plan, PlanChange, PlanInput, PlanSimulation,
 import { useQuery } from "../../data/query";
 import { describeError } from "../../data/types";
 import { useRoute } from "../../lib/router";
-import { BoardSidebar } from "./board/BoardSidebar";
+import { BoardSearch, ChangesList, FloatingCard, SelectionCard } from "./board/BoardPanels";
 import { PlanBoard, type BoardSelection } from "./board/PlanBoard";
+import { isWithin } from "./board/model";
 import { useBoard } from "./board/useBoard";
 import { loadDraft, saveDraft } from "./drafts";
 import { ProposalDocument } from "./PlanChart";
@@ -85,9 +87,21 @@ function toolClass(primary: boolean, disabled: boolean) {
   }`;
 }
 
-function ToolButton({ primary = false, disabled = false, onClick, children }: { primary?: boolean; disabled?: boolean; onClick: () => void; children: ReactNode }) {
+function ToolButton({
+  primary = false,
+  pressed,
+  disabled = false,
+  onClick,
+  children,
+}: {
+  primary?: boolean;
+  pressed?: boolean;
+  disabled?: boolean;
+  onClick: () => void;
+  children: ReactNode;
+}) {
   return (
-    <button type="button" disabled={disabled} onClick={onClick} className={toolClass(primary, false) + " disabled:opacity-40"}>
+    <button type="button" aria-pressed={pressed} disabled={disabled} onClick={onClick} className={`${toolClass(primary, false)} disabled:opacity-40 aria-pressed:bg-accent-weak aria-pressed:text-accent`}>
       {children}
     </button>
   );
@@ -136,6 +150,17 @@ function Editor({
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ tone: "ok" | "error"; text: string } | null>(flash ? { tone: "ok", text: flash } : null);
   const [selection, setSelection] = useState<BoardSelection | null>(null);
+  // 図の上に浮かべる箱: 選んだ人・組織（選んでいる間）か、変更の一覧・メモ・申請と共有のどれか 1 つ
+  const [panel, setPanel] = useState<"changes" | "memo" | "plan" | null>(null);
+  const [focus, setFocus] = useState<{ unitId: string; n: number } | null>(null);
+  const select = (s: BoardSelection | null) => {
+    setSelection(s);
+    if (s) setPanel(null);
+  };
+  const togglePanel = (p: "changes" | "memo" | "plan") => {
+    setSelection(null);
+    setPanel((cur) => (cur === p ? null : p));
+  };
   // 見ているもの: 変更後（編集できる）・今の組織・申請版（見るだけ）
   const [viewing, setViewing] = useState<{ label: string; changes: PlanChange[] } | null>(null);
   const [proposal, setProposal] = useState<{ sim: PlanSimulation; version: PlanVersion | null } | null>(null);
@@ -144,6 +169,14 @@ function Editor({
   const created = useMemo(() => board.tree.units.filter((u) => u.state === "created").map((u) => ({ id: u.id, name: u.name })), [board.tree]);
   const names = useNamers(draft.base_date, draft.changes, groups, created);
   const baseUnits = useOrgUnits(draft.base_date).map((x) => x.unit);
+  /** 探した組織・人を選び、その札まで図を動かす（絞った範囲の外なら全体に戻す）。 */
+  const pick = (s: BoardSelection) => {
+    select(s);
+    const unitId = s.kind === "unit" ? s.unitId : (board.moves.get(s.personId)?.to ?? s.from.org);
+    if (!unitId) return;
+    if (root && !isWithin(board.tree, unitId, root)) navigate({ params: { root: null } }, true);
+    setFocus((f) => ({ unitId, n: (f?.n ?? 0) + 1 }));
+  };
   const dirty = plan
     ? JSON.stringify(toChanges(plan.changes)) !== JSON.stringify(draft.changes) ||
       plan.title !== draft.title ||
@@ -235,7 +268,7 @@ function Editor({
           changes={shownChanges}
           onChange={setChanges}
           selection={selection}
-          onSelect={setSelection}
+          onSelect={select}
           root={root}
           overlay={
             <>
@@ -265,6 +298,21 @@ function Editor({
                     </span>
                   )}
                   {viewing && viewing.changes.length > 0 && <span className="rounded-md border border-border bg-surface px-2 py-1 text-xs font-bold shadow-sm">{viewing.label}</span>}
+                  <BoardSearch data={board} onPick={pick} />
+                </div>
+                <div className="flex flex-wrap items-center justify-end gap-2">
+                <div className="flex items-center gap-0.5 rounded-md border border-border bg-surface p-1 shadow-sm">
+                  <ToolButton pressed={panel === "changes" && !selection} onClick={() => togglePanel("changes")}>
+                    変更 {shownChanges.length}
+                  </ToolButton>
+                  <ToolButton pressed={panel === "memo" && !selection} onClick={() => togglePanel("memo")}>
+                    メモ{draft.note ? " ●" : ""}
+                  </ToolButton>
+                  {plan && (
+                    <ToolButton pressed={panel === "plan" && !selection} onClick={() => togglePanel("plan")}>
+                      申請・共有
+                    </ToolButton>
+                  )}
                 </div>
                 <div className="flex items-center gap-0.5 rounded-md border border-border bg-surface p-1 shadow-sm">
                   {plan ? (
@@ -325,6 +373,7 @@ function Editor({
                     新規
                   </ToolButton>
                 </div>
+                </div>
               </div>
               {(message || board.error !== undefined) && (
                 <div className="absolute bottom-14 left-1/2 flex w-[min(32rem,calc(100%-24px))] -translate-x-1/2 items-start gap-1 shadow-lg">
@@ -340,15 +389,21 @@ function Editor({
               )}
             </>
           }
-          aside={
-            <>
-              <BoardSidebar data={board} changes={shownChanges} onChange={setChanges} selection={selection} onSelect={setSelection} groups={groups} allowGroups />
-              <div className="flex flex-col gap-3 border-t border-border p-3 text-sm">
-                <label className="flex flex-col gap-1 text-xs">
-                  <span className="font-bold text-muted">メモ</span>
-                  <textarea className={inputClass} rows={2} value={draft.note ?? ""} onChange={(e) => setDraft({ ...draft, note: e.target.value || null })} maxLength={2000} />
-                </label>
-                {plan && (
+          focus={focus}
+          floating={
+            selection ? (
+              <SelectionCard data={board} changes={shownChanges} onChange={setChanges} selection={selection} onSelect={select} />
+            ) : panel === "changes" ? (
+              <FloatingCard label="変更" title={`変更 ${shownChanges.length} 件`} onClose={() => setPanel(null)}>
+                <ChangesList data={board} changes={shownChanges} onChange={setChanges} groups={groups} />
+              </FloatingCard>
+            ) : panel === "memo" ? (
+              <FloatingCard label="メモ" title="メモ" onClose={() => setPanel(null)}>
+                <textarea aria-label="メモ" className={inputClass} rows={6} value={draft.note ?? ""} onChange={(e) => setDraft({ ...draft, note: e.target.value || null })} maxLength={2000} />
+              </FloatingCard>
+            ) : panel === "plan" && plan ? (
+              <FloatingCard label="計画" title={title} onClose={() => setPanel(null)}>
+                {(
                   <section aria-label="申請版" className="flex flex-col gap-2">
                     <h3 className="m-0 flex items-center gap-1 text-xs font-bold text-muted">
                       申請版
@@ -385,8 +440,8 @@ function Editor({
                     ))}
                   </section>
                 )}
-                {plan && <ShareBox plan={plan} asOf={draft.base_date} onShared={() => onSaved(plan.id)} />}
-                {plan && (
+                {<ShareBox plan={plan} asOf={draft.base_date} onShared={() => onSaved(plan.id)} />}
+                {(
                   <div className="flex flex-wrap gap-1">
                     <Button variant="ghost" busy={busy} onClick={() => run(async () => download(await field.changesCsv(await persist(), null)))}>
                       CSV
@@ -407,8 +462,8 @@ function Editor({
                     </Button>
                   </div>
                 )}
-              </div>
-            </>
+              </FloatingCard>
+            ) : null
           }
         />
       </div>

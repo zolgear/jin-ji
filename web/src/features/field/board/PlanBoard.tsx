@@ -27,8 +27,10 @@ interface BoardProps {
   onChange?: (next: PlanChange[]) => void;
   selection: BoardSelection | null;
   onSelect: (s: BoardSelection | null) => void;
-  /** 横の欄（ドラッグの元にもなるので、同じドラッグの範囲に置く）。 */
-  aside?: ReactNode;
+  /** 図の上に浮かべる編集の箱（ドラッグの元にもなるので、同じドラッグの範囲に置く）。 */
+  floating?: ReactNode;
+  /** この組織の札まで図を動かす（祖先を開く）。n を変えると同じ組織でも動かし直す。 */
+  focus?: { unitId: string; n: number } | null;
   /** 図の上に重ねる操作（変更後・今の組織の切り替えなど）。 */
   overlay?: ReactNode;
   /** この組織から下だけを描く（無い・見つからなければ全体）。 */
@@ -58,18 +60,16 @@ export function PlanBoard(props: BoardProps) {
   );
   return (
     <DragProvider scroller={scroller} canDrop={canDrop} onDrop={onDrop}>
-      <div className="flex size-full flex-col lg:flex-row">
-        <div className="relative h-[65dvh] min-w-0 shrink-0 lg:h-auto lg:flex-1">
-          <Canvas {...props} scroller={scroller} />
-          {props.overlay}
-        </div>
-        {props.aside && <aside className="min-h-0 shrink-0 border-t border-border bg-surface lg:w-80 lg:overflow-y-auto lg:border-t-0 lg:border-l">{props.aside}</aside>}
+      <div className="relative size-full">
+        <Canvas {...props} scroller={scroller} />
+        {props.overlay}
+        {props.floating}
       </div>
     </DragProvider>
   );
 }
 
-function Canvas({ data, changes, onChange, selection, onSelect, scroller, root }: BoardProps & { scroller: React.RefObject<HTMLDivElement | null> }) {
+function Canvas({ data, changes, onChange, selection, onSelect, scroller, root, focus }: BoardProps & { scroller: React.RefObject<HTMLDivElement | null> }) {
   const [zoom, setZoomState] = useState(0.85);
   // 拡大・縮小の中心（図の上の点を、画面の同じ位置に保つ）
   const anchor = useRef<{ x: number; y: number; cx: number; cy: number } | null>(null);
@@ -136,6 +136,24 @@ function Canvas({ data, changes, onChange, selection, onSelect, scroller, root }
   const top = useMemo(() => (root ? (data.tree.byId.get(root) ?? null) : null), [root, data.tree]);
   const topDepth = useMemo(() => (top ? depthOf(top.id) : 0), [top, depthOf]);
   const isOpen = useCallback((id: string) => open.get(id) ?? (depthOf(id) - topDepth < 1 || touched.has(id)), [open, depthOf, topDepth, touched]);
+  // 探した組織・人の札まで動かす（閉じた祖先を開いてから）
+  useEffect(() => {
+    if (!focus) return;
+    setOpen((m) => {
+      const next = new Map(m);
+      for (let cur = data.tree.byId.get(focus.unitId)?.parentId ?? null, guard = 0; cur && guard < 1000; guard++) {
+        next.set(cur, true);
+        cur = data.tree.byId.get(cur)?.parentId ?? null;
+      }
+      return next;
+    });
+    const timer = setTimeout(() => {
+      scroller.current?.querySelector(`[data-drop-unit="${CSS.escape(focus.unitId)}"]`)?.scrollIntoView({ block: "center", inline: "center", behavior: "smooth" });
+    }, 80);
+    return () => clearTimeout(timer);
+    // 図が変わるたびには動かさない（focus を変えたときだけ）
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focus]);
   const toggle = useCallback((id: string) => setOpen((m) => new Map(m).set(id, !isOpen(id))), [isOpen]);
 
   // 札の外を押してドラッグすると、図を動かす
@@ -157,7 +175,7 @@ function Canvas({ data, changes, onChange, selection, onSelect, scroller, root }
   return (
     <div className="relative size-full">
       <div ref={scroller} onPointerDown={pan} className="size-full cursor-grab overflow-auto bg-bg [background-image:radial-gradient(var(--border)_1px,transparent_1px)] [background-size:20px_20px]">
-        <div className="plan-tree inline-flex min-w-full justify-center px-8 pt-28 pb-16 sm:pt-16" style={{ zoom }}>
+        <div className="plan-tree inline-flex min-w-full justify-center px-8 pt-52 pb-16 sm:pt-16" style={{ zoom }}>
           <ul className="row root">
             {roots.map((u) => (
               <Branch key={u.id} unit={u} data={data} changes={changes} onChange={onChange} selection={selection} onSelect={onSelect} isOpen={isOpen} toggle={toggle} />

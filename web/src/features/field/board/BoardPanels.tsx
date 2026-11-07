@@ -1,5 +1,6 @@
-// 編集のボードの横の欄: 選んだ人・組織の操作（ドラッグの代わりにもなる）、人を探して組織図へ連れてくる、変更の一覧（1 件ずつ取り消せる）。
-import { useEffect, useId, useMemo, useState } from "react";
+// 編集のボードの上に浮かべる箱: 選んだ人・組織の操作（ドラッグの代わりにもなる）、変更の一覧（1 件ずつ取り消せる）、
+// 組織・人を探して図をそこへ動かす検索。箱は入力欄の外を少し透かし、後ろの組織図が見えるようにする。
+import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
 import { Button } from "../../../auth/ui";
 import { personName } from "../../../components/ui";
 import { useAdapter } from "../../../data/adapterContext";
@@ -10,14 +11,12 @@ import { abolishUnit, createUnit, isWithin, movePerson, nextCode, undoMove, upda
 import type { BoardSelection } from "./PlanBoard";
 import { primaryOf, type BoardData } from "./useBoard";
 
-interface SidebarProps {
+interface PanelProps {
   data: BoardData;
   changes: PlanChange[];
   onChange?: (next: PlanChange[]) => void;
   selection: BoardSelection | null;
   onSelect: (s: BoardSelection | null) => void;
-  groups: Group[];
-  allowGroups: boolean;
 }
 
 /** 組織を木の順に並べた選択肢（廃止する組織と、除く組織の配下は出さない）。 */
@@ -34,52 +33,70 @@ function unitOptions(tree: BoardTree, exclude?: string) {
   return out;
 }
 
-export function BoardSidebar(props: SidebarProps) {
-  const { data, changes, onChange, groups, allowGroups } = props;
-  const created = useMemo(() => data.tree.units.filter((u) => u.state === "created").map((u) => ({ id: u.id, name: u.name })), [data.tree]);
-  const names = useNamers(data.baseDate, changes, groups, created);
+/** 図の上に浮かべる箱。PC は右上、スマホは下に出す。 */
+export function FloatingCard({ label, title, onClose, children }: { label: string; title: ReactNode; onClose: () => void; children: ReactNode }) {
   return (
-    <div className="flex flex-col gap-4 p-3 text-sm">
-      <Selected {...props} />
-      {onChange && <FindPerson {...props} />}
-      <section aria-label="変更" className="flex flex-col gap-1.5">
-        <h3 className="m-0 text-xs font-bold text-muted">変更 {changes.length} 件</h3>
-        {changes.length === 0 ? (
-          <p className="m-0 text-muted">まだありません</p>
-        ) : (
-          <ol className="m-0 flex list-none flex-col gap-1 p-0">
-            {changes.map((c, i) => (
-              <li key={`${i}-${c.kind}-${c.target_id}`} className="flex items-start gap-1.5 rounded-sm border border-border bg-surface px-2 py-1 text-xs">
-                <span className="shrink-0 rounded-sm bg-surface-2 px-1">{CHANGE_KIND_LABEL[c.kind]}</span>
-                <span className="min-w-0 flex-1 break-words">{describeChange(c, names)}</span>
-                {onChange && (
-                  <button type="button" aria-label="この変更を取り消す" onClick={() => onChange(changes.filter((_, j) => j !== i))} className="shrink-0 rounded-sm px-1 text-muted hover:bg-surface-2 hover:text-fg">
-                    ×
-                  </button>
-                )}
-              </li>
-            ))}
-          </ol>
-        )}
-      </section>
-      {onChange && (
-        <details className="rounded-md border border-border">
-          <summary className="cursor-pointer px-3 py-2 text-xs font-bold text-muted">{allowGroups ? "連絡先・グループの変更" : "連絡先の変更"}</summary>
-          <div className="p-2">
-            <ChangeAdder asOf={data.baseDate} created={created} groups={groups} allowGroups={allowGroups} only={allowGroups ? ["contact", "group_join"] : ["contact"]} onAdd={(c) => onChange([...changes, c])} />
-          </div>
-        </details>
-      )}
-    </div>
+    <section
+      aria-label={label}
+      className="absolute inset-x-3 bottom-3 z-10 flex max-h-[55%] flex-col overflow-hidden rounded-lg border border-border bg-surface/75 text-sm shadow-xl backdrop-blur-sm sm:inset-x-auto sm:top-16 sm:right-3 sm:bottom-auto sm:max-h-[calc(100%-5rem)] sm:w-80"
+    >
+      <div className="flex items-center gap-2 border-b border-border/60 px-3 py-2">
+        <div className="min-w-0 flex-1 font-bold">{title}</div>
+        <button type="button" aria-label="閉じる" onClick={onClose} className="shrink-0 rounded-sm px-1.5 text-muted hover:bg-surface-2 hover:text-fg">
+          ×
+        </button>
+      </div>
+      <div className="flex min-h-0 flex-col gap-3 overflow-y-auto p-3">{children}</div>
+    </section>
   );
 }
 
-function Selected({ data, changes, onChange, selection, onSelect }: SidebarProps) {
+/** 変更の一覧と、連絡先・グループの変更の追加。 */
+export function ChangesList({ data, changes, onChange, groups }: Omit<PanelProps, "selection" | "onSelect"> & { groups: Group[] }) {
+  const created = useMemo(() => data.tree.units.filter((u) => u.state === "created").map((u) => ({ id: u.id, name: u.name })), [data.tree]);
+  const names = useNamers(data.baseDate, changes, groups, created);
+  return (
+    <>
+      {changes.length === 0 ? (
+        <p className="m-0 text-muted">まだありません</p>
+      ) : (
+        <ol className="m-0 flex list-none flex-col gap-1 p-0">
+          {changes.map((c, i) => (
+            <li key={`${i}-${c.kind}-${c.target_id}`} className="flex items-start gap-1.5 rounded-sm border border-border bg-surface px-2 py-1 text-xs">
+              <span className="shrink-0 rounded-sm bg-surface-2 px-1">{CHANGE_KIND_LABEL[c.kind]}</span>
+              <span className="min-w-0 flex-1 break-words">{describeChange(c, names)}</span>
+              {onChange && (
+                <button type="button" aria-label="この変更を取り消す" onClick={() => onChange(changes.filter((_, j) => j !== i))} className="shrink-0 rounded-sm px-1 text-muted hover:bg-surface-2 hover:text-fg">
+                  ×
+                </button>
+              )}
+            </li>
+          ))}
+        </ol>
+      )}
+      {onChange && (
+        <details className="rounded-md border border-border bg-surface">
+          <summary className="cursor-pointer px-3 py-2 text-xs font-bold text-muted">連絡先・グループの変更</summary>
+          <div className="p-2">
+            <ChangeAdder asOf={data.baseDate} created={created} groups={groups} allowGroups only={["contact", "group_join"]} onAdd={(c) => onChange([...changes, c])} />
+          </div>
+        </details>
+      )}
+    </>
+  );
+}
+
+/** 選んだ人・組織の箱。 */
+export function SelectionCard(props: PanelProps) {
+  const { data, selection, onSelect } = props;
   if (!selection) return null;
-  if (selection.kind === "person") return <SelectedPerson key={selection.personId} selection={selection} data={data} changes={changes} onChange={onChange} onSelect={onSelect} />;
+  if (selection.kind === "person")
+    return (
+      <SelectedPerson key={selection.personId} selection={selection} data={data} changes={props.changes} onChange={props.onChange} onSelect={onSelect} />
+    );
   const unit = data.tree.byId.get(selection.unitId);
   if (!unit) return null;
-  return <SelectedUnit key={unit.id} unitId={unit.id} data={data} changes={changes} onChange={onChange} onSelect={onSelect} />;
+  return <SelectedUnit key={unit.id} unitId={unit.id} data={data} changes={props.changes} onChange={props.onChange} onSelect={onSelect} />;
 }
 
 function SelectedPerson({
@@ -106,8 +123,10 @@ function SelectedPerson({
   const options = unitOptions(data.tree);
   const apply = (next: PlanChange[]) => onChange?.(next);
   return (
-    <section aria-label="選んだ人" className="flex flex-col gap-2 rounded-md border border-accent/50 bg-surface p-3">
-      <div className="flex items-center gap-2">
+    <FloatingCard
+      label="選んだ人"
+      onClose={() => onSelect(null)}
+      title={
         <button
           type="button"
           onPointerDown={onChange ? (e) => drag.begin(e, { kind: "person", personId: selection.personId, name: selection.name, from: selection.from }) : undefined}
@@ -116,10 +135,8 @@ function SelectedPerson({
         >
           {selection.name}
         </button>
-        <button type="button" aria-label="選ぶのをやめる" onClick={() => onSelect(null)} className="ml-auto rounded-sm px-1 text-muted hover:bg-surface-2">
-          ×
-        </button>
-      </div>
+      }
+    >
       <dl className="m-0 grid grid-cols-[3em_1fr] gap-x-2 gap-y-0.5 text-xs">
         <dt className="text-muted">今</dt>
         <dd className="m-0">
@@ -177,7 +194,7 @@ function SelectedPerson({
           </div>
         </>
       )}
-    </section>
+    </FloatingCard>
   );
 }
 
@@ -208,13 +225,7 @@ function SelectedUnit({
     onSelect({ kind: "unit", unitId: id });
   };
   return (
-    <section aria-label="選んだ組織" className="flex flex-col gap-2 rounded-md border border-accent/50 bg-surface p-3">
-      <div className="flex items-center gap-2">
-        <span className="min-w-0 truncate font-bold">{unit.name}</span>
-        <button type="button" aria-label="選ぶのをやめる" onClick={() => onSelect(null)} className="ml-auto rounded-sm px-1 text-muted hover:bg-surface-2">
-          ×
-        </button>
-      </div>
+    <FloatingCard label="選んだ組織" onClose={() => onSelect(null)} title={<span className="block truncate">{unit.name}</span>}>
       {editable && (
         <>
           <label className="flex flex-col gap-1 text-xs">
@@ -268,64 +279,97 @@ function SelectedUnit({
           )}
         </div>
       )}
-    </section>
+    </FloatingCard>
   );
 }
 
-/** 人を探す。選ぶと「選んだ人」に出て、そこから組織図へドラッグするか、移す先を選べる。 */
-function FindPerson({ data, onSelect }: SidebarProps) {
+type SearchHit =
+  | { kind: "unit"; id: string; name: string; sub: string }
+  | { kind: "person"; id: string; name: string; sub: string; org: string | null; title: string | null };
+
+/** 組織（名称・コード）と人（氏名）をまとめて探す。選ぶと、その札まで図を動かして選ぶ。 */
+export function BoardSearch({ data, onPick }: { data: BoardData; onPick: (s: BoardSelection) => void }) {
   const { adapter } = useAdapter();
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<Array<{ id: string; name: string; org: string | null; orgName: string; title: string | null }>>([]);
-  const id = useId();
+  const [people, setPeople] = useState<SearchHit[]>([]);
+  const [open, setOpen] = useState(false);
+  const box = useRef<HTMLDivElement>(null);
+  const listId = useId();
+  const q = query.trim();
+  const units = useMemo<SearchHit[]>(() => {
+    if (!q) return [];
+    const needle = q.toLowerCase();
+    return data.tree.units
+      .filter((u) => u.name.toLowerCase().includes(needle) || u.code.toLowerCase().includes(needle))
+      .slice(0, 6)
+      .map((u) => ({ kind: "unit", id: u.id, name: u.name, sub: [u.levelName, u.parentId ? data.tree.byId.get(u.parentId)?.name : null].filter(Boolean).join("・") }));
+  }, [q, data.tree]);
   useEffect(() => {
-    if (!query.trim()) return;
+    if (!q) return;
     let cancelled = false;
     const timer = setTimeout(() => {
-      adapter.searchPeople(query.trim(), { asOf: data.baseDate, limit: 8 }).then(
+      adapter.searchPeople(q, { asOf: data.baseDate, limit: 6 }).then(
         (page) => {
           if (cancelled) return;
-          setResults(
+          setPeople(
             page.items.map((p) => {
               const a = primaryOf(p);
-              return { id: p.id, name: personName(p), org: a?.org_unit_id ?? null, orgName: a?.org_unit_name ?? "", title: a?.position_title ?? null };
+              return { kind: "person", id: p.id, name: personName(p), sub: a?.org_unit_name ?? "", org: a?.org_unit_id ?? null, title: a?.position_title ?? null };
             }),
           );
         },
-        () => !cancelled && setResults([]),
+        () => !cancelled && setPeople([]),
       );
     }, 200);
     return () => {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [adapter, data.baseDate, query]);
+  }, [adapter, data.baseDate, q]);
+  // 外を押したら候補を閉じる
+  useEffect(() => {
+    if (!open) return;
+    const down = (e: PointerEvent) => !box.current?.contains(e.target as Node) && setOpen(false);
+    window.addEventListener("pointerdown", down);
+    return () => window.removeEventListener("pointerdown", down);
+  }, [open]);
+  const hits = q ? [...units, ...people] : [];
+  const pick = (h: SearchHit) => {
+    onPick(h.kind === "unit" ? { kind: "unit", unitId: h.id } : { kind: "person", personId: h.id, name: h.name, from: { org: h.org, title: h.title } });
+    setQuery("");
+    setPeople([]);
+    setOpen(false);
+  };
   return (
-    <section aria-label="人を探す" className="flex flex-col gap-1">
-      <label htmlFor={id} className="text-xs font-bold text-muted">
-        人を探す
-      </label>
-      <input id={id} type="search" className={inputClass} value={query} onChange={(e) => setQuery(e.target.value)} placeholder="氏名" autoComplete="off" />
-      {query.trim() && results.length > 0 && (
-        <ul className="m-0 max-h-56 list-none overflow-y-auto rounded-md border border-border bg-surface p-0">
-          {results.map((r) => (
-            <li key={r.id}>
-              <button
-                type="button"
-                className="flex w-full items-baseline gap-2 px-3 py-1.5 text-left hover:bg-surface-2"
-                onClick={() => {
-                  onSelect({ kind: "person", personId: r.id, name: r.name, from: { org: r.org, title: r.title } });
-                  setQuery("");
-                  setResults([]);
-                }}
-              >
-                <span>{r.name}</span>
-                <span className="truncate text-xs text-muted">{r.orgName}</span>
+    <div ref={box} className="relative">
+      <input
+        type="search"
+        aria-label="組織・人を探す"
+        aria-controls={listId}
+        className={`${inputClass} h-10 w-48 sm:w-64`}
+        value={query}
+        placeholder="組織・人を探す"
+        autoComplete="off"
+        onChange={(e) => (setQuery(e.target.value), setOpen(true))}
+        onFocus={() => setOpen(true)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && hits[0]) pick(hits[0]);
+          if (e.key === "Escape") setOpen(false);
+        }}
+      />
+      {open && hits.length > 0 && (
+        <ul id={listId} className="absolute top-full left-0 z-20 m-0 mt-1 max-h-80 w-72 list-none overflow-y-auto rounded-md border border-border bg-surface p-0 shadow-xl">
+          {hits.map((h) => (
+            <li key={`${h.kind}:${h.id}`}>
+              <button type="button" className="flex w-full items-baseline gap-2 px-3 py-1.5 text-left hover:bg-surface-2" onClick={() => pick(h)}>
+                <span className="shrink-0 rounded-sm bg-surface-2 px-1 text-xs text-muted">{h.kind === "unit" ? "組織" : "人"}</span>
+                <span className="shrink-0">{h.name}</span>
+                <span className="truncate text-xs text-muted">{h.sub}</span>
               </button>
             </li>
           ))}
         </ul>
       )}
-    </section>
+    </div>
   );
 }

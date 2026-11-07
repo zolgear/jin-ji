@@ -52,7 +52,8 @@ public sealed class FieldRegistrationTests : IAsyncLifetime
         }
     }
 
-    private Task EnableAllAsync() => EnableAsync([.. FieldDomains.All]);
+    /// <summary>既定が hr の領域をすべて field にする（席・持ち場は既定で field）。</summary>
+    private Task EnableAllAsync() => EnableAsync([.. FieldDomains.All.Where(d => FieldDomains.Default(d) == FieldManagementMode.Hr)]);
 
     private FieldRegistrationInput Transfer(string person, string to, DateOnly date, string? title = null)
     {

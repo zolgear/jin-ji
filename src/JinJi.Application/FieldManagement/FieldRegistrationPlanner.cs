@@ -734,7 +734,7 @@ public sealed class FieldRegistrationPlanner
 
     private void RequireMode(FieldDomain domain)
     {
-        if (!_modes.GetValueOrDefault(domain, FieldManagementMode.Hr).AllowsDirectRegistration())
+        if (!_modes.GetValueOrDefault(domain, FieldDomains.Default(domain)).AllowsDirectRegistration())
         {
             throw Forbidden($"領域 {FieldDomains.Key(domain)} の管理元は人事パッケージなので、直接登録できません。");
         }

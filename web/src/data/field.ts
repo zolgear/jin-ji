@@ -107,6 +107,11 @@ export const DOMAIN_LABEL: Record<FieldDomain, string> = {
 
 export const MODE_LABEL: Record<FieldManagementMode, string> = { hr: "人事パッケージ", field: "jin-ji（現場）", both: "両方" };
 
+/** 管理元の表示名。席・持ち場は人事が関わらないので、取込の元を施設管理システムとして示す。 */
+export function modeLabel(domain: FieldDomain, mode: FieldManagementMode): string {
+  return domain === "workplace" && mode === "hr" ? "取込（施設管理システム）" : MODE_LABEL[mode];
+}
+
 export const REGISTRATION_STATUS_LABEL: Record<FieldRegistrationStatus, string> = {
   draft: "下書き",
   pending_consent: "同意待ち",

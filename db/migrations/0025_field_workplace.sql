@@ -3,7 +3,8 @@
 -- 位置づけ
 -- - 席の割り当て（workplace_assignment の主の席）を、組織と人の情報と同じく現場が直接登録できるようにする。
 --   承認は経ず、有効日を決めて反映する。素案（計画）にも入れられる
--- - 管理元の領域に workplace（人の席・持ち場）を足す。既定は hr（取込だけ）で、設定しない導入先の動きは変わらない
+-- - 管理元の領域に workplace（人の席・持ち場）を足す。席の配置は現場の組織が決めるもので人事は関わらないので、既定は field（直接登録だけ）。
+--   席を外部の施設管理システムから取り込む導入先は、管理元を hr（取込だけ）か both にする
 -- - 範囲は人の主務の組織（人の拠点・連絡先と同じ）。総務・ファシリティ管理者のロールは作らない
 -- - 配置図（建物・階・改訂・席の置き場所）は今のまま取込と人事管理者の承認だけで変える
 --
@@ -21,6 +22,14 @@ LANGUAGE sql IMMUTABLE PARALLEL SAFE AS $$
     SELECT ARRAY['org_structure', 'org_site', 'assignment', 'person_site', 'person_contact', 'workplace']
 $$;
 COMMENT ON FUNCTION jinji_field_domains() IS '管理元を設定できる領域（組織の構造・組織の拠点・所属・人の拠点・連絡先・人の席）';
+-- 承認済みの設定が無いときの管理元は、席・持ち場だけ field（JinJi.Domain の FieldDomains.Default と同じ）
+CREATE OR REPLACE FUNCTION jinji_field_domain_mode(field_domain text) RETURNS text
+LANGUAGE sql STABLE PARALLEL SAFE AS $$
+    SELECT coalesce((
+        SELECT s.mode FROM public.field_domain_setting s
+        WHERE s.domain = field_domain AND s.status = 'approved'), CASE field_domain WHEN 'workplace' THEN 'field' ELSE 'hr' END)
+$$;
+COMMENT ON FUNCTION jinji_field_domain_mode(text) IS '領域の今の管理元（承認済みの行。無ければ既定: workplace は field、ほかは hr）';
 COMMENT ON COLUMN field_domain_setting.domain IS '領域（org_structure・org_site・assignment・person_site・person_contact・workplace）';
 
 -- ---------------------------------------------------------------------------

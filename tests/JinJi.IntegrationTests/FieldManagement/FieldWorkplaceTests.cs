@@ -9,7 +9,7 @@ using JinJi.Policy;
 namespace JinJi.IntegrationTests.FieldManagement;
 
 /// <summary>
-/// 人の席・持ち場の直接登録（0025・ADR-0013 決定 11）: 範囲の中の即時反映と未来日の秘匿、席の入れ替え、使っている人がいる席・範囲の外・管理元の拒否、
+/// 人の席・持ち場の直接登録（0025・ADR-0013 決定 11）: 管理元の既定（現場）、範囲の中の即時反映と未来日の秘匿、席の入れ替え、使っている人がいる席・範囲の外・管理元の拒否、
 /// 取り消しを実 PostgreSQL で確かめる。
 /// </summary>
 /// <remarks>
@@ -43,9 +43,9 @@ public sealed class FieldWorkplaceTests : IAsyncLifetime
 
     public ValueTask DisposeAsync() => _db.DisposeAsync();
 
-    private async Task EnableAsync(FieldDomain domain)
+    private async Task SetModeAsync(FieldManagementMode mode)
     {
-        var setting = await _management.ProposeModeAsync(OrgAdmin, domain, FieldManagementMode.Field, null, Ct);
+        var setting = await _management.ProposeModeAsync(OrgAdmin, FieldDomain.Workplace, mode, null, Ct);
         await _management.DecideModeAsync(_db.HrUser("hr2"), setting.Id, true, Ct);
     }
 
@@ -72,7 +72,6 @@ public sealed class FieldWorkplaceTests : IAsyncLifetime
     [Fact(DisplayName = "席: 組織長は配下の人の席を有効日から決められ、未来日の席は関係者にだけ見える。有効日の前なら取り消せる")]
     public async Task Register_AssignsSeatAndWithdraws()
     {
-        await EnableAsync(FieldDomain.Workplace);
         var date = Today.AddDays(7);
 
         var registration = await _service.RegisterAsync(Head, Input(date, Seat("takahashi", "A01")), Ct);
@@ -91,7 +90,6 @@ public sealed class FieldWorkplaceTests : IAsyncLifetime
     [Fact(DisplayName = "席: 2 人の席の入れ替えを 1 回で登録でき（定員 1 の席を先に空ける順で反映）、席を外すこともできる")]
     public async Task Register_SwapsAndClearsSeats()
     {
-        await EnableAsync(FieldDomain.Workplace);
         var date = Today.AddDays(3);
         await _service.RegisterAsync(Head, Input(Today, Seat("takahashi", "A01")), Ct);
 
@@ -112,11 +110,19 @@ public sealed class FieldWorkplaceTests : IAsyncLifetime
         Assert.Equal(FieldManagementError.Conflict, await ErrorOfAsync(() => _service.WithdrawAsync(Head, clear.Id, Ct)));
     }
 
-    [Fact(DisplayName = "席: 使っている人がいる席・保守中の席・範囲の外の人・持ち場の定員超えは拒否し、管理元が hr なら登録できない")]
-    public async Task Register_RejectsOccupiedOutOfScopeAndMode()
+    [Fact(DisplayName = "席: 管理元は設定しなくても現場（直接登録できる）。取込（hr）にした導入先では登録できない")]
+    public async Task Mode_DefaultsToField()
     {
+        Assert.Equal(FieldManagementMode.Field, (await _management.ModesAsync(Head, Ct))[FieldDomain.Workplace]);
+        Assert.Equal(["field"], await _db.QueryAsync<string>(null, "SELECT jinji_field_domain_mode('workplace')", Ct));
+
+        await SetModeAsync(FieldManagementMode.Hr);
         Assert.Equal(FieldManagementError.Forbidden, await ErrorOfAsync(() => _service.RegisterAsync(Head, Input(Today, Seat("takahashi", "A01")), Ct)));
-        await EnableAsync(FieldDomain.Workplace);
+    }
+
+    [Fact(DisplayName = "席: 使っている人がいる席・保守中の席・範囲の外の人・持ち場の定員超えは拒否する")]
+    public async Task Register_RejectsOccupiedOutOfScope()
+    {
 
         // A03 は範囲の外の hr1 が使っている。hr1 の席は head には変えられない
         Assert.Equal(FieldManagementError.Invalid, await ErrorOfAsync(() => _service.RegisterAsync(Head, Input(Today, Seat("takahashi", "A03")), Ct)));

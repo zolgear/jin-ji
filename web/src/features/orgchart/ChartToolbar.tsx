@@ -31,9 +31,15 @@ export function ChartToolbarRow({ children }: { children: ReactNode }) {
 }
 
 /** 帯のボタン（「すべて開く」「全体を表示」など）。 */
-export function ToolbarButton({ onClick, children, title }: { onClick: () => void; children: ReactNode; title?: string }) {
+export function ToolbarButton({ onClick, children, title, pressed }: { onClick: () => void; children: ReactNode; title?: string; pressed?: boolean }) {
   return (
-    <button type="button" title={title} className="h-8 shrink-0 rounded-md border border-border px-3 whitespace-nowrap hover:bg-surface-2" onClick={onClick}>
+    <button
+      type="button"
+      title={title}
+      aria-pressed={pressed}
+      className="h-8 shrink-0 rounded-md border border-border px-3 whitespace-nowrap hover:bg-surface-2 aria-pressed:border-accent aria-pressed:bg-accent-weak aria-pressed:text-accent"
+      onClick={onClick}
+    >
       {children}
     </button>
   );

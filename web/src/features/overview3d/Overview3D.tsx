@@ -49,6 +49,7 @@ import { FloatingCard } from "../../components/FloatingCard";
 import { HelpTip } from "../../components/popover";
 import { OrgPanel } from "../org/OrgPanel";
 import { OrgPersonSearch, type SearchUnit } from "../org/OrgPersonSearch";
+import { OrgTreeList } from "../org/OrgTreeList";
 import { PersonPanel } from "../person/PersonPanel";
 import { CloseButton, ErrorNote, LineKey, Spinner } from "../../components/ui";
 import { useAdapter } from "../../data/adapterContext";
@@ -1804,6 +1805,8 @@ function OrgOverview3D() {
   );
   // 法人（組織の根）を選んだとき（URL の org は組織だけなので、画面の中で持つ）
   const [entityId, setEntityId] = useState<string | null>(null);
+  // 組織のツリー（図の左上に浮かべる。選んでも開いたまま。× と何もないところを押すと閉じる）
+  const [treeOpen, setTreeOpen] = useState(false);
   const selected = orgId ?? entityId;
   const focus = useMemo(() => (scene ? focusOf(byId, selected, links, split) : null), [scene, byId, selected, links, split]);
   const hoveredId = hover?.p.node.id ?? null;
@@ -1852,6 +1855,9 @@ function OrgOverview3D() {
               else navigate({ params: { org: hit.org, person: hit.id } });
             }}
           />
+          <ToolbarButton pressed={treeOpen} onClick={() => setTreeOpen((v) => !v)}>
+            ツリー
+          </ToolbarButton>
           <ToolbarButton
             onClick={() => {
               setEntityId(null);
@@ -1920,6 +1926,7 @@ function OrgOverview3D() {
             const d = downAt.current;
             if (e.type !== "click" || !d || Math.hypot(e.clientX - d.x, e.clientY - d.y) >= 5) return;
             setEntityId(null);
+            setTreeOpen(false);
             if (orgId || personId) selectOrg(null);
           }}
         >
@@ -1957,6 +1964,22 @@ function OrgOverview3D() {
       {/* 走査線（CSS。WebGL の描き直しを起こさない。動きを減らす設定では止まる） */}
       <div className="scan3d pointer-events-none absolute inset-0" aria-hidden="true" />
       <LabelOverlay specs={labels} overlay={overlay} />
+      {treeOpen && (
+        <FloatingCard label="組織のツリー" title="ツリー" onClose={() => setTreeOpen(false)} side="left" top="sm:top-3 sm:max-h-[calc(100%-1.5rem)]">
+          <OrgTreeList
+            selectedId={selected}
+            onSelect={(n) => {
+              if (n.kind === "legal_entity") {
+                setEntityId(n.id);
+                if (orgId || personId) selectOrg(null);
+              } else {
+                setEntityId(null);
+                selectOrg(n.id);
+              }
+            }}
+          />
+        </FloatingCard>
+      )}
       {/* 選んだ人・組織は、図を狭めないよう図の上に浮かべる（何もないところを押すと閉じる） */}
       {personId ? (
         <FloatingCard key={personId} label="人の詳細" top="sm:top-3 sm:max-h-[calc(100%-1.5rem)]">

@@ -293,7 +293,7 @@ export function PersonPanel({ personId, onClose, compact = false }: { personId: 
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between gap-2">
-        <h2 ref={heading} tabIndex={-1} className="text-sm font-bold text-muted outline-none focus-visible:outline-none">
+        <h2 ref={heading} tabIndex={-1} className="text-sm font-bold text-muted">
           人の詳細
         </h2>
         <CloseButton onClick={onClose} />

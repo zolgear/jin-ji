@@ -88,69 +88,48 @@ const CROSS_ROWS: Array<{ key: keyof CrossCounts; kind: "concurrent" | "secondme
 ];
 
 /**
- * 兼務・出向の人数。「この組織に直接」と「配下を含む」を分けて示す。説明は見出しの横の「i」に収める。
+ * 兼務・出向の人数。0 名の行は出さず、全部 0 名なら何も出さない。配下があるときは「配下を含む」を括弧で添える。説明は見出しの横の「i」に収める。
  */
 function CrossTable({ forest, links, orgId, hasChildren }: { forest: OrgForest; links: OrgLink[]; orgId: string; hasChildren: boolean }) {
   const summary = useMemo(() => crossSummary(forest, links, orgId), [forest, links, orgId]);
-  const cell = (n: number) => (
-    <td className={`tabular py-1 pl-2 text-right ${n === 0 ? "text-muted" : "font-bold"}`}>{n}名</td>
-  );
+  const rows = CROSS_ROWS.filter((r) => summary.direct[r.key] > 0 || (hasChildren && summary.subtree[r.key] > 0));
+  if (rows.length === 0) return null;
   const { internal } = summary;
   return (
     <section aria-labelledby="org-cross" className="text-xs">
-      <table className="w-full border-collapse">
-        <caption className="mb-1 text-left font-bold text-muted">
-          <span className="flex items-center gap-0.5">
-            <span id="org-cross">兼務・出向</span>
-            <HelpTip label="兼務・出向の人数について" icon="info" width={280}>
-              <p className="m-0">
-                <b>受け入れ</b>: 主務は他の組織で、この組織でも兼務・出向している人
-              </p>
-              <p className="m-0">
-                <b>送り出し</b>: この組織が主務で、他の組織で兼務・出向している人
-              </p>
-              <p className="m-0">
-                <b>この組織に直接</b>: この組織だけの人数
-              </p>
-              {hasChildren && (
-                <p className="m-0">
-                  <b>配下を含む</b>: 配下の組織も合わせた人数。配下の組織どうしの分は数えず、外の組織との間だけ数えます
-                  {internal.concurrent + internal.secondment > 0 &&
-                    `（配下どうし: ${[internal.concurrent > 0 ? `兼務 ${internal.concurrent}名` : "", internal.secondment > 0 ? `出向 ${internal.secondment}名` : ""].filter(Boolean).join("・")}）`}
-                  。
-                </p>
-              )}
-            </HelpTip>
-          </span>
-        </caption>
-        <thead>
-          <tr className="border-b border-border text-muted">
-            <th scope="col" className="py-1 text-left font-normal">
-              <span className="sr-only">種類</span>
-            </th>
-            <th scope="col" className="py-1 pl-2 text-right font-normal">この組織に直接</th>
-            {hasChildren && (
-              <th scope="col" className="py-1 pl-2 text-right font-normal">
-                配下を含む
-              </th>
+      <h3 className="mb-0.5 flex items-center gap-0.5 font-bold text-muted">
+        <span id="org-cross">兼務・出向</span>
+        <HelpTip label="兼務・出向の人数について" icon="info" width={280}>
+          <p className="m-0">
+            <b>受け入れ</b>: 主務は他の組織で、この組織でも兼務・出向している人
+          </p>
+          <p className="m-0">
+            <b>送り出し</b>: この組織が主務で、他の組織で兼務・出向している人
+          </p>
+          {hasChildren && (
+            <p className="m-0">
+              <b>配下を含む</b>: 配下の組織も合わせた人数。配下の組織どうしの分は数えず、外の組織との間だけ数えます
+              {internal.concurrent + internal.secondment > 0 &&
+                `（配下どうし: ${[internal.concurrent > 0 ? `兼務 ${internal.concurrent}名` : "", internal.secondment > 0 ? `出向 ${internal.secondment}名` : ""].filter(Boolean).join("・")}）`}
+              。
+            </p>
+          )}
+        </HelpTip>
+      </h3>
+      <ul className="m-0 flex list-none flex-wrap gap-x-4 gap-y-0.5 p-0">
+        {rows.map((r) => (
+          <li key={r.key} className="flex items-center gap-1">
+            <LineKey kind={r.kind} width={14} />
+            {r.label}
+            {summary.direct[r.key] > 0 && <span className="tabular font-bold">{summary.direct[r.key]}名</span>}
+            {hasChildren && summary.subtree[r.key] !== summary.direct[r.key] && (
+              <span className="tabular text-muted">
+                {summary.direct[r.key] > 0 ? `（配下を含む ${summary.subtree[r.key]}名）` : `配下を含む ${summary.subtree[r.key]}名`}
+              </span>
             )}
-          </tr>
-        </thead>
-        <tbody>
-          {CROSS_ROWS.map((r) => (
-            <tr key={r.key} className="border-b border-border/60">
-              <th scope="row" className="py-1 text-left font-normal">
-                <span className="flex items-center gap-1">
-                  <LineKey kind={r.kind} width={14} />
-                  {r.label}
-                </span>
-              </th>
-              {cell(summary.direct[r.key])}
-              {hasChildren && cell(summary.subtree[r.key])}
-            </tr>
-          ))}
-        </tbody>
-      </table>
+          </li>
+        ))}
+      </ul>
     </section>
   );
 }
@@ -201,7 +180,7 @@ export function OrgPanel({ orgId, onClose }: { orgId: string; onClose: () => voi
               </span>
             ))}
           </nav>
-          <h2 ref={heading} tabIndex={-1} className="text-xl font-bold outline-none focus-visible:outline-none">
+          <h2 ref={heading} tabIndex={-1} className="text-xl font-bold">
             {node.name}
           </h2>
           <div className="flex flex-wrap gap-x-3 text-xs text-muted">
@@ -253,19 +232,20 @@ export function OrgPanel({ orgId, onClose }: { orgId: string; onClose: () => voi
             )}
           </dd>
         </div>
-        {node.headcount && (
-          <>
-            <div className="rounded-sm border border-border px-2 py-1.5">
-              <dt className="text-muted">直属</dt>
-              <dd className="tabular m-0 text-sm font-bold">{node.headcount.primary}名</dd>
-            </div>
-            <div className="rounded-sm border border-border px-2 py-1.5">
-              <dt className="text-muted">所属（配下を含む）</dt>
-              <dd className="tabular m-0 text-sm font-bold">{node.totalPrimary}名</dd>
-            </div>
-          </>
-        )}
       </dl>
+
+      {node.headcount && (
+        <p className="m-0 flex flex-wrap items-baseline gap-x-4 text-xs text-muted">
+          <span>
+            直属 <b className="tabular text-sm text-fg">{node.headcount.primary}名</b>
+          </span>
+          {node.children.length > 0 && (
+            <span>
+              配下を含む <b className="tabular text-sm text-fg">{node.totalPrimary}名</b>
+            </span>
+          )}
+        </p>
+      )}
 
       {node.headcount && stats.data && <CrossTable forest={forest} links={stats.data.links} orgId={node.id} hasChildren={node.children.length > 0} />}
 

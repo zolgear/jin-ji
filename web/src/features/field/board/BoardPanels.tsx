@@ -5,6 +5,7 @@ import { Button } from "../../../auth/ui";
 import { Badge, personKana, personName } from "../../../components/ui";
 import { usePerson } from "../../../app/hooks";
 import { useAdapter } from "../../../data/adapterContext";
+import { employmentTypeLabel } from "../../../lib/labels";
 import { assignmentKind, PersonDetail } from "../../person/PersonPanel";
 import { CHANGE_KIND_LABEL, type Group, type PlanChange } from "../../../data/field";
 import { ChangeAdder, describeChange, inputClass, newUuid, useNamers } from "../shared";
@@ -214,7 +215,7 @@ function SelectedPerson({
 }
 
 /**
- * 選んだ人の要点（フリガナと所属。兼務・出向を含む）。すべての項目は「詳細」で箱の上に開く（画面を移らない）。
+ * 選んだ人の要点（フリガナ・所属〔兼務・出向を含む〕・社員番号・雇用区分・拠点）。すべての項目は「詳細」で箱の上に開く（画面を移らない）。
  * 見えるのは閲覧者の公開範囲の項目だけ。
  */
 function PersonDetails({ personId, asOf }: { personId: string; asOf: string }) {
@@ -254,6 +255,27 @@ function PersonDetails({ personId, asOf }: { personId: string; asOf: string }) {
           })}
         </ul>
       )}
+      {/* 社員番号・雇用区分・拠点（見えない・無い項目は出さない） */}
+      <dl className="m-0 grid grid-cols-[4.5em_1fr] gap-x-2 gap-y-0.5 text-xs">
+        {p.employee_number && (
+          <>
+            <dt className="text-muted">社員番号</dt>
+            <dd className="m-0 tabular">{p.employee_number}</dd>
+          </>
+        )}
+        {p.employment_type && (
+          <>
+            <dt className="text-muted">雇用区分</dt>
+            <dd className="m-0">{employmentTypeLabel(p.employment_type)}</dd>
+          </>
+        )}
+        {p.site && (
+          <>
+            <dt className="text-muted">拠点</dt>
+            <dd className="m-0">{p.site.name}</dd>
+          </>
+        )}
+      </dl>
       <dialog
         ref={attachDialog}
         aria-label={`${personName(p)}の詳細`}

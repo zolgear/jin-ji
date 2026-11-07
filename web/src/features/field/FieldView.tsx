@@ -39,7 +39,7 @@ export function FieldView() {
 
   return (
     <div className="flex h-full flex-col">
-      <div role="tablist" aria-label="組織の変更" className="flex gap-1 border-b border-border px-4 pt-3">
+      <div role="tablist" aria-label="組織の変更" className="flex gap-1 overflow-x-auto border-b border-border px-4 pt-3">
         {TABS.map((t) => (
           <button
             key={t.id}
@@ -47,7 +47,7 @@ export function FieldView() {
             role="tab"
             aria-selected={t.id === tab}
             onClick={() => navigate({ params: { tab: t.id === "edit" ? null : t.id } })}
-            className="-mb-px rounded-t-md border border-transparent px-4 py-2 text-sm font-bold text-muted aria-selected:border-border aria-selected:border-b-surface aria-selected:bg-surface aria-selected:text-fg"
+            className="-mb-px shrink-0 rounded-t-md border border-transparent px-3 py-2 text-sm whitespace-nowrap sm:px-4 font-bold text-muted aria-selected:border-border aria-selected:border-b-surface aria-selected:bg-surface aria-selected:text-fg"
           >
             {t.label}
           </button>

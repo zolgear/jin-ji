@@ -31,6 +31,8 @@ interface BoardProps {
   aside?: ReactNode;
   /** 図の上に重ねる操作（変更後・今の組織の切り替えなど）。 */
   overlay?: ReactNode;
+  /** この組織から下だけを描く（無い・見つからなければ全体）。 */
+  root?: string | null;
 }
 
 export function PlanBoard(props: BoardProps) {
@@ -67,7 +69,7 @@ export function PlanBoard(props: BoardProps) {
   );
 }
 
-function Canvas({ data, changes, onChange, selection, onSelect, scroller }: BoardProps & { scroller: React.RefObject<HTMLDivElement | null> }) {
+function Canvas({ data, changes, onChange, selection, onSelect, scroller, root }: BoardProps & { scroller: React.RefObject<HTMLDivElement | null> }) {
   const [zoom, setZoomState] = useState(0.85);
   // 拡大・縮小の中心（図の上の点を、画面の同じ位置に保つ）
   const anchor = useRef<{ x: number; y: number; cx: number; cy: number } | null>(null);
@@ -131,7 +133,9 @@ function Canvas({ data, changes, onChange, selection, onSelect, scroller }: Boar
     },
     [data.tree],
   );
-  const isOpen = useCallback((id: string) => open.get(id) ?? (depthOf(id) < 1 || touched.has(id)), [open, depthOf, touched]);
+  const top = useMemo(() => (root ? (data.tree.byId.get(root) ?? null) : null), [root, data.tree]);
+  const topDepth = useMemo(() => (top ? depthOf(top.id) : 0), [top, depthOf]);
+  const isOpen = useCallback((id: string) => open.get(id) ?? (depthOf(id) - topDepth < 1 || touched.has(id)), [open, depthOf, topDepth, touched]);
   const toggle = useCallback((id: string) => setOpen((m) => new Map(m).set(id, !isOpen(id))), [isOpen]);
 
   // 札の外を押してドラッグすると、図を動かす
@@ -149,7 +153,7 @@ function Canvas({ data, changes, onChange, selection, onSelect, scroller }: Boar
     window.addEventListener("pointerup", up);
   };
 
-  const roots = data.tree.children.get(null) ?? [];
+  const roots = top ? [top] : (data.tree.children.get(null) ?? []);
   return (
     <div className="relative size-full">
       <div ref={scroller} onPointerDown={pan} className="size-full cursor-grab overflow-auto bg-bg [background-image:radial-gradient(var(--border)_1px,transparent_1px)] [background-size:20px_20px]">

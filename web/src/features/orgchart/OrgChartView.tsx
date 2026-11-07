@@ -548,8 +548,8 @@ function Chart() {
               すべて開く
             </ToolbarButton>
             <ToolbarButton onClick={() => setExpanded(new Map())}>既定に戻す</ToolbarButton>
-            {/* 組織の変更の画面の編集で、この組織図の上で異動・新設・改廃を組み立てる */}
-            <ToolbarButton onClick={() => navigate({ view: "changes", params: { tab: null, org: null, dir: null } })}>編集</ToolbarButton>
+            {/* 組織の変更の画面の編集で、この組織図の上で異動・新設・改廃を組み立てる（組織を選んでいれば、そこから下だけ） */}
+            <ToolbarButton onClick={() => navigate({ view: "changes", params: { tab: null, org: null, person: null, dir: null, root: orgId } })}>編集</ToolbarButton>
             <HelpTip label="図の見方">
               <p className="m-0 flex items-center gap-2">
                 <svg aria-hidden="true" width="18" height="8" className="line-key">

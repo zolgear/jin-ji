@@ -1,5 +1,5 @@
 // 編集のタブ: 組織図の上で人・組織をドラッグして変更を組み立て、目的に応じて「計画として保存」か「変更を反映」する。
-// 開いている計画は URL の plan に持つ（無ければ新しい編集）。保存・反映の前の変更は drafts に覚え、タブを移っても消さない。
+// 開いている計画は URL の plan に、組織図で選んだ組織から下だけを描くときはその組織を root に持つ（無ければ新しい編集・全体）。保存・反映の前の変更は drafts に覚え、タブを移っても消さない。
 // 計画は公開されない作業領域で、保存しても公開されている組織・人の情報は変わらない（ADR-0013 決定 8・9）。
 // 反映は範囲の中の直接登録（部をまたぐ異動は相手側の同意で反映）。申請版・承認の記録・共有・提案資料は、ボードの横の欄と上の帯から行う。
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -103,6 +103,8 @@ function Editor({
 }) {
   const { adapter } = useAdapter();
   const field = adapter.field;
+  const { route, navigate } = useRoute();
+  const root = route.params.get("root");
   const draftKey = plan?.id ?? "new";
   const [draft, setDraft] = useState<PlanInput>(
     () =>
@@ -235,6 +237,7 @@ function Editor({
           onChange={setChanges}
           selection={selection}
           onSelect={setSelection}
+          root={root}
           overlay={
             <div className="absolute top-3 left-3 flex flex-wrap items-center gap-2">
               <fieldset className="m-0 flex overflow-hidden rounded-md border border-border bg-surface p-0 text-sm shadow-sm">
@@ -251,6 +254,15 @@ function Editor({
                   今の組織
                 </button>
               </fieldset>
+              {root && board.tree.byId.has(root) && (
+                <span className="flex h-8 items-center gap-1 rounded-md border border-border bg-surface pl-3 text-sm shadow-sm">
+                  <span className="font-bold">{board.tree.byId.get(root)!.name}</span>
+                  <span className="text-muted">から下</span>
+                  <button type="button" aria-label="組織全体を表示" title="組織全体を表示" onClick={() => navigate({ params: { root: null } }, true)} className="h-full px-2 text-muted hover:bg-surface-2 hover:text-fg">
+                    ×
+                  </button>
+                </span>
+              )}
               {viewing && viewing.changes.length > 0 && <span className="rounded-md border border-border bg-surface px-2 py-1 text-xs font-bold shadow-sm">{viewing.label}</span>}
             </div>
           }

@@ -44,7 +44,12 @@ import { LineGeometry } from "three/examples/jsm/lines/LineGeometry.js";
 import { LineMaterial } from "three/examples/jsm/lines/LineMaterial.js";
 import { useOrgStats, useOrgTree } from "../../app/hooks";
 import { useNav } from "../../app/nav";
+import { useRoute } from "../../lib/router";
+import { FloatingCard } from "../../components/FloatingCard";
 import { HelpTip } from "../../components/popover";
+import { OrgPanel } from "../org/OrgPanel";
+import { OrgPersonSearch, type SearchUnit } from "../org/OrgPersonSearch";
+import { PersonPanel } from "../person/PersonPanel";
 import { ErrorNote, LineKey, Spinner } from "../../components/ui";
 import { useAdapter } from "../../data/adapterContext";
 import { describeError, type OrgLink } from "../../data/types";
@@ -1770,7 +1775,10 @@ export function Overview3D() {
 function OrgOverview3D() {
   const { adapter } = useAdapter();
   const { setMode } = useFloorRoute();
-  const { asOf, orgId, selectOrg } = useNav();
+  const { asOf, orgId, personId, selectOrg, openPerson } = useNav();
+  const { navigate } = useRoute();
+  // 押した位置（何もないところのクリックと、回転・移動のドラッグを見分ける）
+  const downAt = useRef<{ x: number; y: number } | null>(null);
   const tree = useOrgTree(asOf);
   const stats = useOrgStats(asOf);
   const theme = useResolvedTheme();
@@ -1780,6 +1788,12 @@ function OrgOverview3D() {
   const split = useMemo(() => (forest && splitMode ? splitBySite(forest) : null), [forest, splitMode]);
   const scene = useMemo(() => (split ? layout3dSplit(split) : forest ? layout3d(forest) : null), [forest, split]);
   const byId = useMemo(() => new Map((scene?.nodes ?? []).map((p) => [p.node.id, p])), [scene]);
+  // 検索で探す組織（候補には上位組織の名前を添える）
+  const searchUnits = useMemo<SearchUnit[]>(() => {
+    const units = tree.data?.units ?? [];
+    const names = new Map(units.map((u) => [u.id, u.name]));
+    return units.map((u) => ({ id: u.id, name: u.name, code: u.code, sub: (u.parent_id && names.get(u.parent_id)) || "" }));
+  }, [tree.data]);
   const [hover, setHover] = useState<{ p: Placed3D; x: number; y: number; width: number } | null>(null);
   const [fitRequest, setFitRequest] = useState(0);
   const container = useRef<HTMLDivElement>(null);
@@ -1850,16 +1864,31 @@ function OrgOverview3D() {
         {(tree.loading || stats.loading) && <Spinner />}
         {!statsAvailable && !stats.loading && <NoStatsBadge title="集計の API が未提供のため、人数と兼務・出向の線を表示していません" />}
         <ChartToolbarEnd>
+          {/* 組織・人をまとめて探す。組織はその組織を、人はその人の主務の組織を選んでカメラを寄せる */}
+          <OrgPersonSearch
+            units={searchUnits}
+            asOf={asOf}
+            onPick={(hit) => (hit.kind === "unit" ? selectOrg(hit.id) : navigate({ params: { org: hit.org, person: hit.id } }))}
+          />
           <ToolbarButton onClick={() => (orgId ? selectOrg(null) : setFitRequest((n) => n + 1))}>全体を表示</ToolbarButton>
+          {/* 組織の変更の画面の編集を開く（組織図の画面と同じ。組織を選んでいれば、そこから下だけ） */}
+          <ToolbarButton onClick={() => navigate({ view: "changes", params: { tab: null, org: null, person: null, root: orgId } })}>編集</ToolbarButton>
           <HelpTip label="図の見方" width={340}>
             <HowToRead stats={statsAvailable} />
           </HelpTip>
         </ChartToolbarEnd>
       </ChartToolbar>
-    <div ref={container} className="relative min-h-0 flex-1" style={{ cursor: hover ? "pointer" : "grab" }}>
+    <div
+      ref={container}
+      className="relative min-h-0 flex-1"
+      style={{ cursor: hover ? "pointer" : "grab" }}
+      onPointerDown={(e) => {
+        downAt.current = { x: e.clientX, y: e.clientY };
+      }}
+    >
       <p id="overview3d-help" className="sr-only">
         3D 組織俯瞰。上の段ほど上位の組織で、段ごとに底面の形が違い（法人は十二角、1 段目は八角、2 段目は六角、3 段目は円、4 段目以降は角を落とした四角）、底面の面積が主務の人数です。マウスのドラッグまたは 1 本指で回転、ホイールまたはピンチで拡大縮小、右ドラッグまたは 2
-        本指で移動。組織を選ぶとその組織に寄って黄と黒の縞の輪で囲み、兼務・出向の相手先を弧で結びます。キーボードでは右の組織の一覧から選べます。人数の表は組織図の「表」にあります。
+        本指で移動。組織を選ぶとその組織に寄って黄と黒の縞の輪で囲み、兼務・出向の相手先を弧で結びます。キーボードでは上の帯の検索から組織・人を選べます。何もないところを押すと選択を外します。人数の表は組織図の「表」にあります。
       </p>
       <WebGlBoundary>
         <Canvas
@@ -1869,6 +1898,11 @@ function OrgOverview3D() {
           camera={{ fov: 40, near: 0.5, far: 8000, position: [0, 60, 120] }}
           gl={{ antialias: true, toneMapping: THREE.NeutralToneMapping }}
           aria-describedby="overview3d-help"
+          // 何もないところを押したら（回転・移動のドラッグでなければ）選択を外す
+          onPointerMissed={(e) => {
+            const d = downAt.current;
+            if (e.type === "click" && d && Math.hypot(e.clientX - d.x, e.clientY - d.y) < 5) selectOrg(null);
+          }}
         >
           <SceneContent
             scene={scene}
@@ -1896,6 +1930,18 @@ function OrgOverview3D() {
       {/* 走査線（CSS。WebGL の描き直しを起こさない。動きを減らす設定では止まる） */}
       <div className="scan3d pointer-events-none absolute inset-0" aria-hidden="true" />
       <LabelOverlay specs={labels} overlay={overlay} />
+      {/* 選んだ人・組織は、図を狭めないよう図の上に浮かべる（何もないところを押すと閉じる） */}
+      {personId ? (
+        <FloatingCard key={personId} label="人の詳細" top="sm:top-3 sm:max-h-[calc(100%-1.5rem)]">
+          <PersonPanel personId={personId} onClose={() => openPerson(null)} compact />
+        </FloatingCard>
+      ) : (
+        orgId && (
+          <FloatingCard key={orgId} label="組織の詳細" wide top="sm:top-3 sm:max-h-[calc(100%-1.5rem)]">
+            <OrgPanel orgId={orgId} onClose={() => selectOrg(null)} />
+          </FloatingCard>
+        )
+      )}
       {hover && (
         <div
           className="pointer-events-none absolute z-10 min-w-[10em] rounded-sm border border-t-2 border-border border-t-signal bg-surface px-2 py-1.5 text-xs shadow"

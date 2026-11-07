@@ -14,6 +14,7 @@ import { useRoute } from "../../lib/router";
 import { useFormatDate } from "../../lib/dateStyle";
 import { EMPLOYMENT_STATUS_LABEL, employmentTypeLabel } from "../../lib/labels";
 import { ReportCorrection } from "../corrections/ReportCorrection";
+import { PersonSummary } from "./PersonSummary";
 
 export function assignmentKind(a: Assignment): { label: string; tone: "primary" | "concurrent" | "secondment" } {
   if (a.secondment === "outbound") return { label: "出向", tone: "secondment" };
@@ -280,7 +281,8 @@ export function PersonDetail({ person, report = true }: { person: Person; report
   );
 }
 
-export function PersonPanel({ personId, onClose }: { personId: string; onClose: () => void }) {
+/** compact なら要点だけを出し、全項目は「詳細」のダイアログで開く（3D 表示の浮かべる箱）。 */
+export function PersonPanel({ personId, onClose, compact = false }: { personId: string; onClose: () => void; compact?: boolean }) {
   const { asOf } = useNav();
   const person = usePerson(personId, asOf);
   const heading = useRef<HTMLHeadingElement>(null);
@@ -300,6 +302,11 @@ export function PersonPanel({ personId, onClose }: { personId: string; onClose: 
       </div>
       {person.error ? (
         <ErrorNote>{describeError(person.error)}</ErrorNote>
+      ) : person.data && compact ? (
+        <>
+          <div className="text-lg font-bold">{personName(person.data)}</div>
+          <PersonSummary personId={personId} asOf={asOf} />
+        </>
       ) : person.data ? (
         <PersonDetail person={person.data} />
       ) : (

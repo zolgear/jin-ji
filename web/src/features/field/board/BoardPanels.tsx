@@ -1,18 +1,16 @@
 // 編集のボードの上に浮かべる箱: 選んだ人・組織の操作（ドラッグの代わりにもなる）、変更の一覧（1 件ずつ取り消せる）、
-// 組織・人を探して図をそこへ動かす検索。箱は入力欄の外を少し透かし、後ろの組織図が見えるようにする。
-import { useCallback, useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
+// 組織・人を探して図をそこへ動かす検索。箱は components/FloatingCard（入力欄の外を少し透かす）。
+import { useId, useMemo, useState } from "react";
 import { Button } from "../../../auth/ui";
-import { Badge, personKana, personName } from "../../../components/ui";
-import { usePerson } from "../../../app/hooks";
-import { useAdapter } from "../../../data/adapterContext";
-import { employmentTypeLabel } from "../../../lib/labels";
-import { assignmentKind, PersonDetail } from "../../person/PersonPanel";
+import { FloatingCard } from "../../../components/FloatingCard";
+import { OrgPersonSearch } from "../../org/OrgPersonSearch";
+import { PersonSummary } from "../../person/PersonSummary";
 import { CHANGE_KIND_LABEL, type Group, type PlanChange } from "../../../data/field";
 import { ChangeAdder, describeChange, inputClass, newUuid, useNamers } from "../shared";
 import { useBoardDrag } from "./drag";
 import { abolishUnit, createUnit, isWithin, movePerson, nextCode, undoMove, updateUnit, type BoardTree } from "./model";
 import { useMoveInUnit, type BoardSelection } from "./PlanBoard";
-import { primaryOf, type BoardData } from "./useBoard";
+import type { BoardData } from "./useBoard";
 
 interface PanelProps {
   data: BoardData;
@@ -34,24 +32,6 @@ function unitOptions(tree: BoardTree, exclude?: string) {
   };
   walk(null, 0);
   return out;
-}
-
-/** 図の上に浮かべる箱。PC は右上、スマホは下に出す。 */
-export function FloatingCard({ label, title, onClose, children, wide = false }: { label: string; title: ReactNode; onClose: () => void; children: ReactNode; wide?: boolean }) {
-  return (
-    <section
-      aria-label={label}
-      className={`absolute inset-x-3 bottom-3 z-10 flex max-h-[55%] flex-col overflow-hidden rounded-lg border border-border bg-surface/75 text-sm shadow-xl backdrop-blur-sm sm:inset-x-auto sm:top-16 sm:right-3 sm:bottom-auto sm:max-h-[calc(100%-5rem)] ${wide ? "sm:w-96" : "sm:w-80"}`}
-    >
-      <div className="flex items-center gap-2 border-b border-border/60 px-3 py-2">
-        <div className="min-w-0 flex-1 font-bold">{title}</div>
-        <button type="button" aria-label="閉じる" onClick={onClose} className="shrink-0 rounded-sm px-1.5 text-muted hover:bg-surface-2 hover:text-fg">
-          ×
-        </button>
-      </div>
-      <div className="flex min-h-0 flex-col gap-3 overflow-y-auto p-3">{children}</div>
-    </section>
-  );
 }
 
 /** 変更の一覧と、連絡先・グループの変更の追加。 */
@@ -209,86 +189,8 @@ function SelectedPerson({
           </div>
         </>
       )}
-      <PersonDetails personId={selection.personId} asOf={data.baseDate} />
+      <PersonSummary personId={selection.personId} asOf={data.baseDate} report={false} />
     </FloatingCard>
-  );
-}
-
-/**
- * 選んだ人の要点（フリガナ・所属〔兼務・出向を含む〕・社員番号・雇用区分・拠点）。すべての項目は「詳細」で箱の上に開く（画面を移らない）。
- * 見えるのは閲覧者の公開範囲の項目だけ。
- */
-function PersonDetails({ personId, asOf }: { personId: string; asOf: string }) {
-  const person = usePerson(personId, asOf);
-  const dialog = useRef<HTMLDialogElement | null>(null);
-  // 箱の外（背景）を押したら閉じる（背景を押すと、対象は <dialog> そのものになる）
-  const attachDialog = useCallback((d: HTMLDialogElement | null) => {
-    dialog.current = d;
-    if (!d) return;
-    const onClick = (e: MouseEvent) => e.target === d && d.close();
-    d.addEventListener("click", onClick);
-    return () => d.removeEventListener("click", onClick);
-  }, []);
-  const p = person.data;
-  if (!p) return null;
-  const kana = personKana(p);
-  const assignments = [...(p.assignments ?? [])].sort((a, b) => (a.type === "primary" ? -1 : 0) - (b.type === "primary" ? -1 : 0));
-  return (
-    <section aria-label="人の詳細" className="flex flex-col gap-2 border-t border-border/60 pt-3">
-      <div className="flex items-center gap-2">
-        {kana && <span className="min-w-0 flex-1 truncate text-xs text-muted">{kana}</span>}
-        <button type="button" onClick={() => dialog.current?.showModal()} className="ml-auto shrink-0 rounded-sm border border-border bg-surface px-2 py-0.5 text-xs hover:bg-surface-2">
-          詳細
-        </button>
-      </div>
-      {assignments.length > 0 && (
-        <ul className="m-0 flex list-none flex-col gap-1 p-0">
-          {assignments.map((a) => {
-            const kind = assignmentKind(a);
-            return (
-              <li key={`${a.org_unit_id}:${a.type}:${a.valid_from}`} className="flex flex-wrap items-center gap-1.5 text-xs">
-                <Badge tone={kind.tone}>{kind.label}</Badge>
-                <span className="font-bold">{a.org_unit_name}</span>
-                {a.position_title && <span className="text-muted">{a.position_title}</span>}
-              </li>
-            );
-          })}
-        </ul>
-      )}
-      {/* 社員番号・雇用区分・拠点（見えない・無い項目は出さない） */}
-      <dl className="m-0 grid grid-cols-[4.5em_1fr] gap-x-2 gap-y-0.5 text-xs">
-        {p.employee_number && (
-          <>
-            <dt className="text-muted">社員番号</dt>
-            <dd className="m-0 tabular">{p.employee_number}</dd>
-          </>
-        )}
-        {p.employment_type && (
-          <>
-            <dt className="text-muted">雇用区分</dt>
-            <dd className="m-0">{employmentTypeLabel(p.employment_type)}</dd>
-          </>
-        )}
-        {p.site && (
-          <>
-            <dt className="text-muted">拠点</dt>
-            <dd className="m-0">{p.site.name}</dd>
-          </>
-        )}
-      </dl>
-      <dialog
-        ref={attachDialog}
-        aria-label={`${personName(p)}の詳細`}
-        className="m-auto max-h-[85dvh] w-[min(32rem,calc(100vw-16px))] overflow-y-auto rounded-lg border border-border bg-surface p-4 text-sm text-fg shadow-2xl backdrop:bg-black/40"
-      >
-        <div className="mb-2 flex justify-end">
-          <button type="button" onClick={() => dialog.current?.close()} className="rounded-sm border border-border px-2 py-0.5 text-xs hover:bg-surface-2">
-            閉じる
-          </button>
-        </div>
-        <PersonDetail person={p} report={false} />
-      </dialog>
-    </section>
   );
 }
 
@@ -387,93 +289,17 @@ function SelectedUnit({
   );
 }
 
-type SearchHit =
-  | { kind: "unit"; id: string; name: string; sub: string }
-  | { kind: "person"; id: string; name: string; sub: string; org: string | null; title: string | null };
-
 /** 組織（名称・コード）と人（氏名）をまとめて探す。選ぶと、その札まで図を動かして選ぶ。 */
 export function BoardSearch({ data, onPick }: { data: BoardData; onPick: (s: BoardSelection) => void }) {
-  const { adapter } = useAdapter();
-  const [query, setQuery] = useState("");
-  const [people, setPeople] = useState<SearchHit[]>([]);
-  const [open, setOpen] = useState(false);
-  const box = useRef<HTMLDivElement>(null);
-  const listId = useId();
-  const q = query.trim();
-  const units = useMemo<SearchHit[]>(() => {
-    if (!q) return [];
-    const needle = q.toLowerCase();
-    return data.tree.units
-      .filter((u) => u.name.toLowerCase().includes(needle) || u.code.toLowerCase().includes(needle))
-      .slice(0, 6)
-      .map((u) => ({ kind: "unit", id: u.id, name: u.name, sub: [u.levelName, u.parentId ? data.tree.byId.get(u.parentId)?.name : null].filter(Boolean).join("・") }));
-  }, [q, data.tree]);
-  useEffect(() => {
-    if (!q) return;
-    let cancelled = false;
-    const timer = setTimeout(() => {
-      adapter.searchPeople(q, { asOf: data.baseDate, limit: 6 }).then(
-        (page) => {
-          if (cancelled) return;
-          setPeople(
-            page.items.map((p) => {
-              const a = primaryOf(p);
-              return { kind: "person", id: p.id, name: personName(p), sub: a?.org_unit_name ?? "", org: a?.org_unit_id ?? null, title: a?.position_title ?? null };
-            }),
-          );
-        },
-        () => !cancelled && setPeople([]),
-      );
-    }, 200);
-    return () => {
-      cancelled = true;
-      clearTimeout(timer);
-    };
-  }, [adapter, data.baseDate, q]);
-  // 外を押したら候補を閉じる
-  useEffect(() => {
-    if (!open) return;
-    const down = (e: PointerEvent) => !box.current?.contains(e.target as Node) && setOpen(false);
-    window.addEventListener("pointerdown", down);
-    return () => window.removeEventListener("pointerdown", down);
-  }, [open]);
-  const hits = q ? [...units, ...people] : [];
-  const pick = (h: SearchHit) => {
-    onPick(h.kind === "unit" ? { kind: "unit", unitId: h.id } : { kind: "person", personId: h.id, name: h.name, from: { org: h.org, title: h.title } });
-    setQuery("");
-    setPeople([]);
-    setOpen(false);
-  };
+  const units = useMemo(
+    () => data.tree.units.map((u) => ({ id: u.id, name: u.name, code: u.code, sub: [u.levelName, u.parentId ? data.tree.byId.get(u.parentId)?.name : null].filter(Boolean).join("・") })),
+    [data.tree],
+  );
   return (
-    <div ref={box} className="relative">
-      <input
-        type="search"
-        aria-label="組織・人を探す"
-        aria-controls={listId}
-        className={`${inputClass} h-10 w-48 sm:w-64`}
-        value={query}
-        placeholder="組織・人を探す"
-        autoComplete="off"
-        onChange={(e) => (setQuery(e.target.value), setOpen(true))}
-        onFocus={() => setOpen(true)}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" && hits[0]) pick(hits[0]);
-          if (e.key === "Escape") setOpen(false);
-        }}
-      />
-      {open && hits.length > 0 && (
-        <ul id={listId} className="absolute top-full left-0 z-20 m-0 mt-1 max-h-80 w-72 list-none overflow-y-auto rounded-md border border-border bg-surface p-0 shadow-xl">
-          {hits.map((h) => (
-            <li key={`${h.kind}:${h.id}`}>
-              <button type="button" className="flex w-full items-baseline gap-2 px-3 py-1.5 text-left hover:bg-surface-2" onClick={() => pick(h)}>
-                <span className="shrink-0 rounded-sm bg-surface-2 px-1 text-xs text-muted">{h.kind === "unit" ? "組織" : "人"}</span>
-                <span className="shrink-0">{h.name}</span>
-                <span className="truncate text-xs text-muted">{h.sub}</span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
+    <OrgPersonSearch
+      units={units}
+      asOf={data.baseDate}
+      onPick={(h) => onPick(h.kind === "unit" ? { kind: "unit", unitId: h.id } : { kind: "person", personId: h.id, name: h.name, from: { org: h.org, title: h.title } })}
+    />
   );
 }

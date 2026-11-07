@@ -307,6 +307,73 @@ public sealed class FieldRegistrationTests : IAsyncLifetime
         Assert.Equal(FieldManagementError.Conflict, await ErrorOfAsync(() => _service.WithdrawAsync(Head, today.Id, Ct)));
     }
 
+    // ---- 並び順（0024） ----------------------------------------------------------------------------------------------
+
+    private FieldChangeInput Order(string unit, params string[] people) =>
+        new(FieldChangeKind.MemberOrder, _db.Id(unit), new Dictionary<string, string?> { [FieldRegistrationPlanner.PersonIdsKey] = string.Join(",", people.Select(p => _db.Id(p).ToString("D"))) });
+
+    /// <summary>その日の主務の並び順（人事管理者の見え方）。</summary>
+    private async Task<int?> SortOrderAsync(string person, DateOnly date) =>
+        (await _db.QueryAsync<int?>(
+            null,
+            "SELECT sort_order FROM assignment WHERE person_id = $1 AND assignment_type = 'primary' AND upper_inf(recorded_period) AND valid_period @> $2::date",
+            Ct,
+            _db.Id(person),
+            date)).Single();
+
+    [Fact(DisplayName = "並び順: 組織の範囲を持つ人が有効日から並べ替えられ、発令は作らず、有効日の前なら取り消せる。範囲の外・所属者でない人は拒否する")]
+    public async Task MemberOrder_AppliesAndWithdraws()
+    {
+        await EnableAllAsync();
+        var date = Today.AddDays(5);
+
+        var registration = await _service.RegisterAsync(OrgAdmin, new FieldRegistrationInput(date, null, [Order("HR", "hr2", "hr1")]), Ct);
+        Assert.Equal(FieldRegistrationStatus.Applied, registration.Status);
+        Assert.Equal(2, (await _service.GetAsync(OrgAdmin, registration.Id, Ct)).Proposals.Count);
+        Assert.Equal(0, await SortOrderAsync("hr2", date));
+        Assert.Equal(1, await SortOrderAsync("hr1", date));
+        Assert.Null(await SortOrderAsync("hr1", Today));
+        Assert.Equal(_db.Id("HR"), await PrimaryOrgAsync("hr1", date));
+        Assert.Equal(0L, (await _db.QueryAsync<long>(
+            null, "SELECT count(*) FROM personnel_action WHERE person_id IN ($1, $2) AND effective_date = $3", Ct, _db.Id("hr1"), _db.Id("hr2"), date)).Single());
+
+        // スナップショット（所属者の並びの元）にも並び順が載る
+        var snapshot = await _db.Snapshots.LoadAsync(_db.HrUser("hr1"), date, date, Ct);
+        Assert.Equal(0, snapshot.AssignmentsOf(_db.Id("hr2")).Single(a => a.Type == AssignmentType.Primary).SortOrder);
+
+        // 同じ並びは変更が無い
+        Assert.Equal(FieldManagementError.Invalid, await ErrorOfAsync(() => _service.RegisterAsync(OrgAdmin, new FieldRegistrationInput(date, null, [Order("HR", "hr2", "hr1")]), Ct)));
+
+        await _service.WithdrawAsync(OrgAdmin, registration.Id, Ct);
+        Assert.Null(await SortOrderAsync("hr2", date));
+
+        // 範囲の外（同意では補えない）・所属者でない人・重複は拒否する
+        Assert.Equal(FieldManagementError.Forbidden, await ErrorOfAsync(() => _service.RegisterAsync(Head, new FieldRegistrationInput(date, null, [Order("HR", "hr2", "hr1")]), Ct)));
+        Assert.Equal(FieldManagementError.Invalid, await ErrorOfAsync(() => _service.RegisterAsync(Head, new FieldRegistrationInput(date, null, [Order("S2", "takahashi")]), Ct)));
+        Assert.Equal(FieldManagementError.Invalid, await ErrorOfAsync(() => _service.RegisterAsync(Head, new FieldRegistrationInput(date, null, [Order("S2", "member", "member")]), Ct)));
+    }
+
+    [Fact(DisplayName = "並び順: 同じ登録で異動してくる人も並べられ（異動の提案に並び順を足す）、後で別の組織へ異動すると並び順は外れる")]
+    public async Task MemberOrder_WithTransferAndResetOnTransfer()
+    {
+        await EnableAllAsync();
+        var date = Today.AddDays(5);
+        var transfer = new FieldChangeInput(FieldChangeKind.Assignment, _db.Id("takahashi"), new Dictionary<string, string?> { [ProposalFields.OrgUnitId] = _db.Id("S2").ToString("D") });
+
+        var registration = await _service.RegisterAsync(Head, new FieldRegistrationInput(date, null, [transfer, Order("S2", "takahashi", "member")]), Ct);
+        Assert.Equal(FieldRegistrationStatus.Applied, registration.Status);
+        Assert.Equal(2, (await _service.GetAsync(Head, registration.Id, Ct)).Proposals.Count);
+        Assert.Equal(_db.Id("S2"), await PrimaryOrgAsync("takahashi", date));
+        Assert.Equal(0, await SortOrderAsync("takahashi", date));
+        Assert.Equal(1, await SortOrderAsync("member", date));
+
+        // 並べた後に異動すると、異動先では並べていない
+        var later = date.AddDays(3);
+        await _service.RegisterAsync(Head, Transfer("member", "S1", later), Ct);
+        Assert.Equal(1, await SortOrderAsync("member", date));
+        Assert.Null(await SortOrderAsync("member", later));
+    }
+
     [Fact(DisplayName = "新設: 配下に組織を新設し、同じ登録で異動できる。所属者が残る組織は廃止できない")]
     public async Task OrgCreate_AndTransferIntoIt()
     {

@@ -24,7 +24,7 @@ export type PlanRegistrationResult = Schemas["PlanRegistrationResponse"];
 
 /** 素案・直接登録の 1 つの変更（kind・target_id・values）。 */
 export interface PlanChange {
-  kind: "assignment" | "person" | "org_update" | "org_create" | "org_abolish" | "group_join" | "group_leave";
+  kind: "assignment" | "person" | "org_update" | "org_create" | "org_abolish" | "member_order" | "group_join" | "group_leave";
   target_id: string | null;
   values: Record<string, string | null>;
 }
@@ -125,6 +125,7 @@ export const CHANGE_KIND_LABEL: Record<PlanChange["kind"], string> = {
   org_update: "組織の変更",
   org_create: "組織の新設",
   org_abolish: "組織の廃止",
+  member_order: "並び順",
   group_join: "グループに加入",
   group_leave: "グループから脱退",
 };

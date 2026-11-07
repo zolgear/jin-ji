@@ -272,7 +272,7 @@ export interface components {
       count: number; // int32
     };
     FieldChangeRequest: {
-      kind?: "assignment" | "person" | "org_update" | "org_create" | "org_abolish" | null;
+      kind?: "assignment" | "person" | "org_update" | "org_create" | "org_abolish" | "member_order" | null;
       target_id?: string | null; // uuid
       values?: {
         [key: string]: string;
@@ -711,7 +711,7 @@ export interface components {
       recorded_at: string; // date-time
     };
     PlanChangeDto: {
-      kind?: "assignment" | "person" | "org_update" | "org_create" | "org_abolish" | "group_join" | "group_leave" | null;
+      kind?: "assignment" | "person" | "org_update" | "org_create" | "org_abolish" | "member_order" | "group_join" | "group_leave" | null;
       target_id?: string | null; // uuid
       values?: {
         [key: string]: string;

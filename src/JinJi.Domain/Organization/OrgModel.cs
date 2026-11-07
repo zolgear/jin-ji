@@ -108,7 +108,8 @@ public sealed record Assignment(
     string? PositionTitle,
     SecondmentType Secondment,
     DateOnly ValidFrom,
-    DateOnly? ValidUntil);
+    DateOnly? ValidUntil,
+    int? SortOrder = null);
 
 /// <summary>アカウントの一時停止の期間（理由は持たない。ADR-0002）。</summary>
 /// <param name="From">開始日。</param>

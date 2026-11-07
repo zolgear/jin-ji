@@ -92,6 +92,10 @@ export function simulateDemo(dir: DemoDirectory, baseDate: string, changes: Plan
         }
         if (unit.state === "unchanged") unit.state = "changed";
         return;
+      case "member_order":
+        // 並び順は人数・組織図を変えない
+        if (!unit) break;
+        return;
       case "org_abolish":
         if (!unit) break;
         unit.state = "abolished";

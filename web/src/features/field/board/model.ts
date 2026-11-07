@@ -123,16 +123,63 @@ export function movePerson(
   const rest = changes.filter((c) => c !== existing);
   const sameOrg = to === from.org;
   const sameTitle = nextTitle === undefined || (nextTitle ?? null) === (from.title ?? null);
-  if (sameOrg && sameTitle) return rest;
+  if (sameOrg && sameTitle) return leaveOrders(rest, personId, (unitId) => unitId !== to);
   const values: Record<string, string | null> = { org_unit_id: to };
   if (nextTitle !== undefined && !sameTitle) values.position_title = nextTitle;
   const change: PlanChange = { kind: "assignment", target_id: personId, values };
-  return existing ? changes.map((c) => (c === existing ? change : c)) : [...changes, change];
+  return leaveOrders(existing ? changes.map((c) => (c === existing ? change : c)) : [...changes, change], personId, (unitId) => unitId !== to);
 }
 
 /** 異動を取り消す。 */
 export function undoMove(changes: PlanChange[], personId: string): PlanChange[] {
-  return changes.filter((c) => !(c.kind === "assignment" && c.target_id === personId));
+  const existing = changes.find((c) => c.kind === "assignment" && c.target_id === personId);
+  if (!existing) return changes;
+  // 異動先の並び順からは外す（元の組織の並び順はそのまま）
+  const to = existing.values.org_unit_id;
+  return leaveOrders(
+    changes.filter((c) => c !== existing),
+    personId,
+    (unitId) => unitId === to,
+  );
+}
+
+/** 組織の並び順の変更（並べた人の ID。無ければ null）。 */
+export function orderOf(changes: PlanChange[], unitId: string): string[] | null {
+  const c = changes.find((x) => x.kind === "member_order" && x.target_id === unitId);
+  return c?.values.person_ids ? c.values.person_ids.split(",").filter(Boolean) : null;
+}
+
+/**
+ * 組織の並び順を決める。base（今の並び。異動してくる人を含まない）と同じなら並び順の変更を消す。
+ * 並べた人の一覧は、その組織に（変更の後で）主務を持つ人だけにする（呼ぶ側の札の並び）。
+ */
+export function setOrder(changes: PlanChange[], unitId: string, ids: string[], base: string[]): PlanChange[] {
+  const rest = changes.filter((c) => !(c.kind === "member_order" && c.target_id === unitId));
+  if (ids.length === 0 || (ids.length === base.length && ids.every((id, i) => id === base[i]))) return rest;
+  const change: PlanChange = { kind: "member_order", target_id: unitId, values: { person_ids: ids.join(",") } };
+  const existing = changes.find((c) => c.kind === "member_order" && c.target_id === unitId);
+  return existing ? changes.map((c) => (c === existing ? change : c)) : [...rest, change];
+}
+
+/** 並びの中で、person を at の人の前（before）か後ろへ動かす。at が無ければ最後へ。 */
+export function placeIn(ids: string[], personId: string, at: { personId: string; before: boolean } | null): string[] {
+  const rest = ids.filter((id) => id !== personId);
+  if (!at) return [...rest, personId];
+  const i = rest.indexOf(at.personId);
+  if (i < 0) return [...rest, personId];
+  rest.splice(at.before ? i : i + 1, 0, personId);
+  return rest;
+}
+
+/** 人が組織を出たら、その組織の並び順から外す（leaves が true の組織から。並びが空になれば変更ごと消す）。 */
+function leaveOrders(changes: PlanChange[], personId: string, leaves: (unitId: string | null) => boolean): PlanChange[] {
+  return changes.flatMap((c) => {
+    if (c.kind !== "member_order" || !leaves(c.target_id)) return [c];
+    const ids = (c.values.person_ids ?? "").split(",").filter(Boolean);
+    if (!ids.includes(personId)) return [c];
+    const left = ids.filter((id) => id !== personId);
+    return left.length ? [{ ...c, values: { person_ids: left.join(",") } }] : [];
+  });
 }
 
 /**
@@ -170,6 +217,7 @@ export function abolishUnit(changes: PlanChange[], tree: BoardTree, unitId: stri
       (c) =>
         !(c.kind === "org_create" && c.target_id && removed.has(c.target_id)) &&
         !(c.kind === "assignment" && c.values.org_unit_id && removed.has(c.values.org_unit_id)) &&
+        !(c.kind === "member_order" && c.target_id && removed.has(c.target_id)) &&
         !(c.kind === "org_update" && c.values.parent_org_unit_id && removed.has(c.values.parent_org_unit_id)),
     );
   }

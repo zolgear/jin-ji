@@ -42,6 +42,12 @@ public enum FieldChangeKind
 
     /// <summary>組織の廃止（有効日の前日で終える。所属者・配下の組織が残っていれば登録できない）。</summary>
     OrgAbolish,
+
+    /// <summary>
+    /// 組織の中の人の並び順（0024）。target_id は組織、値 person_ids は並べた人（主務の所属者）の jin-ji ID をカンマでつないだもの。
+    /// 人ごとの所属の行の並び順の変更になる（同じ登録で異動する人は、異動に並び順を足す）。
+    /// </summary>
+    MemberOrder,
 }
 
 /// <summary>直接登録の 1 つの変更（入力）。値のキーは <see cref="ProposalFields"/>。キーが無い項目は変えない。</summary>

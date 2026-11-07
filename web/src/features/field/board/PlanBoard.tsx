@@ -1,14 +1,14 @@
 // 編集のボード: 組織図の札に所属する人を並べ、人を別の札へドラッグして異動、札のつまみをドラッグして上位組織の付け替えをする。
 // 新設・変更・廃止した組織と、動かした人は印を付ける（動かした人は元の札にも薄く残す）。
 // ドラッグできない環境（キーボード・読み上げ）では、人や札を選んで横の欄から同じ操作ができる（BoardSidebar）。
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 import { useAdapter } from "../../../data/adapterContext";
 import type { PlanChange } from "../../../data/field";
 import { useQuery } from "../../../data/query";
 import type { Person } from "../../../data/types";
 import { personName } from "../../../components/ui";
-import { DragProvider, useBoardDrag, type DragPayload } from "./drag";
-import { isWithin, movePerson, updateUnit, type BoardUnit } from "./model";
+import { DragProvider, useBoardDrag, type DragPayload, type DropAt } from "./drag";
+import { isWithin, movePerson, orderOf, placeIn, setOrder, updateUnit, type BoardUnit } from "./model";
 import { primaryOf, type BoardData } from "./useBoard";
 
 export type BoardSelection = { kind: "person"; personId: string; name: string; from: { org: string | null; title: string | null } } | { kind: "unit"; unitId: string };
@@ -39,35 +39,67 @@ interface BoardProps {
   root?: string | null;
 }
 
+/** 札ごとの、今の並び（present: 変更の後で主務を持つ人）と基準日の並び（base: 異動してくる人を除く）。 */
+type UnitOrders = Map<string, { present: string[]; base: string[] }>;
+
+const OrdersContext = createContext<UnitOrders | null>(null);
+
+/** 組織の中で人を 1 つ上・下へ動かす（キーボード・読み上げで、ドラッグの代わりに使う）。動かせなければ null。 */
+export function useMoveInUnit(changes: PlanChange[], unitId: string | null, personId: string): ((delta: -1 | 1) => PlanChange[]) | null {
+  const orders = useContext(OrdersContext);
+  const entry = unitId ? orders?.get(unitId) : undefined;
+  if (!entry || !unitId) return null;
+  const i = entry.present.indexOf(personId);
+  if (i < 0) return null;
+  return (delta) => {
+    const neighbor = entry.present[i + delta];
+    if (!neighbor) return changes;
+    return setOrder(changes, unitId, placeIn(entry.present, personId, { personId: neighbor, before: delta < 0 }), entry.base);
+  };
+}
+
 export function PlanBoard(props: BoardProps) {
   const { data, changes, onChange } = props;
   const scroller = useRef<HTMLDivElement>(null);
+  // 札が自分の並びを書き込む入れ物（描画には使わないので、変えても描き直さない）
+  const [orders] = useState<UnitOrders>(() => new Map());
   const canDrop = useCallback(
-    (p: DragPayload, unitId: string) => {
+    (p: DragPayload, unitId: string, at: DropAt | null) => {
       if (!onChange) return false;
       const target = data.tree.byId.get(unitId);
       if (!target || target.state === "abolished") return false;
-      if (p.kind === "person") return (data.moves.get(p.personId)?.to ?? p.from.org) !== unitId;
+      // 同じ組織の中なら、別の人の前後に落とすと並び替え
+      if (p.kind === "person") return (data.moves.get(p.personId)?.to ?? p.from.org) !== unitId || (at !== null && at.personId !== p.personId);
       return target.id !== data.tree.byId.get(p.unitId)?.parentId && !isWithin(data.tree, unitId, p.unitId);
     },
     [data, onChange],
   );
   const onDrop = useCallback(
-    (p: DragPayload, unitId: string) => {
+    (p: DragPayload, unitId: string, at: DropAt | null) => {
       if (!onChange) return;
-      if (p.kind === "person") onChange(movePerson(changes, p.personId, unitId, p.from));
-      else onChange(updateUnit(changes, data.tree, p.unitId, "parent_org_unit_id", unitId));
+      if (p.kind === "unit") {
+        onChange(updateUnit(changes, data.tree, p.unitId, "parent_org_unit_id", unitId));
+        return;
+      }
+      const entry = orders.get(unitId);
+      const current = data.moves.get(p.personId)?.to ?? p.from.org;
+      let next = current === unitId ? changes : movePerson(changes, p.personId, unitId, p.from);
+      // 人の前後に落としたら、その位置に並べる（別の組織から来た人も）
+      if (at && entry) next = setOrder(next, unitId, placeIn(entry.present, p.personId, at), entry.base);
+      onChange(next);
     },
-    [changes, data.tree, onChange],
+    [changes, data.tree, data.moves, onChange, orders],
   );
   return (
-    <DragProvider scroller={scroller} canDrop={canDrop} onDrop={onDrop}>
-      <div className="relative size-full">
-        <Canvas {...props} scroller={scroller} />
-        {props.overlay}
-        {props.floating}
-      </div>
-    </DragProvider>
+    <OrdersContext.Provider value={orders}>
+      <DragProvider scroller={scroller} canDrop={canDrop} onDrop={onDrop}>
+        <div className="relative size-full">
+          <Canvas {...props} scroller={scroller} />
+          {props.overlay}
+          {props.floating}
+        </div>
+      </DragProvider>
+    </OrdersContext.Provider>
   );
 }
 
@@ -255,14 +287,15 @@ interface Chip {
   other: string | null;
 }
 
-function UnitCard({ unit, data, onChange, selection, onSelect, toggle, kids, opened }: BranchProps & { kids: number; opened: boolean }) {
+function UnitCard({ unit, data, changes, onChange, selection, onSelect, toggle, kids, opened }: BranchProps & { kids: number; opened: boolean }) {
   const { adapter } = useAdapter();
   const drag = useBoardDrag();
+  const orders = useContext(OrdersContext);
   const [all, setAll] = useState(false);
   const members = useQuery(adapter, unit.state === "created" ? null : `board-members:${unit.id}:${data.baseDate}`, () =>
     adapter.listOrgMembers(unit.id, { asOf: data.baseDate, limit: 100 }),
   );
-  const chips = useMemo(() => {
+  const ordered = useMemo(() => {
     const list: Chip[] = [];
     for (const p of (members.data?.items ?? []) as Person[]) {
       const a = primaryOf(p, unit.id);
@@ -286,9 +319,29 @@ function UnitCard({ unit, data, onChange, selection, onSelect, toggle, kids, ope
         other: info?.org ?? null,
       });
     }
-    const rank = (c: Chip) => (c.mark === "in" ? 0 : c.personId === unit.headPersonId ? 1 : c.mark === "out" ? 4 : c.title ? 2 : 3);
-    return list.sort((a, b) => rank(a) - rank(b) || a.name.localeCompare(b.name, "ja"));
-  }, [members.data, data.moves, data.moved, unit.id, unit.headPersonId]);
+    // 並びは API の所属者の並び（組織の中の並び順）、異動してくる人はその後ろ。並び順の変更があればその順。出ていく人は最後
+    const order = orderOf(changes, unit.id);
+    const present = list.filter((c) => c.mark !== "out");
+    if (order) {
+      const at = (id: string) => {
+        const i = order.indexOf(id);
+        return i < 0 ? order.length : i;
+      };
+      present.sort((a, b) => at(a.personId) - at(b.personId));
+    }
+    // 基準日の並び（API の並びのうち、残る人）
+    const base = list.filter((c) => c.mark === "none" || c.mark === "title").map((c) => c.personId);
+    return { chips: [...present, ...list.filter((c) => c.mark === "out")], base };
+  }, [members.data, data.moves, data.moved, unit.id, changes]);
+  const { chips, base } = ordered;
+  // 並び替え（ドラッグ・上下のボタン）のために、今の並びと基準日の並びを知らせる
+  useEffect(() => {
+    if (!orders) return;
+    orders.set(unit.id, {
+      present: chips.filter((c) => c.mark !== "out").map((c) => c.personId),
+      base,
+    });
+  }, [orders, unit.id, chips, base]);
 
   const present = chips.filter((c) => c.mark !== "out").length;
   const truncated = Boolean(members.data?.nextCursor);
@@ -416,8 +469,11 @@ function PersonChip({
   const isHead = chip.personId === unit.headPersonId;
   const other = chip.other ? (data.tree.byId.get(chip.other)?.name ?? "—") : null;
   const payload: DragPayload = { kind: "person", personId: chip.personId, name: chip.name, from: chip.from };
+  // 落とす位置の線（この人の前か後ろ）
+  const mark = drag.over === unit.id && drag.overAt?.personId === chip.personId ? (drag.overAt.before ? "top" : "bottom") : null;
   return (
-    <li>
+    <li data-drop-person={out ? undefined : chip.personId} className="relative">
+      {mark && <span aria-hidden="true" className={`absolute inset-x-1 z-10 h-0.5 rounded-full bg-accent ${mark === "top" ? "-top-px" : "-bottom-px"}`} />}
       <button
         type="button"
         onPointerDown={editable && !out ? (e) => drag.begin(e, payload) : undefined}

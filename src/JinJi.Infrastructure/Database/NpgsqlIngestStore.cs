@@ -79,6 +79,7 @@ public sealed partial class NpgsqlIngestStore : IIngestStore
         new("assignment_type", null),
         new("position_title", "text"),
         new("secondment_type", null),
+        new("sort_order", "integer"),
         new("personnel_action_id", "uuid"),
         new("supersedes_id", "uuid"),
     ];
@@ -620,7 +621,8 @@ public sealed partial class NpgsqlIngestStore : IIngestStore
         var secondment = proposal.Payload.GetValueOrDefault(ProposalFields.SecondmentType) ?? "none";
         var action = secondment == "outbound" ? "secondment_start" : type == "concurrent" ? "concurrent_start" : "transfer";
         var actionId = await InsertActionAsync(tx, personId, action, from, unit, cancellationToken, type);
-        await InsertAssignmentAsync(tx, personId, unit, type, proposal.Payload.GetValueOrDefault(ProposalFields.PositionTitle), secondment, actionId, from, null, cancellationToken);
+        var order = proposal.Payload.GetValueOrDefault(ProposalFields.SortOrder) is { } o ? int.Parse(o, CultureInfo.InvariantCulture) : (int?)null;
+        await InsertAssignmentAsync(tx, personId, unit, type, proposal.Payload.GetValueOrDefault(ProposalFields.PositionTitle), secondment, actionId, from, null, cancellationToken, order);
     }
 
     private static Task InsertAssignmentAsync(
@@ -633,12 +635,13 @@ public sealed partial class NpgsqlIngestStore : IIngestStore
         Guid? actionId,
         DateOnly from,
         DateOnly? until,
-        CancellationToken cancellationToken) =>
+        CancellationToken cancellationToken,
+        int? sortOrder = null) =>
         ExecuteAsync(
             tx,
             """
-            INSERT INTO assignment (id, person_id, org_unit_id, assignment_type, position_title, secondment_type, personnel_action_id, valid_period)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, daterange($8, $9))
+            INSERT INTO assignment (id, person_id, org_unit_id, assignment_type, position_title, secondment_type, personnel_action_id, valid_period, sort_order)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, daterange($8, $9), $10)
             """,
             cancellationToken,
             P(Guid.CreateVersion7()),
@@ -649,12 +652,14 @@ public sealed partial class NpgsqlIngestStore : IIngestStore
             P(secondment),
             P(actionId, NpgsqlDbType.Uuid),
             P(from),
-            P(until is { } u && u > from ? u : until is null ? null : from.AddDays(1), NpgsqlDbType.Date));
+            P(until is { } u && u > from ? u : until is null ? null : from.AddDays(1), NpgsqlDbType.Date),
+            P(sortOrder, NpgsqlDbType.Integer));
 
     private static async Task ReviseAssignmentAsync(ViewerTransaction tx, Guid personId, ChangeProposalRecord proposal, DateOnly today, CancellationToken cancellationToken)
     {
         var extra = new Dictionary<string, string?>(StringComparer.Ordinal);
-        if (proposal.Operation == ProposalOperation.Change)
+        // 並び順だけの変更（0024）は発令にしない
+        if (proposal.Operation == ProposalOperation.Change && proposal.Diff.Keys.Any(k => k != ProposalFields.SortOrder))
         {
             // 変更（有効日のある異動・役職の変更）は発令として記録し、新しい所属の行を発令に結び付ける
             var orgChanged = proposal.Diff.TryGetValue(ProposalFields.OrgUnitId, out var org);
@@ -662,6 +667,11 @@ public sealed partial class NpgsqlIngestStore : IIngestStore
             var unit = orgChanged ? Uuid(org!.New!) : (Guid?)null;
             var actionId = await InsertActionAsync(tx, personId, orgChanged ? "transfer" : "position_appointment", date, unit, cancellationToken);
             extra["personnel_action_id"] = actionId.ToString("D");
+            if (orgChanged && !proposal.Diff.ContainsKey(ProposalFields.SortOrder))
+            {
+                // 異動すると組織の中の並び順は外れる（0024。並び順も決めた登録は、その値にする）
+                extra["sort_order"] = null;
+            }
         }
 
         await ReviseAsync(tx, "assignment", AssignmentColumns, "person_id = $1 AND assignment_type = 'primary'", personId, proposal, today, extra, cancellationToken, supersedes: true);

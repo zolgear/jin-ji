@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { OrgUnit } from "../../../data/types";
-import { abolishUnit, applyOrgChanges, createUnit, isWithin, movePerson, movesOf, updateUnit } from "./model";
+import { abolishUnit, applyOrgChanges, createUnit, isWithin, movePerson, movesOf, orderOf, placeIn, setOrder, undoMove, updateUnit } from "./model";
 
 const unit = (id: string, parent: string | null, head: string | null = null): OrgUnit =>
   ({ id, code: id.toUpperCase(), name: `組織${id}`, parent_id: parent, head_person_id: head, level: null, short_name: null, site: null, legal_entity: { id: "le", code: "LE", name: "法人" } }) as unknown as OrgUnit;
@@ -53,5 +53,24 @@ describe("素案ボードの計算", () => {
     expect(applyOrgChanges(base, changes).byId.get("d")?.state).toBe("abolished");
     expect(abolishUnit(changes, tree, "d")).toBe(changes);
     expect(abolishUnit(changes, tree, "d", true)).toEqual([]);
+  });
+
+  it("並び順は今の並びと同じなら変更にせず、異動で組織を出た人は並び順から外す", () => {
+    const now = ["p1", "p2", "p3"];
+    expect(placeIn(now, "p3", { personId: "p1", before: true })).toEqual(["p3", "p1", "p2"]);
+    expect(placeIn(now, "p1", { personId: "p3", before: false })).toEqual(["p2", "p3", "p1"]);
+    expect(placeIn(now, "p4", null)).toEqual(["p1", "p2", "p3", "p4"]);
+
+    let changes = setOrder([], "b", ["p3", "p1", "p2"], now);
+    expect(orderOf(changes, "b")).toEqual(["p3", "p1", "p2"]);
+    expect(setOrder(changes, "b", now, now)).toEqual([]);
+
+    // p3 が c へ異動すると b の並びから外れる。c で並べてから異動を取り消すと、c の並びからも外れる
+    changes = movePerson(changes, "p3", "c", { org: "b", title: null });
+    expect(orderOf(changes, "b")).toEqual(["p1", "p2"]);
+    changes = setOrder(changes, "c", ["p3", "q1"], ["q1"]);
+    changes = undoMove(changes, "p3");
+    expect(orderOf(changes, "c")).toEqual(["q1"]);
+    expect(orderOf(changes, "b")).toEqual(["p1", "p2"]);
   });
 });

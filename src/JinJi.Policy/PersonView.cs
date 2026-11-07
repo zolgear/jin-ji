@@ -195,7 +195,8 @@ public sealed record AssignmentView(
     string? PositionTitle,
     SecondmentType Secondment,
     DateOnly ValidFrom,
-    DateOnly? ValidUntil);
+    DateOnly? ValidUntil,
+    int? SortOrder = null);
 
 /// <summary>一時停止の期間（理由は持たない）。</summary>
 /// <param name="Until">終了予定日（この日を含まない）。人事管理者以外には、業務日付より後なら null（本人にも返さない）。</param>
@@ -420,7 +421,7 @@ public sealed class PersonProjector
         {
             var unit = _data.FindUnit(a.OrgUnitId)!;
             return new AssignmentView(
-                unit.Id, unit.Code, unit.Name, unit.LegalEntityId, a.Type, a.PositionTitle, a.Secondment, a.ValidFrom, DisclosedEnd(a.ValidUntil, hideFuture));
+                unit.Id, unit.Code, unit.Name, unit.LegalEntityId, a.Type, a.PositionTitle, a.Secondment, a.ValidFrom, DisclosedEnd(a.ValidUntil, hideFuture), a.SortOrder);
         }),
     ];
 

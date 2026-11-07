@@ -8,7 +8,7 @@ import { CHANGE_KIND_LABEL, type Group, type PlanChange } from "../../../data/fi
 import { ChangeAdder, describeChange, inputClass, newUuid, useNamers } from "../shared";
 import { useBoardDrag } from "./drag";
 import { abolishUnit, createUnit, isWithin, movePerson, nextCode, undoMove, updateUnit, type BoardTree } from "./model";
-import type { BoardSelection } from "./PlanBoard";
+import { useMoveInUnit, type BoardSelection } from "./PlanBoard";
 import { primaryOf, type BoardData } from "./useBoard";
 
 interface PanelProps {
@@ -122,6 +122,8 @@ function SelectedPerson({
   const destination = to ? data.tree.byId.get(to) : undefined;
   const options = unitOptions(data.tree);
   const apply = (next: PlanChange[]) => onChange?.(next);
+  // 組織の中の並び（ドラッグの代わり）
+  const shift = useMoveInUnit(changes, to, selection.personId);
   return (
     <FloatingCard
       label="選んだ人"
@@ -185,6 +187,16 @@ function SelectedPerson({
           <div className="flex flex-wrap gap-1">
             {destination && destination.headPersonId !== selection.personId && destination.state !== "abolished" && (
               <Button onClick={() => apply(updateUnit(changes, data.tree, destination.id, "head_person_id", selection.personId))}>{destination.name}の組織長にする</Button>
+            )}
+            {shift && (
+              <span className="flex">
+                <Button variant="ghost" aria-label="組織の中で上へ" title="組織の中で上へ" onClick={() => apply(shift(-1))}>
+                  ↑
+                </Button>
+                <Button variant="ghost" aria-label="組織の中で下へ" title="組織の中で下へ" onClick={() => apply(shift(1))}>
+                  ↓
+                </Button>
+              </span>
             )}
             {move && (
               <Button variant="ghost" onClick={() => (apply(undoMove(changes, selection.personId)), setTitleText(selection.from.title ?? ""))}>

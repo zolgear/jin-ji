@@ -630,6 +630,10 @@
           "category": "所属",
           "description": "出向の区別（なし・出向・出向受入）"
         },
+        "sort_order": {
+          "category": "所属",
+          "description": "組織の中の並び順（小さいほど先。並べていなければ空）"
+        },
         "personnel_action_id": {
           "category": "所属",
           "description": "導出元の発令"

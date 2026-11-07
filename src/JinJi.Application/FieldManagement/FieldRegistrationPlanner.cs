@@ -31,6 +31,12 @@ public sealed class FieldRegistrationPlanner
     /// <summary>コード・略称・役職・内線・社用携帯の上限（文字）。</summary>
     public const int MaxShortLength = 100;
 
+    /// <summary>並び順の値のキー（並べた人の jin-ji ID をカンマでつないだもの）。</summary>
+    public const string PersonIdsKey = "person_ids";
+
+    /// <summary>1 つの組織で並べられる人の上限。</summary>
+    public const int MaxOrderedMembers = 500;
+
     private static readonly IReadOnlyDictionary<FieldChangeKind, string[]> AllowedKeys = new Dictionary<FieldChangeKind, string[]>
     {
         [FieldChangeKind.Assignment] = [ProposalFields.OrgUnitId, ProposalFields.PositionTitle],
@@ -46,6 +52,7 @@ public sealed class FieldRegistrationPlanner
             ProposalFields.HeadPersonId, ProposalFields.SiteId,
         ],
         [FieldChangeKind.OrgAbolish] = [],
+        [FieldChangeKind.MemberOrder] = [PersonIdsKey],
     };
 
     private readonly OrgSnapshot _snapshot;
@@ -117,12 +124,17 @@ public sealed class FieldRegistrationPlanner
                 case FieldChangeKind.Person:
                     Person(Target(change, targets));
                     break;
-                case FieldChangeKind.OrgAbolish:
-                    // 廃止は所属の変更をすべて見てから検査する
+                case FieldChangeKind.OrgAbolish or FieldChangeKind.MemberOrder:
+                    // 廃止・並び順は所属の変更をすべて見てから検査する
                     break;
                 default:
                     throw Invalid($"変更の種類 {change.Kind} は直接登録できません。");
             }
+        }
+
+        foreach (var change in changes.Where(c => c.Kind == FieldChangeKind.MemberOrder))
+        {
+            MemberOrder(Target(change, targets));
         }
 
         foreach (var change in changes.Where(c => c.Kind == FieldChangeKind.OrgAbolish))
@@ -357,6 +369,109 @@ public sealed class FieldRegistrationPlanner
         }
 
         Add(2, ProposalTargetKind.Assignment, ProposalOperation.Change, personId, new Dictionary<string, string?>(), diff);
+    }
+
+    /// <summary>
+    /// 組織の中の並び順。並べた人は、有効日にその組織の主務の所属者（同じ登録で異動してくる人を含む）でなければならない。
+    /// 範囲はその組織（同意では補えない。並び順は組織の中のことなので）。並べなかった人の並び順は変えない。
+    /// </summary>
+    private void MemberOrder(FieldChangeInput change)
+    {
+        RequireMode(FieldDomain.Assignment);
+        var unitId = change.TargetId!.Value;
+        if (_snapshot.FindUnit(unitId) is null && !_created.Contains(unitId))
+        {
+            throw NotFound($"組織 {unitId} が {_date:yyyy-MM-dd} にありません。");
+        }
+
+        if (!Covered(unitId))
+        {
+            throw Forbidden("組織の範囲を持たないので、所属者の並び順を変えられません。");
+        }
+
+        var people = PersonIds(change.Values);
+        var changed = false;
+        for (var i = 0; i < people.Count; i++)
+        {
+            var personId = people[i];
+            var current = _snapshot.AssignmentsOf(personId).FirstOrDefault(a => a.Type == AssignmentType.Primary);
+            var org = _transfers.TryGetValue(personId, out var to) ? to : current?.OrgUnitId;
+            if (org != unitId)
+            {
+                throw Invalid($"人 {personId} は {_date:yyyy-MM-dd} に組織 {unitId} の主務の所属者ではありません。");
+            }
+
+            var order = i.ToString(CultureInfo.InvariantCulture);
+            var old = current?.SortOrder?.ToString(CultureInfo.InvariantCulture);
+
+            // 同じ登録で異動する人は、異動の提案に並び順を足す（同じ所属の行への提案を 2 つにしない）
+            var index = _proposals.FindIndex(p => p.Proposal.TargetKind == ProposalTargetKind.Assignment && p.Proposal.TargetId == personId);
+            if (index >= 0)
+            {
+                var (rank, proposal) = _proposals[index];
+                if (proposal.Operation == ProposalOperation.Create)
+                {
+                    _proposals[index] = (rank, proposal with { Payload = new Dictionary<string, string?>(proposal.Payload, StringComparer.Ordinal) { [ProposalFields.SortOrder] = order } });
+                }
+                else
+                {
+                    var merged = new Dictionary<string, FieldChange>(proposal.Diff, StringComparer.Ordinal) { [ProposalFields.SortOrder] = new FieldChange(old, order) };
+                    _proposals[index] = (rank, proposal with { Diff = merged });
+                }
+
+                changed = true;
+                continue;
+            }
+
+            var diff = new Dictionary<string, FieldChange>(StringComparer.Ordinal);
+            if (Put(diff, ProposalFields.SortOrder, old, order))
+            {
+                _people.Add(personId);
+                Add(2, ProposalTargetKind.Assignment, ProposalOperation.Change, personId, new Dictionary<string, string?>(), diff);
+                changed = true;
+            }
+        }
+
+        if (!changed)
+        {
+            throw Invalid($"組織 {unitId} の並び順は変わりません。");
+        }
+
+        _orgs.Add(unitId);
+    }
+
+    private static List<Guid> PersonIds(IReadOnlyDictionary<string, string?> values)
+    {
+        var raw = values.GetValueOrDefault(PersonIdsKey);
+        if (string.IsNullOrWhiteSpace(raw))
+        {
+            throw Invalid($"{PersonIdsKey} に並べる人を指定してください。");
+        }
+
+        var parts = raw.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length > MaxOrderedMembers)
+        {
+            throw Invalid($"並べられるのは 1 つの組織で {MaxOrderedMembers} 人までです。");
+        }
+
+        var ids = new List<Guid>(parts.Length);
+        var seen = new HashSet<Guid>();
+        foreach (var part in parts)
+        {
+            if (!Guid.TryParse(part, CultureInfo.InvariantCulture, out var id))
+            {
+                throw Invalid($"{PersonIdsKey} は UUID をカンマでつないで指定してください。");
+            }
+
+            if (!seen.Add(id))
+            {
+                throw Invalid($"並び順に同じ人 {id} が 2 回あります。");
+            }
+
+            ids.Add(id);
+        }
+
+        return ids;
     }
 
     private void Person(FieldChangeInput change)

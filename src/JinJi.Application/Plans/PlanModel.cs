@@ -12,6 +12,9 @@ public enum PlanChangeKind
     OrgCreate,
     OrgAbolish,
 
+    /// <summary>組織の中の人の並び順（target_id は組織、values の person_ids に並べた人。0024）。</summary>
+    MemberOrder,
+
     /// <summary>グループに加える（target_id はグループ、values に person_id と role）。</summary>
     GroupJoin,
 
@@ -134,7 +137,11 @@ public static class PlanChanges
         "org_unit_id", "position_title", "site_id", "remote_work", "extension_number", "work_mobile_phone",
         "code", "name", "short_name", "level_key", "parent_org_unit_id", "head_person_id",
         "person_id", "role",
+        "person_ids",
     };
+
+    /// <summary>値の上限（文字）。並び順の人の一覧（person_ids）だけは長くてよい（DB の CHECK 制約と同じ）。</summary>
+    public static int MaxValueLength(string key) => key == "person_ids" ? 18500 : 200;
 
     /// <summary>1 つの素案の変更の上限（DB の CHECK 制約と同じ）。</summary>
     public const int MaxChanges = 500;
@@ -146,6 +153,7 @@ public static class PlanChanges
         PlanChangeKind.OrgUpdate => "org_update",
         PlanChangeKind.OrgCreate => "org_create",
         PlanChangeKind.OrgAbolish => "org_abolish",
+        PlanChangeKind.MemberOrder => "member_order",
         PlanChangeKind.GroupJoin => "group_join",
         PlanChangeKind.GroupLeave => "group_leave",
         _ => throw new ArgumentOutOfRangeException(nameof(kind)),
@@ -174,6 +182,7 @@ public static class PlanChanges
         PlanChangeKind.OrgUpdate => FieldChangeKind.OrgUpdate,
         PlanChangeKind.OrgCreate => FieldChangeKind.OrgCreate,
         PlanChangeKind.OrgAbolish => FieldChangeKind.OrgAbolish,
+        PlanChangeKind.MemberOrder => FieldChangeKind.MemberOrder,
         _ => null,
     };
 }

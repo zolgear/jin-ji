@@ -263,6 +263,7 @@ internal sealed class PersonSearchEngine
             PersonSort.HireDate => new SortKey(view.HireDate?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? Last, kana, view.PersonId),
             PersonSort.Site => new SortKey(SitePosition(view), kana, view.PersonId),
             PersonSort.RemoteWork => new SortKey(view.RemoteWork switch { true => "0", false => "1", null => Last }, kana, view.PersonId),
+            PersonSort.Member => new SortKey(MemberPosition(view), kana, view.PersonId),
             PersonSort.HireDateDesc => new SortKey(
                 view.HireDate is { } d ? (99999999 - ((d.Year * 10000) + (d.Month * 100) + d.Day)).ToString("D8", CultureInfo.InvariantCulture) : Last,
                 kana,
@@ -270,6 +271,13 @@ internal sealed class PersonSearchEngine
             _ => new SortKey(string.Empty, string.Empty, view.PersonId),
         };
     }
+
+    /// <summary>絞り込んだ組織の主務の所属の並び順での位置。並べていない・見えない人は最後。</summary>
+    private string MemberPosition(PersonView view) =>
+        _search.OrgUnitId is { } unit
+        && view.Assignments?.FirstOrDefault(a => a.OrgUnitId == unit && a.Type == AssignmentType.Primary) is { SortOrder: { } order }
+            ? order.ToString("D6", CultureInfo.InvariantCulture)
+            : Last;
 
     /// <summary>拠点の順（法人のコード・拠点コード）での位置。拠点が見えない・無い人は最後。</summary>
     private string SitePosition(PersonView view) =>

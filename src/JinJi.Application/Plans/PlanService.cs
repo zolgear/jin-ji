@@ -492,7 +492,7 @@ public sealed class PlanService
         {
             switch (c.Kind)
             {
-                case PlanChangeKind.OrgUpdate or PlanChangeKind.OrgAbolish when c.TargetId is { } unit:
+                case PlanChangeKind.OrgUpdate or PlanChangeKind.OrgAbolish or PlanChangeKind.MemberOrder when c.TargetId is { } unit:
                     orgs.Add(unit);
                     break;
                 case PlanChangeKind.Assignment or PlanChangeKind.Person when c.TargetId is { } person:
@@ -538,9 +538,9 @@ public sealed class PlanService
         foreach (var (change, i) in input.Changes.Select((c, i) => (c, i)))
         {
             var unknown = change.Values.Keys.FirstOrDefault(k => !PlanChanges.ValueKeys.Contains(k));
-            if (unknown is not null || change.Values.Values.Any(v => v is { Length: > 200 }))
+            if (unknown is not null || change.Values.Any(v => v.Value is { } text && text.Length > PlanChanges.MaxValueLength(v.Key)))
             {
-                throw new PlanException(PlanError.Invalid, $"変更 {i}: 項目 {unknown ?? "の値"} は使えません（値は 200 文字まで）。");
+                throw new PlanException(PlanError.Invalid, $"変更 {i}: 項目 {unknown ?? "の値"} は使えません（値は 200 文字まで。並び順の人の一覧は 500 人まで）。");
             }
         }
 

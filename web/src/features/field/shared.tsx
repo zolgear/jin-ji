@@ -190,6 +190,10 @@ export function describeChange(
         .join("・")}`;
     case "org_abolish":
       return `${names.org(change.target_id)} を廃止`;
+    case "member_order": {
+      const ids = (v.person_ids ?? "").split(",").filter(Boolean);
+      return `${names.org(change.target_id)}: ${ids.slice(0, 3).map((id) => names.person(id)).join("・")}${ids.length > 3 ? ` ほか ${ids.length - 3} 名` : ""} の順`;
+    }
     case "group_join":
       return `${names.person(v.person_id)} を ${names.group?.(change.target_id) ?? "グループ"} に加える（${GROUP_ROLE_LABEL[(v.role as GroupRole) ?? "member"] ?? ""}）`;
     case "group_leave":
@@ -386,6 +390,8 @@ export function useNamers(asOf: string, changes: PlanChange[], groups: Group[], 
     ...(c.kind === "assignment" || c.kind === "person" ? [c.target_id ?? ""] : []),
     c.values.head_person_id ?? "",
     c.values.person_id ?? "",
+    // 並び順は先頭の数人だけ名前で出す
+    ...(c.kind === "member_order" ? (c.values.person_ids ?? "").split(",").slice(0, 3) : []),
   ]).filter(Boolean);
   const people = usePeopleNames(personIds, asOf);
   return useMemo(() => {

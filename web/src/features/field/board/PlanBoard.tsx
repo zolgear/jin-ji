@@ -17,6 +17,8 @@ const MEMBER_LIMIT = 8;
 const ZOOM_MIN = 0.3;
 const ZOOM_MAX = 1.5;
 const ZOOM_STEP = 1.2;
+/** 図の周りの余白（拡大・縮小しない）。組織が少なく画面に収まるときも、ドラッグで図を動かせるようにする。 */
+const PAD = 800;
 
 const STATE_LABEL: Record<BoardUnit["state"], string> = { unchanged: "", created: "新設", changed: "変更", abolished: "廃止" };
 
@@ -81,7 +83,7 @@ function Canvas({ data, changes, onChange, selection, onSelect, scroller, root, 
         if (el && n !== z) {
           const x = at?.x ?? el.clientWidth / 2;
           const y = at?.y ?? el.clientHeight / 2;
-          anchor.current = { x, y, cx: (el.scrollLeft + x) / z, cy: (el.scrollTop + y) / z };
+          anchor.current = { x, y, cx: (el.scrollLeft + x - PAD) / z, cy: (el.scrollTop + y - PAD) / z };
         }
         return n;
       });
@@ -93,8 +95,21 @@ function Canvas({ data, changes, onChange, selection, onSelect, scroller, root, 
     const a = anchor.current;
     if (!el || !a) return;
     anchor.current = null;
-    el.scrollTo(a.cx * zoom - a.x, a.cy * zoom - a.y);
+    el.scrollTo(a.cx * zoom + PAD - a.x, a.cy * zoom + PAD - a.y);
   }, [zoom, scroller]);
+  // 初めて描いたとき・描く範囲を変えたときは、図の上端を画面の上に合わせる。横は、画面に収まるなら中央、収まらなければ左端から
+  const treeRef = useRef<HTMLDivElement>(null);
+  const placedFor = useRef<string | null>(null);
+  const hasUnits = data.tree.units.length > 0;
+  useLayoutEffect(() => {
+    const el = scroller.current;
+    const tree = treeRef.current;
+    const key = root ?? "";
+    if (!el || !tree || !hasUnits || placedFor.current === key) return;
+    placedFor.current = key;
+    const width = tree.getBoundingClientRect().width;
+    el.scrollTo(width > el.clientWidth ? PAD : PAD + width / 2 - el.clientWidth / 2, PAD);
+  }, [scroller, root, hasUnits]);
   // ホイールで拡大・縮小（組織図の画面と同じ）。React の onWheel は passive なので自分で付ける
   useEffect(() => {
     const el = scroller.current;
@@ -175,12 +190,14 @@ function Canvas({ data, changes, onChange, selection, onSelect, scroller, root, 
   return (
     <div className="relative size-full">
       <div ref={scroller} onPointerDown={pan} className="size-full cursor-grab select-none overflow-auto bg-bg [background-image:radial-gradient(var(--border)_1px,transparent_1px)] [background-size:20px_20px]">
-        <div className="plan-tree inline-flex min-w-full justify-center px-8 pt-52 pb-16 sm:pt-16" style={{ zoom }}>
-          <ul className="row root">
-            {roots.map((u) => (
-              <Branch key={u.id} unit={u} data={data} changes={changes} onChange={onChange} selection={selection} onSelect={onSelect} isOpen={isOpen} toggle={toggle} />
-            ))}
-          </ul>
+        <div className="w-max" style={{ padding: PAD }}>
+          <div ref={treeRef} className="plan-tree inline-flex px-8 pt-64 pb-16 sm:pt-16" style={{ zoom }}>
+            <ul className="row root">
+              {roots.map((u) => (
+                <Branch key={u.id} unit={u} data={data} changes={changes} onChange={onChange} selection={selection} onSelect={onSelect} isOpen={isOpen} toggle={toggle} />
+              ))}
+            </ul>
+          </div>
         </div>
       </div>
       <div className="absolute bottom-3 left-3 flex overflow-hidden rounded-md border border-border bg-surface shadow-sm">
@@ -337,11 +354,12 @@ function UnitCard({ unit, data, onChange, selection, onSelect, toggle, kids, ope
           {delta !== 0 && <span className="ml-0.5 font-bold text-accent">{delta > 0 ? `+${delta}` : `−${-delta}`}</span>}
         </span>
       </div>
-      {(unit.changed.length > 0 || unit.headPersonId) && (
+      {/* 組織長は所属する人の並びにも出るので、札には変えたときだけ出す（選んだ組織の箱に出す） */}
+      {unit.changed.length > 0 && (
         <div className="flex flex-col gap-0.5 border-b border-border/70 px-2 py-1 text-muted">
-          {unit.headPersonId && (
+          {unit.changed.includes("head_person_id") && (
             <span className="truncate">
-              組織長 <span className={unit.changed.includes("head_person_id") ? "font-bold text-warn-fg" : "text-fg"}>{data.names.get(unit.headPersonId) ?? "…"}</span>
+              組織長 → <span className="font-bold text-warn-fg">{unit.headPersonId ? (data.names.get(unit.headPersonId) ?? "…") : "なし"}</span>
             </span>
           )}
           {unit.changed.includes("name") && unit.base && <span className="truncate">旧名称 {unit.base.name}</span>}

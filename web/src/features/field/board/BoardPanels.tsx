@@ -226,6 +226,16 @@ function SelectedUnit({
   };
   return (
     <FloatingCard label="選んだ組織" onClose={() => onSelect(null)} title={<span className="block truncate">{unit.name}</span>}>
+      <dl className="m-0 grid grid-cols-[4em_1fr] gap-x-2 gap-y-0.5 text-xs">
+        <dt className="text-muted">組織長</dt>
+        <dd className={`m-0 ${unit.changed.includes("head_person_id") ? "font-bold text-warn-fg" : ""}`}>{unit.headPersonId ? (data.names.get(unit.headPersonId) ?? "…") : "なし"}</dd>
+        {unit.levelName && (
+          <>
+            <dt className="text-muted">段</dt>
+            <dd className="m-0">{unit.levelName}</dd>
+          </>
+        )}
+      </dl>
       {editable && (
         <>
           <label className="flex flex-col gap-1 text-xs">

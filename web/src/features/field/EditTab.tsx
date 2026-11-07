@@ -2,9 +2,9 @@
 // 開いている計画は URL の plan に、組織図で選んだ組織から下だけを描くときはその組織を root に持つ（無ければ新しい編集・全体）。保存・反映の前の変更は drafts に覚え、タブを移っても消さない。
 // 計画は公開されない作業領域で、保存しても公開されている組織・人の情報は変わらない（ADR-0013 決定 8・9）。
 // 反映は範囲の中の直接登録（部をまたぐ異動は相手側の同意で反映）。申請版・承認の記録・共有・提案資料は、ボードの横の欄と上の帯から行う。
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useState, type ReactNode } from "react";
 import { Button, Notice } from "../../auth/ui";
-import { HelpTip } from "../../components/popover";
+import { HelpTip, Popover } from "../../components/popover";
 import { Spinner } from "../../components/ui";
 import { useAdapter } from "../../data/adapterContext";
 import type { FieldDownload, Group, Plan, PlanChange, PlanInput, PlanSimulation, PlanVersion } from "../../data/field";
@@ -78,6 +78,25 @@ export function EditTab({ groups, plans, onPlansChanged }: { groups: Group[]; pl
   );
 }
 
+/** 図の上の操作の帯のボタン（Popover の開くボタンにも同じ見た目を使う）。 */
+function toolClass(primary: boolean, disabled: boolean) {
+  return `h-8 rounded-sm px-2 text-sm sm:px-3 font-bold whitespace-nowrap ${primary ? "bg-accent text-accent-fg hover:brightness-110" : "hover:bg-surface-2"} ${
+    disabled ? "pointer-events-none opacity-40" : ""
+  }`;
+}
+
+function ToolButton({ primary = false, disabled = false, onClick, children }: { primary?: boolean; disabled?: boolean; onClick: () => void; children: ReactNode }) {
+  return (
+    <button type="button" disabled={disabled} onClick={onClick} className={toolClass(primary, false) + " disabled:opacity-40"}>
+      {children}
+    </button>
+  );
+}
+
+function closePanel(id: string) {
+  document.getElementById(id)?.hidePopover();
+}
+
 function blank(date: string): PlanInput {
   return { title: "", note: null, base_date: date, effective_date: date, changes: [] };
 }
@@ -105,6 +124,9 @@ function Editor({
   const field = adapter.field;
   const { route, navigate } = useRoute();
   const root = route.params.get("root");
+  const panelId = useId();
+  const savePanel = `${panelId}-save`;
+  const reflectPanel = `${panelId}-reflect`;
   const draftKey = plan?.id ?? "new";
   const [draft, setDraft] = useState<PlanInput>(
     () =>
@@ -170,10 +192,9 @@ function Editor({
       const id = await persist();
       setProposal({ sim: await field.simulate(id, version?.version_no ?? null), version });
     });
-  const reflectable = draft.changes.length > 0 && !draft.changes.some((c) => NOT_REFLECTABLE.has(c.kind)) && draft.effective_date >= adapter.businessDate;
+  const reflectable = draft.changes.length > 0 && !draft.changes.some((c) => NOT_REFLECTABLE.has(c.kind));
   const reflect = () =>
     run(async () => {
-      if (!window.confirm(`有効日 ${draft.effective_date} に、${draft.changes.length} 件の変更を反映します。よろしいですか。`)) return;
       const r = await field.register({ effective_date: draft.effective_date, note: draft.note?.trim() || null, changes: draft.changes });
       saveDraft(draftKey, null);
       onReflected(r.status === "pending_consent" ? "反映しました。相手側の組織の同意待ちの分があります。" : r.status === "draft" ? "下書きにしました。" : "反映しました。");
@@ -186,49 +207,27 @@ function Editor({
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="flex flex-wrap items-end gap-x-3 gap-y-2 border-b border-border bg-surface px-3 py-2">
-        <label className="flex min-w-48 flex-1 flex-col gap-0.5 text-xs">
-          <span className="text-muted">{plan ? "計画" : "題名"}</span>
-          <input className={`${inputClass} font-bold`} value={draft.title} placeholder="無題の計画" onChange={(e) => setDraft({ ...draft, title: e.target.value })} maxLength={200} />
-        </label>
-        <label className="flex flex-col gap-0.5 text-xs">
-          <span className="flex items-center gap-1 text-muted">
-            基準日
+      {/* 題名・基準日・有効日は計画として保存してから出す（それまでは図を広く使う） */}
+      {plan && (
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-border bg-surface px-3 py-1.5 text-sm">
+          <input
+            aria-label="計画の題名"
+            className={`${inputClass} min-w-40 flex-1 font-bold`}
+            value={draft.title}
+            placeholder="無題の計画"
+            onChange={(e) => setDraft({ ...draft, title: e.target.value })}
+            maxLength={200}
+          />
+          <label className="flex items-center gap-1">
+            <span className="text-xs text-muted">基準日</span>
+            <input type="date" className={inputClass} value={draft.base_date} onChange={(e) => setDraft({ ...draft, base_date: e.target.value })} />
             <HelpTip label="基準日の説明">この日の組織と所属の上に、変更を重ねて見ます。</HelpTip>
-          </span>
-          <input type="date" className={inputClass} value={draft.base_date} onChange={(e) => setDraft({ ...draft, base_date: e.target.value })} />
-        </label>
-        <label className="flex flex-col gap-0.5 text-xs">
-          <span className="text-muted">有効日</span>
-          <input type="date" className={inputClass} value={draft.effective_date} onChange={(e) => setDraft({ ...draft, effective_date: e.target.value })} />
-        </label>
-        <div className="flex flex-wrap items-center gap-1">
-          <Button variant="primary" busy={busy} disabled={!dirty} onClick={() => run(async () => void (await persist()), "計画を保存しました。")}>
-            計画として保存
-          </Button>
-          <Button busy={busy} disabled={!reflectable} onClick={reflect}>
-            変更を反映
-          </Button>
-          <HelpTip label="保存と反映の違い">
-            計画として保存: 公開されている組織・人の情報は変わりません。申請版にして承認を記録し、提案資料を出せます。変更を反映: 範囲（組織長・指名された担当・組織管理者）の中の変更は、有効日にそのまま反映されます。部をまたぐ異動は、相手側の組織の範囲を持つ人の同意で反映されます。有効日の前なら「反映の記録」から取り消せます。グループへの加入・脱退は計画でだけ扱います。
-          </HelpTip>
-          <Button busy={busy} disabled={draft.changes.length === 0} onClick={() => openProposal(null)}>
-            提案資料
-          </Button>
-          <Button variant="ghost" onClick={startNew}>
-            新規
-          </Button>
+          </label>
+          <label className="flex items-center gap-1">
+            <span className="text-xs text-muted">有効日</span>
+            <input type="date" className={inputClass} value={draft.effective_date} onChange={(e) => setDraft({ ...draft, effective_date: e.target.value })} />
+          </label>
         </div>
-      </div>
-      {message && (
-        <Notice tone={message.tone === "ok" ? "ok" : "error"} className="m-2">
-          {message.text}
-        </Notice>
-      )}
-      {board.error !== undefined && (
-        <Notice tone="error" className="m-2">
-          {describeError(board.error)}
-        </Notice>
       )}
       <div className="min-h-0 flex-1">
         <PlanBoard
@@ -239,32 +238,107 @@ function Editor({
           onSelect={setSelection}
           root={root}
           overlay={
-            <div className="absolute top-3 left-3 flex flex-wrap items-center gap-2">
-              <fieldset className="m-0 flex overflow-hidden rounded-md border border-border bg-surface p-0 text-sm shadow-sm">
-                <legend className="sr-only">表示</legend>
-                <button type="button" aria-pressed={!viewing} onClick={() => setViewing(null)} className="h-8 px-3 hover:bg-surface-2 aria-pressed:bg-accent aria-pressed:font-bold aria-pressed:text-accent-fg">
-                  変更後
-                </button>
-                <button
-                  type="button"
-                  aria-pressed={viewing?.changes.length === 0}
-                  onClick={() => setViewing({ label: "今の組織", changes: [] })}
-                  className="h-8 px-3 hover:bg-surface-2 aria-pressed:bg-accent aria-pressed:font-bold aria-pressed:text-accent-fg"
-                >
-                  今の組織
-                </button>
-              </fieldset>
-              {root && board.tree.byId.has(root) && (
-                <span className="flex h-8 items-center gap-1 rounded-md border border-border bg-surface pl-3 text-sm shadow-sm">
-                  <span className="font-bold">{board.tree.byId.get(root)!.name}</span>
-                  <span className="text-muted">から下</span>
-                  <button type="button" aria-label="組織全体を表示" title="組織全体を表示" onClick={() => navigate({ params: { root: null } }, true)} className="h-full px-2 text-muted hover:bg-surface-2 hover:text-fg">
-                    ×
-                  </button>
-                </span>
+            <>
+              <div className="pointer-events-none absolute inset-x-3 top-3 flex flex-wrap items-start justify-between gap-2 [&>*]:pointer-events-auto">
+                <div className="flex flex-wrap items-center gap-2">
+                  <fieldset className="m-0 flex overflow-hidden rounded-md border border-border bg-surface p-0 text-sm shadow-sm">
+                    <legend className="sr-only">表示</legend>
+                    <button type="button" aria-pressed={!viewing} onClick={() => setViewing(null)} className="h-8 px-3 hover:bg-surface-2 aria-pressed:bg-accent aria-pressed:font-bold aria-pressed:text-accent-fg">
+                      変更後
+                    </button>
+                    <button
+                      type="button"
+                      aria-pressed={viewing?.changes.length === 0}
+                      onClick={() => setViewing({ label: "今の組織", changes: [] })}
+                      className="h-8 px-3 hover:bg-surface-2 aria-pressed:bg-accent aria-pressed:font-bold aria-pressed:text-accent-fg"
+                    >
+                      今の組織
+                    </button>
+                  </fieldset>
+                  {root && board.tree.byId.has(root) && (
+                    <span className="flex h-8 items-center gap-1 rounded-md border border-border bg-surface pl-3 text-sm shadow-sm">
+                      <span className="font-bold">{board.tree.byId.get(root)!.name}</span>
+                      <span className="text-muted">から下</span>
+                      <button type="button" aria-label="組織全体を表示" title="組織全体を表示" onClick={() => navigate({ params: { root: null } }, true)} className="h-full px-2 text-muted hover:bg-surface-2 hover:text-fg">
+                        ×
+                      </button>
+                    </span>
+                  )}
+                  {viewing && viewing.changes.length > 0 && <span className="rounded-md border border-border bg-surface px-2 py-1 text-xs font-bold shadow-sm">{viewing.label}</span>}
+                </div>
+                <div className="flex items-center gap-0.5 rounded-md border border-border bg-surface p-1 shadow-sm">
+                  {plan ? (
+                    <ToolButton primary disabled={busy || !dirty} onClick={() => run(async () => void (await persist()), "計画を保存しました。")}>
+                      保存
+                    </ToolButton>
+                  ) : (
+                    <Popover id={savePanel} label="計画として保存" trigger="計画として保存" triggerClassName={toolClass(true, !dirty)} width={300}>
+                      <div className="flex flex-col gap-2 p-3">
+                        <label className="flex flex-col gap-1 text-xs">
+                          <span className="text-muted">題名</span>
+                          <input className={`${inputClass} font-bold`} value={draft.title} placeholder="無題の計画" onChange={(e) => setDraft({ ...draft, title: e.target.value })} maxLength={200} />
+                        </label>
+                        <Button
+                          variant="primary"
+                          busy={busy}
+                          disabled={!dirty}
+                          onClick={() =>
+                            run(async () => {
+                              closePanel(savePanel);
+                              await persist();
+                            }, "計画を保存しました。")
+                          }
+                        >
+                          保存
+                        </Button>
+                      </div>
+                    </Popover>
+                  )}
+                  <Popover id={reflectPanel} label="変更を反映" trigger="変更を反映" triggerClassName={toolClass(false, !reflectable)} width={300}>
+                    <div className="flex flex-col gap-2 p-3">
+                      <label className="flex flex-col gap-1 text-xs">
+                        <span className="flex items-center gap-1 text-muted">
+                          有効日
+                          <HelpTip label="反映の説明">
+                            範囲（組織長・指名された担当・組織管理者）の中の変更は、有効日にそのまま反映されます。部をまたぐ異動は、相手側の組織の範囲を持つ人の同意で反映されます。有効日の前なら「反映の記録」から取り消せます。グループへの加入・脱退は計画でだけ扱います。
+                          </HelpTip>
+                        </span>
+                        <input type="date" className={inputClass} value={draft.effective_date} min={adapter.businessDate} onChange={(e) => setDraft({ ...draft, effective_date: e.target.value })} />
+                      </label>
+                      <Button
+                        variant="primary"
+                        busy={busy}
+                        disabled={!reflectable || draft.effective_date < adapter.businessDate}
+                        onClick={() => {
+                          closePanel(reflectPanel);
+                          reflect();
+                        }}
+                      >
+                        {draft.changes.length} 件を反映する
+                      </Button>
+                    </div>
+                  </Popover>
+                  <ToolButton disabled={busy || draft.changes.length === 0} onClick={() => openProposal(null)}>
+                    提案資料
+                  </ToolButton>
+                  <ToolButton disabled={busy} onClick={startNew}>
+                    新規
+                  </ToolButton>
+                </div>
+              </div>
+              {(message || board.error !== undefined) && (
+                <div className="absolute bottom-14 left-1/2 flex w-[min(32rem,calc(100%-24px))] -translate-x-1/2 items-start gap-1 shadow-lg">
+                  <Notice tone={message?.tone === "ok" ? "ok" : "error"} className="flex-1">
+                    {message?.text ?? describeError(board.error)}
+                  </Notice>
+                  {message && (
+                    <button type="button" aria-label="閉じる" onClick={() => setMessage(null)} className="absolute top-1 right-1 h-7 w-7 rounded-sm text-muted hover:bg-surface-2">
+                      ×
+                    </button>
+                  )}
+                </div>
               )}
-              {viewing && viewing.changes.length > 0 && <span className="rounded-md border border-border bg-surface px-2 py-1 text-xs font-bold shadow-sm">{viewing.label}</span>}
-            </div>
+            </>
           }
           aside={
             <>

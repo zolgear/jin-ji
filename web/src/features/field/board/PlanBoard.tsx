@@ -157,7 +157,7 @@ function Canvas({ data, changes, onChange, selection, onSelect, scroller, root }
   return (
     <div className="relative size-full">
       <div ref={scroller} onPointerDown={pan} className="size-full cursor-grab overflow-auto bg-bg [background-image:radial-gradient(var(--border)_1px,transparent_1px)] [background-size:20px_20px]">
-        <div className="plan-tree inline-flex min-w-full justify-center px-8 pt-16 pb-16" style={{ zoom }}>
+        <div className="plan-tree inline-flex min-w-full justify-center px-8 pt-28 pb-16 sm:pt-16" style={{ zoom }}>
           <ul className="row root">
             {roots.map((u) => (
               <Branch key={u.id} unit={u} data={data} changes={changes} onChange={onChange} selection={selection} onSelect={onSelect} isOpen={isOpen} toggle={toggle} />

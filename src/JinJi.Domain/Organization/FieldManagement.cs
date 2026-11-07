@@ -17,6 +17,9 @@ public enum FieldDomain
 
     /// <summary>内線・社用携帯。</summary>
     PersonContact,
+
+    /// <summary>人の決まった席・持ち場（主の席。0025）。</summary>
+    Workplace,
 }
 
 /// <summary>領域の管理元（DB の field_domain_setting.mode）。</summary>
@@ -42,6 +45,7 @@ public static class FieldDomains
         [FieldDomain.Assignment] = "assignment",
         [FieldDomain.PersonSite] = "person_site",
         [FieldDomain.PersonContact] = "person_contact",
+        [FieldDomain.Workplace] = "workplace",
     };
 
     private static readonly Dictionary<FieldManagementMode, string> ModeKeys = new()

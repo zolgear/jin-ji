@@ -31,7 +31,7 @@ public sealed class NpgsqlFieldRegistrationStore : IFieldRegistrationStore
     /// <summary>取り消しで戻す公開側の表（記録期間を持つもの）。</summary>
     private static readonly HashSet<string> BitemporalTables = new(StringComparer.Ordinal)
     {
-        "org_unit_version", "person_version", "assignment", "personnel_action",
+        "org_unit_version", "person_version", "assignment", "personnel_action", "workplace_assignment",
     };
 
     private readonly NpgsqlDataSource _dataSource;
@@ -356,8 +356,9 @@ public sealed class NpgsqlFieldRegistrationStore : IFieldRegistrationStore
         var orgs = await TargetsAsync(tx, "org_unit_version", "org_unit_id", string.Empty, date, cancellationToken);
         var people = await TargetsAsync(tx, "person_version", "person_id", string.Empty, date, cancellationToken);
         var assignments = await TargetsAsync(tx, "assignment", "person_id", "AND t.assignment_type = 'primary'", date, cancellationToken);
+        var workplaces = await TargetsAsync(tx, "workplace_assignment", "person_id", "AND t.role = 'primary'", date, cancellationToken);
         await tx.CommitAsync(cancellationToken);
-        return new FieldWrittenTargets(orgs, people, assignments);
+        return new FieldWrittenTargets(orgs, people, assignments, workplaces);
     }
 
     private static async Task<IReadOnlySet<Guid>> TargetsAsync(ViewerTransaction tx, string table, string key, string filter, DateOnly date, CancellationToken cancellationToken)
@@ -394,6 +395,7 @@ public sealed class NpgsqlFieldRegistrationStore : IFieldRegistrationStore
             SELECT id, target_kind, operation, target_id, effective_date, payload::text, diff::text, basis::text, confidence, status,
                    proposed_by_person_id, proposed_via_client_id, decided_by_person_id
             FROM change_proposal WHERE field_registration_id = $1
+            ORDER BY id
             """);
         command.Parameters.Add(P(registrationId));
         var rows = new List<ChangeProposalRecord>();

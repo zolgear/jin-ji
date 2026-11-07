@@ -1,6 +1,7 @@
 using System.Globalization;
 using JinJi.Application.Ingest;
 using JinJi.Domain.Organization;
+using JinJi.Domain.Workplace;
 
 namespace JinJi.Application.FieldManagement;
 
@@ -20,7 +21,7 @@ public sealed record FieldRegistrationPlan(
 /// <item>範囲は今日の範囲（<see cref="RegistrationScope"/>）で判定する。異動・上位組織の付け替えは出し側と受け側の両方を要し、
 /// 片側しか持たなければもう片側を「同意が要る組織」にする（どちらも持たなければ拒否）</item>
 /// <item>組織長の任免・上位組織の付け替えは、元の上位組織の範囲を要する（同意では補えない。権限を生む変更）</item>
-/// <item>反映の順は 組織の新設 → 組織の変更 → 所属 → 人 → 組織の廃止（新しい組織への異動・異動で空にした組織の廃止を 1 回で登録できる）</item>
+/// <item>反映の順は 組織の新設 → 組織の変更 → 所属 → 人 → 組織の廃止 → 席（新しい組織への異動・異動で空にした組織の廃止を 1 回で登録できる）</item>
 /// </list>
 /// </remarks>
 public sealed class FieldRegistrationPlanner
@@ -53,6 +54,7 @@ public sealed class FieldRegistrationPlanner
         ],
         [FieldChangeKind.OrgAbolish] = [],
         [FieldChangeKind.MemberOrder] = [PersonIdsKey],
+        [FieldChangeKind.Workplace] = [ProposalFields.SeatId, ProposalFields.FloorId, ProposalFields.ZoneKey],
     };
 
     private readonly OrgSnapshot _snapshot;
@@ -67,6 +69,7 @@ public sealed class FieldRegistrationPlanner
     private readonly HashSet<Guid> _consent = [];
     private readonly Dictionary<Guid, Guid> _transfers = [];
     private readonly HashSet<Guid> _created = [];
+    private readonly Dictionary<Guid, SeatTarget?> _seats = [];
 
     /// <param name="snapshot">有効日の組織（旧値と存在の確認）。</param>
     /// <param name="scope">登録者の今日の範囲。</param>
@@ -124,8 +127,8 @@ public sealed class FieldRegistrationPlanner
                 case FieldChangeKind.Person:
                     Person(Target(change, targets));
                     break;
-                case FieldChangeKind.OrgAbolish or FieldChangeKind.MemberOrder:
-                    // 廃止・並び順は所属の変更をすべて見てから検査する
+                case FieldChangeKind.OrgAbolish or FieldChangeKind.MemberOrder or FieldChangeKind.Workplace:
+                    // 廃止・並び順・席は所属の変更をすべて見てから検査する
                     break;
                 default:
                     throw Invalid($"変更の種類 {change.Kind} は直接登録できません。");
@@ -142,8 +145,20 @@ public sealed class FieldRegistrationPlanner
             OrgAbolish(Target(change, targets));
         }
 
+        foreach (var change in changes.Where(c => c.Kind == FieldChangeKind.Workplace))
+        {
+            Workplace(Target(change, targets));
+        }
+
+        if (_seats.Count > 0)
+        {
+            Seats();
+        }
+
+        // 提案の ID を反映の順に振り直す（保存した提案は ID の順に読んで反映する。同じミリ秒の UUIDv7 は順に並ばないので、1 件ごとに時刻を進める）
+        var start = DateTimeOffset.UtcNow;
         return new FieldRegistrationPlan(
-            [.. _proposals.OrderBy(p => p.Order).Select(p => p.Proposal)],
+            [.. _proposals.OrderBy(p => p.Order).Select((p, i) => p.Proposal with { Id = Guid.CreateVersion7(start.AddMilliseconds(i)) })],
             [.. _orgs.Order()],
             [.. _people.Order()],
             [.. _consent.Order()]);
@@ -472,6 +487,179 @@ public sealed class FieldRegistrationPlanner
         }
 
         return ids;
+    }
+
+    // -----------------------------------------------------------------------
+    // 席・持ち場
+    // -----------------------------------------------------------------------
+
+    /// <summary>主の席・持ち場の行き先（席なら Seat、席の無い持ち場なら Zone）。</summary>
+    private sealed record SeatTarget(Guid FloorId, LayoutSeat? Seat, Guid? ZoneKey);
+
+    /// <summary>
+    /// 人の主の席・持ち場。範囲はその人の有効日の主務の組織（同じ登録で異動する人は異動先。同意では補えない）。
+    /// 席の空きと反映の順は、全員の行き先がそろってから <see cref="Seats"/> で決める。
+    /// </summary>
+    private void Workplace(FieldChangeInput change)
+    {
+        RequireMode(FieldDomain.Workplace);
+        var personId = change.TargetId!.Value;
+        _ = _snapshot.FindPerson(personId) ?? throw NotFound($"人 {personId} が見つかりません。");
+        var org = _transfers.TryGetValue(personId, out var to)
+            ? to
+            : _snapshot.AssignmentsOf(personId).FirstOrDefault(a => a.Type == AssignmentType.Primary)?.OrgUnitId
+              ?? throw Invalid("主務の所属が無い人の席は、直接登録で変えられません。");
+        if (!Covered(org))
+        {
+            throw Forbidden("この人の主務の組織の範囲を持たないので、席を変えられません。");
+        }
+
+        var map = _snapshot.Workplace;
+        var values = change.Values;
+        SeatTarget? target;
+        if (OptionalGuid(values, ProposalFields.SeatId) is { } seatId)
+        {
+            var placement = map.FindSeat(seatId) ?? throw NotFound($"席 {seatId} が {_date:yyyy-MM-dd} の配置図にありません。");
+            if (placement.Seat.OutOfService)
+            {
+                throw Invalid($"席 {placement.Seat.Code} は使えない席（保守中・予備）です。");
+            }
+
+            target = new SeatTarget(placement.Floor.Id, placement.Seat, null);
+        }
+        else if (OptionalGuid(values, ProposalFields.ZoneKey) is { } zoneKey)
+        {
+            var floorId = RequiredGuid(values, ProposalFields.FloorId);
+            _ = map.FindZone(floorId, zoneKey) ?? throw NotFound($"持ち場 {zoneKey} が {_date:yyyy-MM-dd} の配置図にありません。");
+            target = new SeatTarget(floorId, null, zoneKey);
+        }
+        else
+        {
+            target = null;
+        }
+
+        _orgs.Add(org);
+        _people.Add(personId);
+        _seats[personId] = target;
+    }
+
+    /// <summary>
+    /// 席の空きを確かめ、提案を作る。定員 1 の席は、今使っている人が同じ登録で席を変えるか外すときだけ使える。
+    /// 反映は、空く席を先に動かす順にする（席の入れ替えのように順が決まらないときは、1 人の席を先に外してから最後に付ける）。
+    /// </summary>
+    private void Seats()
+    {
+        var map = _snapshot.Workplace;
+        var current = _seats.Keys.ToDictionary(p => p, p => map.AssignmentsOf(p).FirstOrDefault(a => a.Role == WorkplaceRole.Primary));
+        foreach (var group in _seats.Where(s => s.Value?.Seat is not null).GroupBy(s => s.Value!.Seat!.SeatId))
+        {
+            var seat = group.First().Value!.Seat!;
+            var staying = map.AssignmentsOfSeat(seat.SeatId).Count(a => !_seats.ContainsKey(a.PersonId) || _seats[a.PersonId]?.Seat?.SeatId == seat.SeatId);
+            var arriving = group.Count(s => current[s.Key]?.SeatId != seat.SeatId);
+            if (staying + arriving > seat.Capacity)
+            {
+                throw Invalid(seat.IsExclusive
+                    ? $"席 {seat.Code} は {_date:yyyy-MM-dd} に別の人が使っています。同じ登録でその人の席を変えるか外してください。"
+                    : $"持ち場 {seat.Code} の定員（{seat.Capacity} 人）を超えます。");
+            }
+        }
+
+        // 空く席を待つ人（行き先の定員 1 の席を、今は席を変える別の人が使っている）
+        var waits = new Dictionary<Guid, Guid>();
+        foreach (var (person, target) in _seats)
+        {
+            if (target?.Seat is { IsExclusive: true } seat
+                && current[person]?.SeatId != seat.SeatId
+                && map.AssignmentsOfSeat(seat.SeatId).FirstOrDefault(a => a.PersonId != person) is { } holder)
+            {
+                waits[person] = holder.PersonId;
+            }
+        }
+
+        var done = new HashSet<Guid>();
+        var deferred = new List<Guid>();
+        void Visit(Guid person, HashSet<Guid> path)
+        {
+            if (done.Contains(person))
+            {
+                return;
+            }
+
+            if (!path.Add(person))
+            {
+                // 入れ替え（循環）: この人の席を先に外し、最後に付ける
+                deferred.Add(person);
+                done.Add(person);
+                SeatProposal(person, null, current[person], rank: 5);
+                return;
+            }
+
+            if (waits.TryGetValue(person, out var holder))
+            {
+                Visit(holder, path);
+            }
+
+            if (done.Add(person))
+            {
+                SeatProposal(person, _seats[person], current[person], rank: 6);
+            }
+
+            path.Remove(person);
+        }
+
+        foreach (var person in _seats.Keys.Order())
+        {
+            Visit(person, []);
+        }
+
+        foreach (var person in deferred.Where(p => _seats[p] is not null))
+        {
+            SeatProposal(person, _seats[person], null, rank: 7);
+        }
+    }
+
+    private void SeatProposal(Guid personId, SeatTarget? target, WorkplaceAssignment? current, int rank)
+    {
+        const string Primary = "primary";
+        if (target is null)
+        {
+            if (current is null)
+            {
+                throw Invalid($"人 {personId} には {_date:yyyy-MM-dd} に外す席がありません。");
+            }
+
+            var end = new Dictionary<string, string?>(StringComparer.Ordinal) { [ProposalFields.Role] = Primary };
+            Add(rank, ProposalTargetKind.WorkplaceAssignment, ProposalOperation.End, personId, end, new Dictionary<string, FieldChange>());
+            return;
+        }
+
+        var exclusive = Bool(target.Seat?.IsExclusive ?? false);
+        if (current is null)
+        {
+            var payload = new Dictionary<string, string?>(StringComparer.Ordinal)
+            {
+                [ProposalFields.FloorId] = Id(target.FloorId),
+                [ProposalFields.SeatId] = Id(target.Seat?.SeatId),
+                [ProposalFields.ZoneKey] = Id(target.ZoneKey),
+                [ProposalFields.Role] = Primary,
+                [ProposalFields.Exclusive] = exclusive,
+                [ProposalFields.ValidFrom] = Date(_date),
+            };
+            Add(rank, ProposalTargetKind.WorkplaceAssignment, ProposalOperation.Create, personId, payload, new Dictionary<string, FieldChange>());
+            return;
+        }
+
+        var diff = new Dictionary<string, FieldChange>(StringComparer.Ordinal);
+        Put(diff, ProposalFields.FloorId, Id(current.FloorId), Id(target.FloorId));
+        Put(diff, ProposalFields.SeatId, Id(current.SeatId), Id(target.Seat?.SeatId));
+        Put(diff, ProposalFields.ZoneKey, Id(current.ZoneKey), Id(target.ZoneKey));
+        Put(diff, ProposalFields.Exclusive, Bool(current.Exclusive), exclusive);
+        if (diff.Count == 0)
+        {
+            throw Invalid($"人 {personId} の席は変わりません。");
+        }
+
+        Add(rank, ProposalTargetKind.WorkplaceAssignment, ProposalOperation.Change, personId, new Dictionary<string, string?>(), diff);
     }
 
     private void Person(FieldChangeInput change)

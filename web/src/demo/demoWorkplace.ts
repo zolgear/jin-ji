@@ -54,10 +54,44 @@ export class DemoWorkplaceService {
       const zones = new Map(layout.zones.map((z) => [z.zone_key, z]));
       for (const seat of layout.seats) this.seatById.set(seat.seat_id, { seat, floor, zone: seat.zone_key ? zones.get(seat.zone_key) : undefined });
     }
-    for (const a of wp.assignments) {
+    this.index();
+  }
+
+  private index() {
+    this.bySeat.clear();
+    this.byPerson.clear();
+    this.stateCache.clear();
+    for (const a of this.wp.assignments) {
       if (a.seat_id) this.bySeat.set(a.seat_id, [...(this.bySeat.get(a.seat_id) ?? []), a]);
       this.byPerson.set(a.person_id, [...(this.byPerson.get(a.person_id) ?? []), a]);
     }
+  }
+
+  /**
+   * 席の直接登録をデモの割り当てに反映する（主の席を有効日の前日で終え、行き先の席があれば有効日から足す）。
+   * 端末のメモリだけで、再読み込みで元に戻る。
+   */
+  applySeatMoves(moves: ReadonlyMap<string, string | null>, from: string) {
+    for (const [personId, seatId] of moves) {
+      for (const a of this.wp.assignments) {
+        if (a.person_id === personId && a.role === "primary" && (a.valid_until === null || a.valid_until > from)) a.valid_until = a.valid_from >= from ? a.valid_from : from;
+      }
+      const info = seatId ? this.seatById.get(seatId) : undefined;
+      if (info) {
+        this.wp.assignments.push({
+          person_id: personId,
+          floor_id: info.floor.id,
+          seat_id: seatId,
+          zone_key: null,
+          role: "primary",
+          exclusive: info.seat.capacity === 1,
+          valid_from: from,
+          valid_until: null,
+        });
+      }
+    }
+    this.wp.assignments = this.wp.assignments.filter((a) => a.valid_until === null || a.valid_until > a.valid_from);
+    this.index();
   }
 
   private visible(person: DemoPerson | undefined, field: PersonField): boolean {

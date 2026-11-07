@@ -3920,7 +3920,7 @@
           "FieldEndpoints"
         ],
         "summary": "直接登録する（範囲の中ならすぐに反映。AI エージェントは下書き）",
-        "description": "changes の kind: assignment（異動・役職）/ person（拠点・リモートワーク・内線・社用携帯）/ org_update（名称・略称・段・上位組織・組織長・拠点）/ org_create（新設）/ org_abolish（廃止）。values のキーは項目名（org_unit_id など）。有効日は今日以降（遡及は組織管理者・人事管理者）。相手側の組織の範囲が要れば pending_consent。変える人は 50 人まで。範囲の外は 403、値の誤りは 400、作成後に対象が変わっていれば 409。",
+        "description": "changes の kind: assignment（異動・役職）/ person（拠点・リモートワーク・内線・社用携帯）/ org_update（名称・略称・段・上位組織・組織長・拠点）/ org_create（新設）/ org_abolish（廃止）/ member_order（組織の中の並び順）/ workplace（人の主の席・持ち場）。values のキーは項目名（org_unit_id など）。有効日は今日以降（遡及は組織管理者・人事管理者）。相手側の組織の範囲が要れば pending_consent。変える人は 50 人まで。範囲の外は 403、値の誤りは 400、作成後に対象が変わっていれば 409。",
         "operationId": "CreateFieldRegistration",
         "requestBody": {
           "content": {
@@ -9577,6 +9577,7 @@
               "org_create",
               "org_abolish",
               "member_order",
+              "workplace",
               null
             ],
             "type": [
@@ -9673,7 +9674,8 @@
               "org_site",
               "assignment",
               "person_site",
-              "person_contact"
+              "person_contact",
+              "workplace"
             ],
             "type": "string"
           },
@@ -9967,7 +9969,8 @@
               "org_site",
               "assignment",
               "person_site",
-              "person_contact"
+              "person_contact",
+              "workplace"
             ],
             "type": "string"
           },
@@ -12138,6 +12141,7 @@
               "org_create",
               "org_abolish",
               "member_order",
+              "workplace",
               "group_join",
               "group_leave",
               null
@@ -13021,6 +13025,7 @@
               "assignment",
               "person_site",
               "person_contact",
+              "workplace",
               null
             ],
             "type": [

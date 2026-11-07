@@ -108,7 +108,7 @@ internal static class FieldEndpoints
             .WithSummary("直接登録する（範囲の中ならすぐに反映。AI エージェントは下書き）")
             .WithDescription(
                 "changes の kind: assignment（異動・役職）/ person（拠点・リモートワーク・内線・社用携帯）/ org_update（名称・略称・段・上位組織・組織長・拠点）/ " +
-                "org_create（新設）/ org_abolish（廃止）。values のキーは項目名（org_unit_id など）。有効日は今日以降（遡及は組織管理者・人事管理者）。" +
+                "org_create（新設）/ org_abolish（廃止）/ member_order（組織の中の並び順）/ workplace（人の主の席・持ち場）。values のキーは項目名（org_unit_id など）。有効日は今日以降（遡及は組織管理者・人事管理者）。" +
                 $"相手側の組織の範囲が要れば pending_consent。変える人は {FieldRegistrationService.MaxPeople} 人まで。範囲の外は 403、値の誤りは 400、作成後に対象が変わっていれば 409。")
             .WithMetadata(new RequestKindMetadata(RequestKind.Field, false))
             .Produces<FieldRegistrationResponse>()
@@ -158,7 +158,7 @@ internal static class FieldEndpoints
     {
         if (!FieldDomains.TryParseDomain(body?.Domain, out var domain) || !FieldDomains.TryParseMode(body?.Mode, out var mode))
         {
-            return Problems.BadRequest(http, "domain（org_structure / org_site / assignment / person_site / person_contact）と mode（hr / field / both）を指定してください。");
+            return Problems.BadRequest(http, "domain（org_structure / org_site / assignment / person_site / person_contact / workplace）と mode（hr / field / both）を指定してください。");
         }
 
         return await Handle(http, async () => FieldSettingResponse.From(await service.ProposeModeAsync(http.Viewer(), domain, mode, body!.Note, cancellationToken)));
@@ -463,7 +463,7 @@ public sealed record FieldChangeRequest
     /// <summary>対象の人・組織（新設では省略可。省略なら採番する）。</summary>
     public Guid? TargetId { get; init; }
 
-    /// <summary>変える項目（キーは org_unit_id・position_title・site_id・remote_work・extension_number・work_mobile_phone・code・name・short_name・level_key・parent_org_unit_id・head_person_id）。</summary>
+    /// <summary>変える項目（キーは org_unit_id・position_title・site_id・remote_work・extension_number・work_mobile_phone・code・name・short_name・level_key・parent_org_unit_id・head_person_id・person_ids・seat_id・floor_id・zone_key）。</summary>
     public IReadOnlyDictionary<string, string?>? Values { get; init; }
 }
 

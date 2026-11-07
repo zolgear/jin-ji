@@ -58,6 +58,10 @@ public static class FieldModeFilter
                 case (ProposalTargetKind.OrgUnitVersion, ProposalOperation.Abolish):
                     result.Add(Whole(proposal, FieldDomain.OrgStructure, modes, written.OrgUnits.Contains(target)));
                     break;
+                case (ProposalTargetKind.WorkplaceAssignment, _)
+                    when proposal.Payload.GetValueOrDefault(ProposalFields.Role) is null or "primary":
+                    result.Add(Whole(proposal, FieldDomain.Workplace, modes, written.Workplaces.Contains(target)));
+                    break;
                 case (ProposalTargetKind.Assignment, _):
                     result.Add(Whole(proposal, FieldDomain.Assignment, modes, written.Assignments.Contains(target)));
                     break;

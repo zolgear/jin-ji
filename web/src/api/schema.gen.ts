@@ -272,7 +272,7 @@ export interface components {
       count: number; // int32
     };
     FieldChangeRequest: {
-      kind?: "assignment" | "person" | "org_update" | "org_create" | "org_abolish" | "member_order" | null;
+      kind?: "assignment" | "person" | "org_update" | "org_create" | "org_abolish" | "member_order" | "workplace" | null;
       target_id?: string | null; // uuid
       values?: {
         [key: string]: string;
@@ -290,7 +290,7 @@ export interface components {
       revoked_at: string | null; // date-time
     };
     FieldModeResponse: {
-      domain: "org_structure" | "org_site" | "assignment" | "person_site" | "person_contact";
+      domain: "org_structure" | "org_site" | "assignment" | "person_site" | "person_contact" | "workplace";
       mode: "hr" | "field" | "both";
     };
     FieldRegistrationChangeResponse: {
@@ -334,7 +334,7 @@ export interface components {
     };
     FieldSettingResponse: {
       id: string; // uuid
-      domain: "org_structure" | "org_site" | "assignment" | "person_site" | "person_contact";
+      domain: "org_structure" | "org_site" | "assignment" | "person_site" | "person_contact" | "workplace";
       mode: "hr" | "field" | "both";
       status: "proposed" | "approved" | "rejected" | "superseded";
       note: string | null;
@@ -711,7 +711,7 @@ export interface components {
       recorded_at: string; // date-time
     };
     PlanChangeDto: {
-      kind?: "assignment" | "person" | "org_update" | "org_create" | "org_abolish" | "member_order" | "group_join" | "group_leave" | null;
+      kind?: "assignment" | "person" | "org_update" | "org_create" | "org_abolish" | "member_order" | "workplace" | "group_join" | "group_leave" | null;
       target_id?: string | null; // uuid
       values?: {
         [key: string]: string;
@@ -862,7 +862,7 @@ export interface components {
       note: string | null;
     };
     ProposeFieldSettingRequest: {
-      domain?: "org_structure" | "org_site" | "assignment" | "person_site" | "person_contact" | null;
+      domain?: "org_structure" | "org_site" | "assignment" | "person_site" | "person_contact" | "workplace" | null;
       mode?: "hr" | "field" | "both" | null;
       note?: string | null;
     };

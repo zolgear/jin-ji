@@ -4,8 +4,9 @@
 // 人（組織の色の点）・空席（輪）・使えない席（淡い斜線）・選んだ人（控えめなアクセント色の輪と札）・今日の所在の人（点の右上の小さな菱形）。
 // 1 m の格子をごく薄く。状態は形で区別し、色だけに頼らない。ズーム・パンは viewBox で行う（ホイール・ドラッグ・ピンチ・ボタン）。
 // アクセシビリティ: 同じ内容の表（席番号・状態・人・組織）を下に置き、キーボードで席を順に辿れる。
+// 編集（edit）では、人の点をつかんで席へ動かせる（落とし先は data-drop-seat。ドラッグは呼び出し側が持つ）。拡大すると人の姓を出す。
 import { useEffect, useId, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
-import { chairPosition, deskSize, slotColorVar, type FloorView, type SeatView } from "./floorModel";
+import { chairPosition, deskSize, slotColorVar, type FloorView, type SeatPerson, type SeatView } from "./floorModel";
 import { centerOn, fitViewport, panBy, toSvgY, viewBoxOf, zoomAt, type Viewport } from "./planViewport";
 
 const STATE_LABEL = { person: "人", vacant: "空席", unavailable: "使えない席" } as const;
@@ -19,6 +20,19 @@ export interface FloorPlan2DProps {
   /** 表の見出し（読み上げ）。 */
   title: string;
   className?: string;
+  /** 編集（人をつかんで席へ動かす）。 */
+  edit?: FloorPlanEdit;
+}
+
+export interface FloorPlanEdit {
+  /** 人の点を押したとき（動かしたらドラッグにするのは呼び出し側）。 */
+  onPersonDown: (e: ReactPointerEvent, seat: SeatView, person: SeatPerson) => void;
+  /** ドラッグ中に指している席。 */
+  overSeatId: string | null;
+  /** 変えた席（破線の輪）。 */
+  changedSeatIds: ReadonlySet<string>;
+  /** 選んだ席。 */
+  selectedSeatId: string | null;
 }
 
 function ZoomIcon({ kind }: { kind: "in" | "out" | "fit" }) {
@@ -38,7 +52,7 @@ function ZoomIcon({ kind }: { kind: "in" | "out" | "fit" }) {
 
 const btn = "inline-flex size-8 items-center justify-center rounded-md border border-border bg-surface text-fg shadow-sm hover:bg-surface-2";
 
-export function FloorPlan2D({ view, selectedPersonId = null, onSeat, title, className = "" }: FloorPlan2DProps) {
+export function FloorPlan2D({ view, selectedPersonId = null, onSeat, title, className = "", edit }: FloorPlan2DProps) {
   const uid = useId().replace(/:/g, "");
   const box = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ w: 800, h: 500 });
@@ -134,7 +148,9 @@ export function FloorPlan2D({ view, selectedPersonId = null, onSeat, title, clas
   const showZoneText = pxPerMm > 0.006;
   // 札の文字は、縮小したときも読めるように画面の 8.5px 以上に保つ（配置図の mm で 640〜900）
   const zoneFont = Math.min(900, Math.max(640, 8.5 / Math.max(pxPerMm, 1e-6)));
-  const clickable = (s: SeatView) => s.state === "person";
+  const clickable = (s: SeatView) => s.state === "person" || (Boolean(edit) && s.seat.status !== "unavailable");
+  // 編集で拡大したら人の姓を出す（画面で 1 m が 30px 以上）
+  const nameFont = edit && pxPerMm >= 0.03 ? 10 / pxPerMm : null;
   const seatTarget = (s: SeatView) => {
     if (moved.current > 6) return;
     if (clickable(s)) onSeat?.(s);
@@ -229,6 +245,8 @@ export function FloorPlan2D({ view, selectedPersonId = null, onSeat, title, clas
               Y={Y}
               hatch={`url(#${uid}-hatch-seat)`}
               clickable={clickable(s) && Boolean(onSeat)}
+              edit={edit}
+              nameFont={nameFont}
               onClick={() => seatTarget(s)}
               onHover={(e) => {
                 const r = box.current?.getBoundingClientRect();
@@ -298,11 +316,13 @@ export function SeatTooltip({ s }: { s: SeatView }) {
 
 const PERSON_R = 260;
 
-function SeatGlyph({ s, Y, hatch, clickable, onClick, onHover }: {
+function SeatGlyph({ s, Y, hatch, clickable, edit, nameFont, onClick, onHover }: {
   s: SeatView;
   Y: (y: number) => number;
   hatch: string;
   clickable: boolean;
+  edit?: FloorPlanEdit;
+  nameFont: number | null;
   onClick: () => void;
   onHover: (e: { clientX: number; clientY: number } | null) => void;
 }) {
@@ -313,8 +333,22 @@ function SeatGlyph({ s, Y, hatch, clickable, onClick, onHover }: {
   const [px, pyRaw] = chairPosition(s.seat);
   const py = Y(pyRaw);
   const color = slotColorVar(s.slot) ?? "var(--site-other)";
+  // 編集では人の点をつかめる（押した点の人。持ち場は並んだ点ごと）
+  const grab = (p: SeatPerson) =>
+    edit
+      ? {
+          onPointerDown: (e: ReactPointerEvent) => {
+            e.stopPropagation();
+            edit.onPersonDown(e, s, p);
+          },
+          style: { cursor: "grab" },
+        }
+      : {};
+  const id = s.seat.seat_id;
+  const ring = edit && (edit.overSeatId === id ? "over" : edit.selectedSeatId === id ? "selected" : edit.changedSeatIds.has(id) ? "changed" : null);
   return (
     <g
+      data-drop-seat={edit ? id : undefined}
       onClick={onClick}
       onPointerEnter={(e) => onHover(e)}
       onPointerMove={(e) => onHover(e)}
@@ -338,15 +372,33 @@ function SeatGlyph({ s, Y, hatch, clickable, onClick, onHover }: {
         (station ? (
           // 持ち場: 定員までの小さな点を横に並べる
           s.people.slice(0, s.seat.capacity).map((p, i, list) => (
-            <circle key={p.personId} cx={x + (i - (list.length - 1) / 2) * 420} cy={y} r={190} fill={color} />
+            <circle key={p.personId} cx={x + (i - (list.length - 1) / 2) * 420} cy={y} r={190} fill={color} {...grab(p)} />
           ))
         ) : (
-          <circle cx={px} cy={py} r={PERSON_R} fill={color} />
+          s.people[0] ? <circle cx={px} cy={py} r={PERSON_R} fill={color} {...grab(s.people[0])} /> : <circle cx={px} cy={py} r={PERSON_R} fill={color} />
         ))}
       {s.state === "person" && station && s.people.length === 0 && <circle cx={x} cy={y} r={190} fill={color} />}
       {s.state === "vacant" && <circle cx={px} cy={py} r={PERSON_R - 20} fill="var(--surface)" stroke="var(--fg)" strokeWidth="1" vectorEffect="non-scaling-stroke" />}
       {s.state === "unavailable" && (
         <rect x={px - 260} y={py - 260} width={520} height={520} rx={60} fill={hatch} stroke="var(--edge)" strokeWidth="0.8" vectorEffect="non-scaling-stroke" opacity="0.9" />
+      )}
+      {ring && (
+        <circle
+          cx={px}
+          cy={py}
+          r={ring === "over" ? 560 : 440}
+          fill="none"
+          stroke="var(--accent)"
+          strokeWidth={ring === "changed" ? 1.4 : 2.4}
+          strokeDasharray={ring === "changed" ? "3 2" : undefined}
+          vectorEffect="non-scaling-stroke"
+          pointerEvents="none"
+        />
+      )}
+      {nameFont !== null && s.people.length > 0 && (
+        <text x={px} y={py + PERSON_R + nameFont * 1.1} fontSize={nameFont} textAnchor="middle" fill="var(--fg)" pointerEvents="none">
+          {s.people.map((p) => (p.name ?? "").split(/[\s　]/)[0]).join("・")}
+        </text>
       )}
       {/* 今日の所在の人: 点の右上の小さな菱形（形で示す） */}
       {s.today && (

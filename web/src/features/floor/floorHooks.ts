@@ -1,5 +1,5 @@
 // 建物・フロアモードの URL の状態と取得のフック。
-// URL: #/overview-3d?mode=floor&site=&building=&floor=&plan=1&person=&color=none&presence=0（as_of はタイムマシンと共有。仕様 §5.5）
+// URL: #/overview-3d?mode=floor&site=&building=&floor=&plan=1&edit=1&person=&color=none&presence=0（as_of はタイムマシンと共有。仕様 §5.5）
 // color は「組織で色分け」の明示（org / none）。書かなければ設定画面の既定（lib/settings.ts。既定はオン）に従う
 import { useCallback, useEffect, useState } from "react";
 import { useAdapter } from "../../data/adapterContext";
@@ -14,6 +14,8 @@ export interface FloorRoute {
   buildingId: string | null;
   floorId: string | null;
   plan: boolean;
+  /** 席の編集（平面図の上で人を席へ動かす）。 */
+  edit: boolean;
   personId: string | null;
   /** 組織で色分けをしない（単色）か。URL の color が設定の既定より優先する。 */
   monochrome: boolean;
@@ -24,7 +26,7 @@ export interface FloorRoute {
 /** 組織モードの引数（建物・フロアモードでは使わない）。 */
 const ORG_MODE_KEYS = ["org", "split", "color"];
 /** 建物・フロアモードの引数（組織モードに戻すと消す）。 */
-export const FLOOR_MODE_KEYS = ["mode", "site", "building", "floor", "plan", "color", "presence"];
+export const FLOOR_MODE_KEYS = ["mode", "site", "building", "floor", "plan", "edit", "color", "presence"];
 
 export function useFloorRoute() {
   const { route, navigate } = useRoute();
@@ -36,6 +38,7 @@ export function useFloorRoute() {
     buildingId: p.get("building"),
     floorId: p.get("floor"),
     plan: p.get("plan") === "1",
+    edit: p.get("edit") === "1",
     personId: p.get("person"),
     monochrome: !resolveFloorOrgColor(p.get("color"), floorOrgColor),
     presenceParam: p.get("presence"),
@@ -56,9 +59,10 @@ export function useFloorRoute() {
   return { ...state, set, setMode, setOrgColor };
 }
 
-export function useBuildings(siteId: string | null, asOf: string) {
+/** rev は席の変更を反映した後に取り直すための番号。 */
+export function useBuildings(siteId: string | null, asOf: string, rev = 0) {
   const { adapter } = useAdapter();
-  return useQuery(adapter, siteId ? `buildings:${siteId}:${asOf}` : null, () => adapter.workplace.listBuildings(siteId!, asOf));
+  return useQuery(adapter, siteId ? `buildings:${siteId}:${asOf}:${rev}` : null, () => adapter.workplace.listBuildings(siteId!, asOf));
 }
 
 export function useFloorLayout(floorId: string | null, asOf: string) {
@@ -66,9 +70,9 @@ export function useFloorLayout(floorId: string | null, asOf: string) {
   return useQuery(adapter, floorId ? `layout:${floorId}:${asOf}` : null, () => adapter.workplace.getFloorLayout(floorId!, asOf));
 }
 
-export function useFloorOccupants(floorId: string | null, asOf: string) {
+export function useFloorOccupants(floorId: string | null, asOf: string, rev = 0) {
   const { adapter } = useAdapter();
-  return useQuery(adapter, floorId ? `occupants:${floorId}:${asOf}` : null, () => adapter.workplace.listFloorOccupants(floorId!, asOf));
+  return useQuery(adapter, floorId ? `occupants:${floorId}:${asOf}:${rev}` : null, () => adapter.workplace.listFloorOccupants(floorId!, asOf));
 }
 
 /** 階の今日の所在（外部から届いたもの。提供元が無い導入先では null）。今日のときだけ取る。 */

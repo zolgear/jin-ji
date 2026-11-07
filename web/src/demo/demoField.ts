@@ -1,5 +1,6 @@
 // 直接登録・グループ・素案のデモ（架空データ。端末のメモリだけに持ち、再読み込みで消える）。
-// デモでは全領域の管理元を jin-ji（field）にし、利用者は全社の範囲を持つ。直接登録は記録だけで、デモの組織・人のデータは変えない。
+// デモでは全領域の管理元を jin-ji（field）にし、利用者は全社の範囲を持つ。直接登録は記録だけで、デモの組織・人のデータは変えない
+// （席の変更だけは、フロアの画面で確かめられるようデモの割り当てに反映する。onSeats）。
 // 素案のシミュレーションは、API の PlanSimulator と同じ考え方（基準日の組織に変更を重ねる）を簡単にしたもの。
 import type {
   FieldAdapter,
@@ -24,7 +25,7 @@ const newId = () => {
   return `00000000-0000-7000-8000-${counter.toString(16).padStart(12, "0")}`;
 };
 
-const DOMAINS = ["org_structure", "org_site", "assignment", "person_site", "person_contact"] as const;
+const DOMAINS = ["org_structure", "org_site", "assignment", "person_site", "person_contact", "workplace"] as const;
 
 /** 基準日の組織に素案の変更を重ねる（人は ID と数だけ）。 */
 export function simulateDemo(dir: DemoDirectory, baseDate: string, changes: PlanChange[]): PlanSimulation {
@@ -96,6 +97,10 @@ export function simulateDemo(dir: DemoDirectory, baseDate: string, changes: Plan
         // 並び順は人数・組織図を変えない
         if (!unit) break;
         return;
+      case "workplace":
+        // 席は人数・組織図を変えない
+        if (!c.target_id) break;
+        return;
       case "org_abolish":
         if (!unit) break;
         unit.state = "abolished";
@@ -143,7 +148,16 @@ export function simulateDemo(dir: DemoDirectory, baseDate: string, changes: Plan
   return sim;
 }
 
-export function createDemoField(dir: DemoDirectory, later: <T>(fn: () => T) => Promise<T>): FieldAdapter {
+/** 席の変更（人 → 行き先の席。null は席を外す）をデモの割り当てに反映する。 */
+export type DemoSeatApplier = (moves: ReadonlyMap<string, string | null>, from: string) => void;
+
+function seatMoves(changes: PlanChange[]): Map<string, string | null> {
+  const moves = new Map<string, string | null>();
+  for (const c of changes) if (c.kind === "workplace" && c.target_id) moves.set(c.target_id, c.values.seat_id ?? null);
+  return moves;
+}
+
+export function createDemoField(dir: DemoDirectory, later: <T>(fn: () => T) => Promise<T>, onSeats?: DemoSeatApplier): FieldAdapter {
   const me = demoMe(dir.data).id;
   const now = () => new Date().toISOString();
   const settings: FieldSetting[] = [];
@@ -235,7 +249,7 @@ export function createDemoField(dir: DemoDirectory, later: <T>(fn: () => T) => P
           created_at: now(),
           expires_at: now(),
           org_unit_ids: [],
-          person_ids: i.changes.filter((c) => c.kind === "assignment" || c.kind === "person").map((c) => c.target_id!).filter(Boolean),
+          person_ids: i.changes.filter((c) => c.kind === "assignment" || c.kind === "person" || c.kind === "workplace").map((c) => c.target_id!).filter(Boolean),
           consent_org_unit_ids: [],
           consented_by: null,
           consented_at: null,
@@ -245,7 +259,8 @@ export function createDemoField(dir: DemoDirectory, later: <T>(fn: () => T) => P
           withdrawn_at: null,
           changes: i.changes.map((c) => ({
             id: newId(),
-            target_kind: c.kind === "assignment" ? "assignment" : c.kind === "person" ? "person_version" : c.kind === "org_create" ? "org_unit" : "org_unit_version",
+            target_kind:
+              c.kind === "assignment" ? "assignment" : c.kind === "person" ? "person_version" : c.kind === "workplace" ? "workplace_assignment" : c.kind === "org_create" ? "org_unit" : "org_unit_version",
             operation: c.kind === "org_create" ? "create" : c.kind === "org_abolish" ? "abolish" : "change",
             target_id: c.target_id,
             status: "applied",
@@ -254,6 +269,8 @@ export function createDemoField(dir: DemoDirectory, later: <T>(fn: () => T) => P
           })),
         };
         registrations.unshift(r);
+        const moves = seatMoves(i.changes);
+        if (moves.size > 0) onSeats?.(moves, i.effective_date);
         return r;
       }),
     transition: (id, action) =>
@@ -400,6 +417,8 @@ export function createDemoField(dir: DemoDirectory, later: <T>(fn: () => T) => P
         changes: null,
       };
       registrations.unshift(r);
+      const moves = seatMoves(field);
+      if (moves.size > 0) onSeats?.(moves, effective);
       return r;
     });
   }

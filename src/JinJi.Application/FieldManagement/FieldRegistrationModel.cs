@@ -48,6 +48,12 @@ public enum FieldChangeKind
     /// 人ごとの所属の行の並び順の変更になる（同じ登録で異動する人は、異動に並び順を足す）。
     /// </summary>
     MemberOrder,
+
+    /// <summary>
+    /// 人の主の席・持ち場（0025）。target_id は人、値は seat_id（席）か floor_id と zone_key（席の無い持ち場）。どれも空なら主の席を外す。
+    /// 定員 1 の席を使っている人がいれば、同じ登録でその人の席も変えるか外す。
+    /// </summary>
+    Workplace,
 }
 
 /// <summary>直接登録の 1 つの変更（入力）。値のキーは <see cref="ProposalFields"/>。キーが無い項目は変えない。</summary>
@@ -163,7 +169,8 @@ public interface IFieldRegistrationStore
 /// <param name="OrgUnits">組織の版。</param>
 /// <param name="People">人の版。</param>
 /// <param name="Assignments">主務の所属（人）。</param>
-public sealed record FieldWrittenTargets(IReadOnlySet<Guid> OrgUnits, IReadOnlySet<Guid> People, IReadOnlySet<Guid> Assignments)
+/// <param name="Workplaces">主の席・持ち場（人）。</param>
+public sealed record FieldWrittenTargets(IReadOnlySet<Guid> OrgUnits, IReadOnlySet<Guid> People, IReadOnlySet<Guid> Assignments, IReadOnlySet<Guid> Workplaces)
 {
-    public static FieldWrittenTargets None { get; } = new(new HashSet<Guid>(), new HashSet<Guid>(), new HashSet<Guid>());
+    public static FieldWrittenTargets None { get; } = new(new HashSet<Guid>(), new HashSet<Guid>(), new HashSet<Guid>(), new HashSet<Guid>());
 }

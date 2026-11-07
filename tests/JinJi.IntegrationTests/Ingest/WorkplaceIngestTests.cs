@@ -1,17 +1,21 @@
 using System.Text;
+using JinJi.Application.FieldManagement;
 using JinJi.Application.Ingest;
 using JinJi.Connectors;
 using JinJi.Domain;
 using JinJi.Domain.Organization;
 using JinJi.Domain.Workplace;
+using JinJi.Infrastructure.Database;
 using JinJi.Ingest;
 using JinJi.IntegrationTests.Support;
+using JinJi.Policy;
 
 namespace JinJi.IntegrationTests.Ingest;
 
 /// <summary>
 /// 建物・フロアモードの取込（0019。仕様 §4）: 配置図の JSON・席の CSV（改訂の起案 → 別人の承認、有効日での切り替え、席の同一性）、
 /// 割り当ての CSV（人の席・持ち場のゾーン・終了・拠点の食い違い）、形の検査と修正依頼、排他制約による承認時の衝突。
+/// 席の割り当ての管理元は既定で現場（直接登録）なので、ここでは席を外部の施設管理システムから取り込む導入先として、管理元を取込（hr）にする。
 /// </summary>
 public sealed class WorkplaceIngestTests : IAsyncLifetime
 {
@@ -67,6 +71,10 @@ public sealed class WorkplaceIngestTests : IAsyncLifetime
     {
         _db = await IngestDatabase.CreateAsync(Ct);
         _site = await InsertSiteAsync("S10", "東京本社");
+        var management = new FieldManagementService(new NpgsqlFieldManagementStore(_db.DataSource), _db.Snapshots, _db.Audit, TimeProvider.System);
+        var orgAdmin = ViewerContext.ForUser(_db.Id("takahashi"), [Roles.OrgAdmin], Channel.Ui, FieldLimit.Unrestricted);
+        var setting = await management.ProposeModeAsync(orgAdmin, FieldDomain.Workplace, FieldManagementMode.Hr, null, Ct);
+        await management.DecideModeAsync(_db.HrUser("hr2"), setting.Id, true, Ct);
     }
 
     public ValueTask DisposeAsync() => _db.DisposeAsync();

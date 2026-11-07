@@ -17,6 +17,9 @@ public enum FieldDomain
 
     /// <summary>内線・社用携帯。</summary>
     PersonContact,
+
+    /// <summary>人の決まった席・持ち場（主の席。0025）。</summary>
+    Workplace,
 }
 
 /// <summary>領域の管理元（DB の field_domain_setting.mode）。</summary>
@@ -42,6 +45,7 @@ public static class FieldDomains
         [FieldDomain.Assignment] = "assignment",
         [FieldDomain.PersonSite] = "person_site",
         [FieldDomain.PersonContact] = "person_contact",
+        [FieldDomain.Workplace] = "workplace",
     };
 
     private static readonly Dictionary<FieldManagementMode, string> ModeKeys = new()
@@ -90,6 +94,12 @@ public static class FieldDomains
         mode = default;
         return false;
     }
+
+    /// <summary>
+    /// 承認済みの設定が無いときの管理元。席・持ち場は現場の組織が決めるもので人事は関わらないので field、ほかは hr
+    /// （DB の jinji_field_domain_mode() と同じ）。
+    /// </summary>
+    public static FieldManagementMode Default(FieldDomain domain) => domain == FieldDomain.Workplace ? FieldManagementMode.Field : FieldManagementMode.Hr;
 
     /// <summary>直接登録を許すか（field・both）。</summary>
     public static bool AllowsDirectRegistration(this FieldManagementMode mode) => mode != FieldManagementMode.Hr;

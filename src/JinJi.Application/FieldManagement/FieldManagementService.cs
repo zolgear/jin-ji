@@ -53,14 +53,14 @@ public sealed class FieldManagementService
         _timeProvider = timeProvider;
     }
 
-    /// <summary>領域ごとの今の管理元（承認済みの行。無ければ <see cref="FieldManagementMode.Hr"/>）。</summary>
+    /// <summary>領域ごとの今の管理元（承認済みの行。無ければ領域の既定。<see cref="FieldDomains.Default"/>）。</summary>
     public async Task<IReadOnlyDictionary<FieldDomain, FieldManagementMode>> ModesAsync(ViewerContext viewer, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(viewer);
         var approved = (await _store.ListSettingsAsync(viewer, cancellationToken))
             .Where(s => s.Status == FieldDomainSettingStatus.Approved)
             .ToDictionary(s => s.Domain, s => s.Mode);
-        return FieldDomains.All.ToDictionary(d => d, d => approved.GetValueOrDefault(d, FieldManagementMode.Hr));
+        return FieldDomains.All.ToDictionary(d => d, d => approved.GetValueOrDefault(d, FieldDomains.Default(d)));
     }
 
     /// <summary>管理元の起案の一覧（新しい順）。</summary>

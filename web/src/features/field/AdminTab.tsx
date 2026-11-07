@@ -5,7 +5,7 @@ import { Button, Notice } from "../../auth/ui";
 import { HelpTip } from "../../components/popover";
 import { Spinner } from "../../components/ui";
 import { useAdapter } from "../../data/adapterContext";
-import { DOMAIN_LABEL, MODE_LABEL, type FieldDomain, type FieldGrant, type FieldManagementMode, type FieldMode, type FieldSetting } from "../../data/field";
+import { DOMAIN_LABEL, MODE_LABEL, modeLabel, type FieldDomain, type FieldGrant, type FieldManagementMode, type FieldMode, type FieldSetting } from "../../data/field";
 import { useQuery } from "../../data/query";
 import { describeError } from "../../data/types";
 import { inputClass, OrgSelect, PersonPicker, useNamers } from "./shared";
@@ -50,7 +50,7 @@ export function AdminTab({ canManage }: { canManage: boolean }) {
         {pending.map((s) => (
           <div key={s.id} className="flex flex-wrap items-center gap-2 rounded-md border border-warn-fg/30 bg-warn-bg px-3 py-2 text-sm">
             <span>
-              起案: {DOMAIN_LABEL[s.domain]} を {MODE_LABEL[s.mode]} に
+              起案: {DOMAIN_LABEL[s.domain]} を {modeLabel(s.domain, s.mode)} に
             </span>
             {canManage && (
               <span className="ml-auto flex gap-1">
@@ -75,14 +75,14 @@ function ModeRow({ mode, canManage, onPropose }: { mode: FieldMode; canManage: b
       <th scope="row" className="py-2 pr-3 text-left font-normal">
         {DOMAIN_LABEL[mode.domain as FieldDomain]}
       </th>
-      <td className="py-2 pr-3 font-bold">{MODE_LABEL[mode.mode]}</td>
+      <td className="py-2 pr-3 font-bold">{modeLabel(mode.domain, mode.mode)}</td>
       {canManage && (
         <td className="py-2">
           <span className="flex gap-1">
             <select className={inputClass} value={next} onChange={(e) => setNext(e.target.value as FieldManagementMode)} aria-label={`${DOMAIN_LABEL[mode.domain]}の新しい管理元`}>
               {(Object.keys(MODE_LABEL) as FieldManagementMode[]).map((m) => (
                 <option key={m} value={m}>
-                  {MODE_LABEL[m]}
+                  {modeLabel(mode.domain, m)}
                 </option>
               ))}
             </select>

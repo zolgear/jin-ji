@@ -24,7 +24,7 @@ export type PlanRegistrationResult = Schemas["PlanRegistrationResponse"];
 
 /** 素案・直接登録の 1 つの変更（kind・target_id・values）。 */
 export interface PlanChange {
-  kind: "assignment" | "person" | "org_update" | "org_create" | "org_abolish" | "member_order" | "group_join" | "group_leave";
+  kind: "assignment" | "person" | "org_update" | "org_create" | "org_abolish" | "member_order" | "workplace" | "group_join" | "group_leave";
   target_id: string | null;
   values: Record<string, string | null>;
 }
@@ -102,9 +102,15 @@ export const DOMAIN_LABEL: Record<FieldDomain, string> = {
   assignment: "異動・役職",
   person_site: "人の拠点・リモートワーク",
   person_contact: "内線・社用携帯",
+  workplace: "人の席・持ち場",
 };
 
 export const MODE_LABEL: Record<FieldManagementMode, string> = { hr: "人事パッケージ", field: "jin-ji（現場）", both: "両方" };
+
+/** 管理元の表示名。席・持ち場は人事が関わらないので、取込の元を施設管理システムとして示す。 */
+export function modeLabel(domain: FieldDomain, mode: FieldManagementMode): string {
+  return domain === "workplace" && mode === "hr" ? "取込（施設管理システム）" : MODE_LABEL[mode];
+}
 
 export const REGISTRATION_STATUS_LABEL: Record<FieldRegistrationStatus, string> = {
   draft: "下書き",
@@ -126,6 +132,7 @@ export const CHANGE_KIND_LABEL: Record<PlanChange["kind"], string> = {
   org_create: "組織の新設",
   org_abolish: "組織の廃止",
   member_order: "並び順",
+  workplace: "席",
   group_join: "グループに加入",
   group_leave: "グループから脱退",
 };
@@ -145,6 +152,9 @@ export const VALUE_LABEL: Record<string, string> = {
   head_person_id: "組織長",
   person_id: "人",
   role: "役割",
+  seat_id: "席",
+  floor_id: "階",
+  zone_key: "持ち場",
   abolish: "廃止",
 };
 

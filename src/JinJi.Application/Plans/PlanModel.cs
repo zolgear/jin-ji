@@ -3,7 +3,7 @@ using JinJi.Policy;
 
 namespace JinJi.Application.Plans;
 
-/// <summary>素案の変更の種類（直接登録の 5 つと、グループの加入・脱退）。</summary>
+/// <summary>素案の変更の種類（直接登録の種類と、グループの加入・脱退）。</summary>
 public enum PlanChangeKind
 {
     Assignment,
@@ -14,6 +14,9 @@ public enum PlanChangeKind
 
     /// <summary>組織の中の人の並び順（target_id は組織、values の person_ids に並べた人。0024）。</summary>
     MemberOrder,
+
+    /// <summary>人の主の席・持ち場（target_id は人、values に seat_id か floor_id と zone_key。どれも空なら席を外す。0025）。</summary>
+    Workplace,
 
     /// <summary>グループに加える（target_id はグループ、values に person_id と role）。</summary>
     GroupJoin,
@@ -138,6 +141,7 @@ public static class PlanChanges
         "code", "name", "short_name", "level_key", "parent_org_unit_id", "head_person_id",
         "person_id", "role",
         "person_ids",
+        "floor_id", "seat_id", "zone_key",
     };
 
     /// <summary>値の上限（文字）。並び順の人の一覧（person_ids）だけは長くてよい（DB の CHECK 制約と同じ）。</summary>
@@ -154,6 +158,7 @@ public static class PlanChanges
         PlanChangeKind.OrgCreate => "org_create",
         PlanChangeKind.OrgAbolish => "org_abolish",
         PlanChangeKind.MemberOrder => "member_order",
+        PlanChangeKind.Workplace => "workplace",
         PlanChangeKind.GroupJoin => "group_join",
         PlanChangeKind.GroupLeave => "group_leave",
         _ => throw new ArgumentOutOfRangeException(nameof(kind)),
@@ -183,6 +188,7 @@ public static class PlanChanges
         PlanChangeKind.OrgCreate => FieldChangeKind.OrgCreate,
         PlanChangeKind.OrgAbolish => FieldChangeKind.OrgAbolish,
         PlanChangeKind.MemberOrder => FieldChangeKind.MemberOrder,
+        PlanChangeKind.Workplace => FieldChangeKind.Workplace,
         _ => null,
     };
 }

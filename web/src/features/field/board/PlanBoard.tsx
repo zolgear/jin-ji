@@ -174,7 +174,7 @@ function Canvas({ data, changes, onChange, selection, onSelect, scroller, root, 
   const roots = top ? [top] : (data.tree.children.get(null) ?? []);
   return (
     <div className="relative size-full">
-      <div ref={scroller} onPointerDown={pan} className="size-full cursor-grab overflow-auto bg-bg [background-image:radial-gradient(var(--border)_1px,transparent_1px)] [background-size:20px_20px]">
+      <div ref={scroller} onPointerDown={pan} className="size-full cursor-grab select-none overflow-auto bg-bg [background-image:radial-gradient(var(--border)_1px,transparent_1px)] [background-size:20px_20px]">
         <div className="plan-tree inline-flex min-w-full justify-center px-8 pt-52 pb-16 sm:pt-16" style={{ zoom }}>
           <ul className="row root">
             {roots.map((u) => (

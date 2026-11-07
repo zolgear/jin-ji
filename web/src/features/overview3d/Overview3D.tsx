@@ -50,13 +50,13 @@ import { HelpTip } from "../../components/popover";
 import { OrgPanel } from "../org/OrgPanel";
 import { OrgPersonSearch, type SearchUnit } from "../org/OrgPersonSearch";
 import { PersonPanel } from "../person/PersonPanel";
-import { ErrorNote, LineKey, Spinner } from "../../components/ui";
+import { CloseButton, ErrorNote, LineKey, Spinner } from "../../components/ui";
 import { useAdapter } from "../../data/adapterContext";
 import { describeError, type OrgLink } from "../../data/types";
-import { buildForest } from "../../lib/orgTree";
+import { buildForest, type OrgNode } from "../../lib/orgTree";
 import { assignSiteColors, type SiteColoring } from "../../lib/siteColors";
 import { partitionName, splitBySite, type SiteSplit } from "../../lib/siteSplit";
-import { ChartToolbar, ChartToolbarEnd, CrossKindFilter, NoStatsBadge, SiteModeControls, ToolbarButton } from "../orgchart/ChartToolbar";
+import { ChartToolbar, ChartToolbarEnd, ChartToolbarRow, CrossKindFilter, NoStatsBadge, SiteModeControls, ToolbarButton } from "../orgchart/ChartToolbar";
 import { useSiteColorMode, useSiteSplitMode } from "../orgchart/SiteLegend";
 import { useResolvedTheme } from "../../lib/theme";
 import { useFloorRoute } from "../floor/floorHooks";
@@ -1312,23 +1312,20 @@ function CameraRig({ scene, byId, focus, fitRequest, controls, reduced, layoutKe
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [controls, fitRequest, size.width > 0]);
 
-  // 組織を選んだら寄せる。選択を外したら全体に戻す。配置の種類が変わったら（拠点で分ける）、全体か選んだ組織に合わせ直す
+  // 組織を選んだら寄せる。選択を外してもカメラは動かさない（全体へ戻すのは「全体を表示」）。配置の種類が変わったら（拠点で分ける）、全体か選んだ組織に合わせ直す
   const focusId = focus?.id ?? null;
-  const hadFocus = useRef(false);
   const lastLayout = useRef(layoutKey);
   useEffect(() => {
     if (!controls || size.width === 0) return;
     const relayout = lastLayout.current !== layoutKey;
     lastLayout.current = layoutKey;
     if (!focus) {
-      if (hadFocus.current || relayout) {
+      if (relayout) {
         // 切り替えでは今の見下ろす向きを保つ（急に回り込まない）。縦長の画面の向きは最初の表示と同じ
         moveTo(wholeScene(scene), viewDir(size.width / Math.max(1, size.height)), reduced);
       }
-      hadFocus.current = false;
       return;
     }
-    hadFocus.current = true;
     const self = byId.get(focus.id)!;
     const parent = self.node.parentId ? byId.get(self.node.parentId) : undefined;
     const points = [self, ...(parent ? [parent] : [])];
@@ -1805,7 +1802,10 @@ function OrgOverview3D() {
     () => (stats.data?.links ?? []).filter((l) => (l.kind === "concurrent" ? showConcurrent : showSecondment)),
     [stats.data, showConcurrent, showSecondment],
   );
-  const focus = useMemo(() => (scene ? focusOf(byId, orgId, links, split) : null), [scene, byId, orgId, links, split]);
+  // 法人（組織の根）を選んだとき（URL の org は組織だけなので、画面の中で持つ）
+  const [entityId, setEntityId] = useState<string | null>(null);
+  const selected = orgId ?? entityId;
+  const focus = useMemo(() => (scene ? focusOf(byId, selected, links, split) : null), [scene, byId, selected, links, split]);
   const hoveredId = hover?.p.node.id ?? null;
   const [siteMode, setSiteMode] = useSiteColorMode();
   const coloring = useMemo(() => {
@@ -1839,6 +1839,35 @@ function OrgOverview3D() {
   const h = hover?.p.node.headcount;
   const orgCount = scene.nodes.filter((n) => n.node.kind === "org").length;
   const statsAvailable = stats.data !== null && stats.data !== undefined;
+  // 帯の右の操作（スマホ幅では 2 段目に左寄せで出す）
+  const endControls = (
+    <>
+          {/* 組織・人をまとめて探す。組織はその組織を、人はその人の主務の組織を選んでカメラを寄せる */}
+          <OrgPersonSearch
+            units={searchUnits}
+            asOf={asOf}
+            onPick={(hit) => {
+              setEntityId(null);
+              if (hit.kind === "unit") selectOrg(hit.id);
+              else navigate({ params: { org: hit.org, person: hit.id } });
+            }}
+          />
+          <ToolbarButton
+            onClick={() => {
+              setEntityId(null);
+              if (orgId) selectOrg(null);
+              setFitRequest((n) => n + 1);
+            }}
+          >
+            全体を表示
+          </ToolbarButton>
+          {/* 組織の変更の画面の編集を開く（組織図の画面と同じ。組織を選んでいれば、そこから下だけ） */}
+          <ToolbarButton onClick={() => navigate({ view: "changes", params: { tab: null, org: null, person: null, root: orgId } })}>編集</ToolbarButton>
+          <HelpTip label="図の見方" width={340}>
+            <HowToRead stats={statsAvailable} />
+          </HelpTip>
+    </>
+  );
   return (
     <div className="flex size-full flex-col">
       {/* 操作の帯（2D の組織図と共通の部品・同じ順序）。図に重なる箱は置かず、読み方の説明は「図の見方」（?）の中に入れる */}
@@ -1863,21 +1892,9 @@ function OrgOverview3D() {
         </span>
         {(tree.loading || stats.loading) && <Spinner />}
         {!statsAvailable && !stats.loading && <NoStatsBadge title="集計の API が未提供のため、人数と兼務・出向の線を表示していません" />}
-        <ChartToolbarEnd>
-          {/* 組織・人をまとめて探す。組織はその組織を、人はその人の主務の組織を選んでカメラを寄せる */}
-          <OrgPersonSearch
-            units={searchUnits}
-            asOf={asOf}
-            onPick={(hit) => (hit.kind === "unit" ? selectOrg(hit.id) : navigate({ params: { org: hit.org, person: hit.id } }))}
-          />
-          <ToolbarButton onClick={() => (orgId ? selectOrg(null) : setFitRequest((n) => n + 1))}>全体を表示</ToolbarButton>
-          {/* 組織の変更の画面の編集を開く（組織図の画面と同じ。組織を選んでいれば、そこから下だけ） */}
-          <ToolbarButton onClick={() => navigate({ view: "changes", params: { tab: null, org: null, person: null, root: orgId } })}>編集</ToolbarButton>
-          <HelpTip label="図の見方" width={340}>
-            <HowToRead stats={statsAvailable} />
-          </HelpTip>
-        </ChartToolbarEnd>
+        <ChartToolbarEnd secondRow>{endControls}</ChartToolbarEnd>
       </ChartToolbar>
+      <ChartToolbarRow>{endControls}</ChartToolbarRow>
     <div
       ref={container}
       className="relative min-h-0 flex-1"
@@ -1901,7 +1918,9 @@ function OrgOverview3D() {
           // 何もないところを押したら（回転・移動のドラッグでなければ）選択を外す
           onPointerMissed={(e) => {
             const d = downAt.current;
-            if (e.type === "click" && d && Math.hypot(e.clientX - d.x, e.clientY - d.y) < 5) selectOrg(null);
+            if (e.type !== "click" || !d || Math.hypot(e.clientX - d.x, e.clientY - d.y) >= 5) return;
+            setEntityId(null);
+            if (orgId || personId) selectOrg(null);
           }}
         >
           <SceneContent
@@ -1915,7 +1934,15 @@ function OrgOverview3D() {
             layoutKey={splitMode ? "split" : "entity"}
             labels={labels}
             overlay={overlay}
-            onSelect={(p) => selectOrg(p.node.kind === "legal_entity" ? null : p.node.id)}
+            onSelect={(p) => {
+              if (p.node.kind === "legal_entity") {
+                setEntityId(p.node.id);
+                if (orgId || personId) selectOrg(null);
+              } else {
+                setEntityId(null);
+                selectOrg(p.node.id);
+              }
+            }}
             onHover={(p, e) => {
               if (!p || !e) {
                 setHover(null);
@@ -1935,10 +1962,15 @@ function OrgOverview3D() {
         <FloatingCard key={personId} label="人の詳細" top="sm:top-3 sm:max-h-[calc(100%-1.5rem)]">
           <PersonPanel personId={personId} onClose={() => openPerson(null)} compact />
         </FloatingCard>
+      ) : orgId ? (
+        <FloatingCard key={orgId} label="組織の詳細" wide top="sm:top-3 sm:max-h-[calc(100%-1.5rem)]">
+          <OrgPanel orgId={orgId} onClose={() => selectOrg(null)} />
+        </FloatingCard>
       ) : (
-        orgId && (
-          <FloatingCard key={orgId} label="組織の詳細" wide top="sm:top-3 sm:max-h-[calc(100%-1.5rem)]">
-            <OrgPanel orgId={orgId} onClose={() => selectOrg(null)} />
+        entityId &&
+        byId.get(entityId) && (
+          <FloatingCard key={entityId} label="法人の詳細" top="sm:top-3 sm:max-h-[calc(100%-1.5rem)]">
+            <EntitySummary node={byId.get(entityId)!.node} onClose={() => setEntityId(null)} onSelectOrg={(id) => (setEntityId(null), selectOrg(id))} />
           </FloatingCard>
         )
       )}
@@ -1997,6 +2029,52 @@ function OrgOverview3D() {
         </div>
       )}
     </div>
+    </div>
+  );
+}
+
+/** 法人（組織の根）の箱: 名称・法人コード・組織の数・主務の人数と、直下の組織（選ぶとその組織へ）。 */
+function EntitySummary({ node, onClose, onSelectOrg }: { node: OrgNode; onClose: () => void; onSelectOrg: (id: string) => void }) {
+  let units = 0;
+  const count = (n: OrgNode) => n.children.forEach((c) => (c.kind === "org" && units++, count(c)));
+  count(node);
+  const people = node.children.reduce<number | null>((sum, c) => (c.totalPrimary === null || sum === null ? null : sum + c.totalPrimary), 0);
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <div className="text-xs text-muted">法人</div>
+          <h2 className="text-xl font-bold">{node.name}</h2>
+          {node.code && <div className="text-xs text-muted">法人コード: {node.code}</div>}
+        </div>
+        <CloseButton onClick={onClose} />
+      </div>
+      <dl className="m-0 grid grid-cols-2 gap-2 text-xs">
+        <div className="rounded-sm border border-border bg-surface px-2 py-1.5">
+          <dt className="text-muted">組織</dt>
+          <dd className="m-0 text-sm font-bold tabular">{units}</dd>
+        </div>
+        <div className="rounded-sm border border-border bg-surface px-2 py-1.5">
+          <dt className="text-muted">主務の人数</dt>
+          <dd className="m-0 text-sm font-bold tabular">{people === null ? "—" : `${people}名`}</dd>
+        </div>
+      </dl>
+      {node.children.length > 0 && (
+        <section aria-label="直下の組織" className="flex flex-col gap-1">
+          <h3 className="m-0 text-xs font-bold text-muted">直下の組織</h3>
+          <ul className="m-0 flex list-none flex-col p-0">
+            {node.children.map((c) => (
+              <li key={c.id}>
+                <button type="button" onClick={() => onSelectOrg(c.id)} className="flex w-full items-baseline gap-2 rounded-sm px-1.5 py-1 text-left hover:bg-surface-2">
+                  <span className="font-bold">{c.name}</span>
+                  {c.levelName && <span className="text-xs text-muted">{c.levelName}</span>}
+                  {c.totalPrimary !== null && <span className="ml-auto text-xs text-muted tabular">{c.totalPrimary}名</span>}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </div>
   );
 }

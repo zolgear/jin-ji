@@ -2,7 +2,7 @@
 // 組織の変更の編集・3D 表示の浮かべる箱で使う（画面を移らずに全項目を見られる）。
 import { useCallback, useRef } from "react";
 import { usePerson } from "../../app/hooks";
-import { Badge, personKana, personName } from "../../components/ui";
+import { Badge, CloseButton, personKana, personName } from "../../components/ui";
 import { employmentTypeLabel } from "../../lib/labels";
 import { assignmentKind, PersonDetail } from "./PersonPanel";
 
@@ -74,9 +74,7 @@ export function PersonSummary({ personId, asOf, report = true }: { personId: str
         className="m-auto max-h-[85dvh] w-[min(32rem,calc(100vw-16px))] overflow-y-auto rounded-lg border border-border bg-surface p-4 text-sm text-fg shadow-2xl backdrop:bg-black/40"
       >
         <div className="mb-2 flex justify-end">
-          <button type="button" onClick={() => dialog.current?.close()} className="rounded-sm border border-border px-2 py-0.5 text-xs hover:bg-surface-2">
-            閉じる
-          </button>
+          <CloseButton onClick={() => dialog.current?.close()} />
         </div>
         <PersonDetail person={p} report={report} />
       </dialog>

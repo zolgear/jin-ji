@@ -5,7 +5,7 @@ import { useOrgTree, usePerson } from "../../app/hooks";
 import { useNav } from "../../app/nav";
 import { HelpTip } from "../../components/popover";
 import { RemoteWorkValue, SiteValue } from "../../components/site";
-import { Badge, ErrorNote, FieldValue, isVisible, personKana, personName, PrivateValue, Spinner } from "../../components/ui";
+import { Badge, CloseButton, ErrorNote, FieldValue, isVisible, personKana, personName, PrivateValue, Spinner } from "../../components/ui";
 import { useAdapter } from "../../data/adapterContext";
 import { useQuery } from "../../data/query";
 import { describeError, type Assignment, type Person } from "../../data/types";
@@ -293,12 +293,10 @@ export function PersonPanel({ personId, onClose, compact = false }: { personId: 
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between gap-2">
-        <h2 ref={heading} tabIndex={-1} className="text-sm font-bold text-muted outline-none">
+        <h2 ref={heading} tabIndex={-1} className="text-sm font-bold text-muted outline-none focus-visible:outline-none">
           人の詳細
         </h2>
-        <button type="button" onClick={onClose} className="rounded-sm border border-border px-2 py-0.5 text-xs hover:bg-surface-2">
-          閉じる
-        </button>
+        <CloseButton onClick={onClose} />
       </div>
       {person.error ? (
         <ErrorNote>{describeError(person.error)}</ErrorNote>

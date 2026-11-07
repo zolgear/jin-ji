@@ -71,12 +71,12 @@ export function OrgPersonSearch({ units: all, asOf, onPick }: { units: SearchUni
     setOpen(false);
   };
   return (
-    <div ref={box} className="relative">
+    <div ref={box} className="relative min-w-0 max-md:flex-1">
       <input
         type="search"
         aria-label="組織・人を探す"
         aria-controls={listId}
-        className={`${inputClass} h-10 w-48 sm:w-64`}
+        className={`${inputClass} h-10 w-full md:w-64`}
         value={query}
         placeholder="組織・人を探す"
         autoComplete="off"

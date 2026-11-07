@@ -4,7 +4,7 @@ import { useOrgStats, useOrgTree, usePersonNames } from "../../app/hooks";
 import { useNav } from "../../app/nav";
 import { HelpTip } from "../../components/popover";
 import { SiteIcon, SiteValue } from "../../components/site";
-import { Badge, ErrorNote, LineKey, personKana, personName, Spinner } from "../../components/ui";
+import { Badge, CloseButton, ErrorNote, LineKey, personKana, personName, Spinner } from "../../components/ui";
 import { useAdapter } from "../../data/adapterContext";
 import { describeError, type OrgLink, type Person } from "../../data/types";
 import { useRoute } from "../../lib/router";
@@ -175,9 +175,7 @@ export function OrgPanel({ orgId, onClose }: { orgId: string; onClose: () => voi
     return (
       <div className="flex flex-col gap-3">
         <ErrorNote>表示している日付にはこの組織がありません（廃止・統合された可能性があります）。</ErrorNote>
-        <button type="button" onClick={onClose} className="self-start rounded-sm border border-border px-2 py-0.5 text-xs hover:bg-surface-2">
-          閉じる
-        </button>
+        <CloseButton onClick={onClose} />
       </div>
     );
   }
@@ -203,7 +201,7 @@ export function OrgPanel({ orgId, onClose }: { orgId: string; onClose: () => voi
               </span>
             ))}
           </nav>
-          <h2 ref={heading} tabIndex={-1} className="text-xl font-bold outline-none">
+          <h2 ref={heading} tabIndex={-1} className="text-xl font-bold outline-none focus-visible:outline-none">
             {node.name}
           </h2>
           <div className="flex flex-wrap gap-x-3 text-xs text-muted">
@@ -211,7 +209,7 @@ export function OrgPanel({ orgId, onClose }: { orgId: string; onClose: () => voi
             <span>組織コード: {node.code || "未設定"}</span>
           </div>
         </div>
-        <div className="flex shrink-0 gap-1">
+        <div className="flex shrink-0 items-center gap-1">
           {/* 組織の変更の画面の編集を、この組織から下だけで開く */}
           <button
             type="button"
@@ -220,9 +218,7 @@ export function OrgPanel({ orgId, onClose }: { orgId: string; onClose: () => voi
           >
             編集
           </button>
-          <button type="button" onClick={onClose} className="rounded-sm border border-border px-2 py-0.5 text-xs hover:bg-surface-2">
-            閉じる
-          </button>
+          <CloseButton onClick={onClose} />
         </div>
       </div>
 

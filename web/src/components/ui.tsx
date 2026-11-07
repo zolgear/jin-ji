@@ -142,3 +142,14 @@ export function CloseIcon() {
     </svg>
   );
 }
+
+/** 閉じるボタン（× の印。読み上げは「閉じる」）。 */
+export function CloseButton({ onClick, label = "閉じる" }: { onClick: () => void; label?: string }) {
+  return (
+    <button type="button" aria-label={label} title={label} onClick={onClick} className="flex size-7 shrink-0 items-center justify-center rounded-sm text-muted hover:bg-surface-2 hover:text-fg">
+      <svg aria-hidden="true" viewBox="0 0 12 12" className="size-3" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
+        <path d="M2 2l8 8M10 2l-8 8" />
+      </svg>
+    </button>
+  );
+}

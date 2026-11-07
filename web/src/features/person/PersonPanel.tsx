@@ -15,7 +15,7 @@ import { useFormatDate } from "../../lib/dateStyle";
 import { EMPLOYMENT_STATUS_LABEL, employmentTypeLabel } from "../../lib/labels";
 import { ReportCorrection } from "../corrections/ReportCorrection";
 
-function assignmentKind(a: Assignment): { label: string; tone: "primary" | "concurrent" | "secondment" } {
+export function assignmentKind(a: Assignment): { label: string; tone: "primary" | "concurrent" | "secondment" } {
   if (a.secondment === "outbound") return { label: "出向", tone: "secondment" };
   if (a.secondment === "inbound") return { label: "出向受入", tone: "secondment" };
   return a.type === "primary" ? { label: "主務", tone: "primary" } : { label: "兼務", tone: "concurrent" };
@@ -99,7 +99,8 @@ function PresenceRow({ person }: { person: Person }) {
   );
 }
 
-export function PersonDetail({ person }: { person: Person }) {
+/** report が false なら、値の誤りの報告を出さない（組織の変更の画面の詳細など）。 */
+export function PersonDetail({ person, report = true }: { person: Person; report?: boolean }) {
   const { adapter } = useAdapter();
   const { asOf, showOrgIn, view } = useNav();
   const tree = useOrgTree(asOf);
@@ -270,7 +271,7 @@ export function PersonDetail({ person }: { person: Person }) {
         </HelpTip>
       </div>
       {/* 今日の時点の表示のときだけ報告できる（過去の時点の値は、今の人事パッケージの値と違って当然のため） */}
-      {asOf === today ? (
+      {!report ? null : asOf === today ? (
         <ReportCorrection person={person} />
       ) : (
         <p className="border-t border-border pt-3 text-xs text-muted">値の誤りの報告は、タイムマシンで今日を表示しているときに行えます。</p>

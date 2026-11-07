@@ -1,11 +1,11 @@
 // 編集のボードの上に浮かべる箱: 選んだ人・組織の操作（ドラッグの代わりにもなる）、変更の一覧（1 件ずつ取り消せる）、
 // 組織・人を探して図をそこへ動かす検索。箱は入力欄の外を少し透かし、後ろの組織図が見えるようにする。
-import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
 import { Button } from "../../../auth/ui";
-import { personName } from "../../../components/ui";
+import { Badge, personKana, personName } from "../../../components/ui";
 import { usePerson } from "../../../app/hooks";
 import { useAdapter } from "../../../data/adapterContext";
-import { PersonDetail } from "../../person/PersonPanel";
+import { assignmentKind, PersonDetail } from "../../person/PersonPanel";
 import { CHANGE_KIND_LABEL, type Group, type PlanChange } from "../../../data/field";
 import { ChangeAdder, describeChange, inputClass, newUuid, useNamers } from "../shared";
 import { useBoardDrag } from "./drag";
@@ -128,7 +128,6 @@ function SelectedPerson({
   const shift = useMoveInUnit(changes, to, selection.personId);
   return (
     <FloatingCard
-      wide
       label="選んだ人"
       onClose={() => onSelect(null)}
       title={
@@ -214,13 +213,59 @@ function SelectedPerson({
   );
 }
 
-/** 選んだ人の詳細（人の詳細パネルと同じ中身。閲覧者の公開範囲で見える項目だけ）。 */
+/**
+ * 選んだ人の要点（フリガナと所属。兼務・出向を含む）。すべての項目は「詳細」で箱の上に開く（画面を移らない）。
+ * 見えるのは閲覧者の公開範囲の項目だけ。
+ */
 function PersonDetails({ personId, asOf }: { personId: string; asOf: string }) {
   const person = usePerson(personId, asOf);
-  if (!person.data) return null;
+  const dialog = useRef<HTMLDialogElement | null>(null);
+  // 箱の外（背景）を押したら閉じる（背景を押すと、対象は <dialog> そのものになる）
+  const attachDialog = useCallback((d: HTMLDialogElement | null) => {
+    dialog.current = d;
+    if (!d) return;
+    const onClick = (e: MouseEvent) => e.target === d && d.close();
+    d.addEventListener("click", onClick);
+    return () => d.removeEventListener("click", onClick);
+  }, []);
+  const p = person.data;
+  if (!p) return null;
+  const kana = personKana(p);
+  const assignments = [...(p.assignments ?? [])].sort((a, b) => (a.type === "primary" ? -1 : 0) - (b.type === "primary" ? -1 : 0));
   return (
-    <section aria-label="人の詳細" className="border-t border-border/60 pt-3">
-      <PersonDetail person={person.data} />
+    <section aria-label="人の詳細" className="flex flex-col gap-2 border-t border-border/60 pt-3">
+      <div className="flex items-center gap-2">
+        {kana && <span className="min-w-0 flex-1 truncate text-xs text-muted">{kana}</span>}
+        <button type="button" onClick={() => dialog.current?.showModal()} className="ml-auto shrink-0 rounded-sm border border-border bg-surface px-2 py-0.5 text-xs hover:bg-surface-2">
+          詳細
+        </button>
+      </div>
+      {assignments.length > 0 && (
+        <ul className="m-0 flex list-none flex-col gap-1 p-0">
+          {assignments.map((a) => {
+            const kind = assignmentKind(a);
+            return (
+              <li key={`${a.org_unit_id}:${a.type}:${a.valid_from}`} className="flex flex-wrap items-center gap-1.5 text-xs">
+                <Badge tone={kind.tone}>{kind.label}</Badge>
+                <span className="font-bold">{a.org_unit_name}</span>
+                {a.position_title && <span className="text-muted">{a.position_title}</span>}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+      <dialog
+        ref={attachDialog}
+        aria-label={`${personName(p)}の詳細`}
+        className="m-auto max-h-[85dvh] w-[min(32rem,calc(100vw-16px))] overflow-y-auto rounded-lg border border-border bg-surface p-4 text-sm text-fg shadow-2xl backdrop:bg-black/40"
+      >
+        <div className="mb-2 flex justify-end">
+          <button type="button" onClick={() => dialog.current?.close()} className="rounded-sm border border-border px-2 py-0.5 text-xs hover:bg-surface-2">
+            閉じる
+          </button>
+        </div>
+        <PersonDetail person={p} report={false} />
+      </dialog>
     </section>
   );
 }

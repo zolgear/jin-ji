@@ -7,24 +7,21 @@ import { Spinner } from "./components/ui";
 import { AdapterProvider, DEMO_AVAILABLE, useAdapter, type AdapterChoice } from "./data/adapterContext";
 import { CorrectionsView } from "./features/corrections/CorrectionsView";
 import { FieldView } from "./features/field/FieldView";
-import { OrgOutline } from "./features/org/OrgOutline";
 import { OrgPanel } from "./features/org/OrgPanel";
 import { OrgChartView } from "./features/orgchart/OrgChartView";
 import { PersonPanel } from "./features/person/PersonPanel";
 import { SearchView } from "./features/search/SearchView";
 import { SettingsView } from "./features/settings/SettingsView";
 import { parseHash } from "./lib/router";
-import { useFloorRoute } from "./features/floor/floorHooks";
 
 // three.js は大きいので 3D の画面を開いたときに読む
 const Overview3D = lazy(() => import("./features/overview3d/Overview3D").then((m) => ({ default: m.Overview3D })));
 
 function SidePanel() {
   const { view, orgId, personId, openPerson, selectOrg } = useNav();
-  const { floorMode } = useFloorRoute();
   const panelRef = useRef<HTMLElement>(null);
-  // 3D の組織モードで何も選んでいないときは組織の一覧を出す（建物・フロアモードでは階の一覧が図の中にある）
-  const open = view !== "settings" && view !== "changes" && Boolean(personId || orgId || (view === "overview-3d" && !floorMode));
+  // 何も選んでいないときは出さない。3D 表示は図の上に浮かべる箱で出す（Overview3D。Esc で閉じるのはここで扱う）
+  const open = view !== "settings" && view !== "changes" && view !== "overview-3d" && Boolean(personId || orgId);
   const close = () => {
     if (personId) openPerson(null);
     else selectOrg(null);
@@ -39,22 +36,18 @@ function SidePanel() {
     return () => window.removeEventListener("keydown", onKey);
   });
   if (!open) return null;
-  // 3D で何も選んでいないときは、組織の一覧（キーボード操作の代替）を出す
-  const outlineOnly = !personId && !orgId;
   return (
     <aside
       ref={panelRef}
-      aria-label={personId ? "人の詳細" : orgId ? "組織の詳細" : "組織の一覧"}
-      className={`z-20 overflow-y-auto border-border bg-surface p-4 lg:static lg:block lg:w-[400px] lg:shrink-0 lg:border-l ${
-        outlineOnly ? "hidden" : `fixed inset-0 top-auto ${personId ? "max-h-[75dvh]" : "max-h-[55dvh]"} rounded-t-lg border-t shadow-2xl lg:max-h-none lg:rounded-none lg:shadow-none`
+      aria-label={personId ? "人の詳細" : "組織の詳細"}
+      className={`fixed inset-0 top-auto z-20 overflow-y-auto rounded-t-lg border-t border-border bg-surface p-4 shadow-2xl lg:static lg:block lg:max-h-none lg:w-[400px] lg:shrink-0 lg:rounded-none lg:border-l lg:shadow-none ${
+        personId ? "max-h-[75dvh]" : "max-h-[55dvh]"
       }`}
     >
       {personId ? (
         <PersonPanel key={personId} personId={personId} onClose={() => openPerson(null)} />
-      ) : orgId ? (
-        <OrgPanel key={orgId} orgId={orgId} onClose={() => selectOrg(null)} />
       ) : (
-        <OrgOutline />
+        orgId && <OrgPanel key={orgId} orgId={orgId} onClose={() => selectOrg(null)} />
       )}
     </aside>
   );

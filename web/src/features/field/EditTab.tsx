@@ -12,7 +12,8 @@ import type { FieldDownload, Group, Plan, PlanChange, PlanInput, PlanSimulation,
 import { useQuery } from "../../data/query";
 import { describeError } from "../../data/types";
 import { useRoute } from "../../lib/router";
-import { BoardSearch, ChangesList, FloatingCard, SelectionCard } from "./board/BoardPanels";
+import { FloatingCard } from "../../components/FloatingCard";
+import { BoardSearch, ChangesList, SelectionCard } from "./board/BoardPanels";
 import { PlanBoard, type BoardSelection } from "./board/PlanBoard";
 import { isWithin } from "./board/model";
 import { useBoard } from "./board/useBoard";

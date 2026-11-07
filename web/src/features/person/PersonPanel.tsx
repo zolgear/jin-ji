@@ -5,7 +5,7 @@ import { useOrgTree, usePerson } from "../../app/hooks";
 import { useNav } from "../../app/nav";
 import { HelpTip } from "../../components/popover";
 import { RemoteWorkValue, SiteValue } from "../../components/site";
-import { Badge, ErrorNote, FieldValue, isVisible, personKana, personName, PrivateValue, Spinner } from "../../components/ui";
+import { Badge, CloseButton, ErrorNote, FieldValue, isVisible, personKana, personName, PrivateValue, Spinner } from "../../components/ui";
 import { useAdapter } from "../../data/adapterContext";
 import { useQuery } from "../../data/query";
 import { describeError, type Assignment, type Person } from "../../data/types";
@@ -14,6 +14,7 @@ import { useRoute } from "../../lib/router";
 import { useFormatDate } from "../../lib/dateStyle";
 import { EMPLOYMENT_STATUS_LABEL, employmentTypeLabel } from "../../lib/labels";
 import { ReportCorrection } from "../corrections/ReportCorrection";
+import { PersonSummary } from "./PersonSummary";
 
 export function assignmentKind(a: Assignment): { label: string; tone: "primary" | "concurrent" | "secondment" } {
   if (a.secondment === "outbound") return { label: "出向", tone: "secondment" };
@@ -280,7 +281,8 @@ export function PersonDetail({ person, report = true }: { person: Person; report
   );
 }
 
-export function PersonPanel({ personId, onClose }: { personId: string; onClose: () => void }) {
+/** compact なら要点だけを出し、全項目は「詳細」のダイアログで開く（3D 表示の浮かべる箱）。 */
+export function PersonPanel({ personId, onClose, compact = false }: { personId: string; onClose: () => void; compact?: boolean }) {
   const { asOf } = useNav();
   const person = usePerson(personId, asOf);
   const heading = useRef<HTMLHeadingElement>(null);
@@ -291,15 +293,18 @@ export function PersonPanel({ personId, onClose }: { personId: string; onClose: 
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between gap-2">
-        <h2 ref={heading} tabIndex={-1} className="text-sm font-bold text-muted outline-none">
+        <h2 ref={heading} tabIndex={-1} className="text-sm font-bold text-muted">
           人の詳細
         </h2>
-        <button type="button" onClick={onClose} className="rounded-sm border border-border px-2 py-0.5 text-xs hover:bg-surface-2">
-          閉じる
-        </button>
+        <CloseButton onClick={onClose} />
       </div>
       {person.error ? (
         <ErrorNote>{describeError(person.error)}</ErrorNote>
+      ) : person.data && compact ? (
+        <>
+          <div className="text-lg font-bold">{personName(person.data)}</div>
+          <PersonSummary personId={personId} asOf={asOf} />
+        </>
       ) : person.data ? (
         <PersonDetail person={person.data} />
       ) : (

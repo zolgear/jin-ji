@@ -17,15 +17,29 @@ export function ChartToolbar({ children }: { children: ReactNode }) {
   );
 }
 
-/** 帯の右寄せの部分（全体の操作と「図の見方」）。 */
-export function ChartToolbarEnd({ children }: { children: ReactNode }) {
-  return <span className="ml-auto flex items-center gap-2">{children}</span>;
+/**
+ * 帯の右寄せの部分（全体の操作と「図の見方」）。secondRow なら、スマホ幅ではここに出さず、帯の下の 2 段目（ChartToolbarRow）に左寄せで出す
+ * （検索の欄など、横に送ると見えなくなるもの）。
+ */
+export function ChartToolbarEnd({ children, secondRow = false }: { children: ReactNode; secondRow?: boolean }) {
+  return <span className={`ml-auto flex items-center gap-2 ${secondRow ? "max-md:hidden" : ""}`}>{children}</span>;
+}
+
+/** スマホ幅だけの帯の 2 段目（左寄せ）。 */
+export function ChartToolbarRow({ children }: { children: ReactNode }) {
+  return <div className="flex shrink-0 items-center gap-2 border-b border-border bg-surface px-4 py-2 text-[13px] md:hidden">{children}</div>;
 }
 
 /** 帯のボタン（「すべて開く」「全体を表示」など）。 */
-export function ToolbarButton({ onClick, children, title }: { onClick: () => void; children: ReactNode; title?: string }) {
+export function ToolbarButton({ onClick, children, title, pressed }: { onClick: () => void; children: ReactNode; title?: string; pressed?: boolean }) {
   return (
-    <button type="button" title={title} className="h-8 rounded-md border border-border px-3 hover:bg-surface-2" onClick={onClick}>
+    <button
+      type="button"
+      title={title}
+      aria-pressed={pressed}
+      className="h-8 shrink-0 rounded-md border border-border px-3 whitespace-nowrap hover:bg-surface-2 aria-pressed:border-accent aria-pressed:bg-accent-weak aria-pressed:text-accent"
+      onClick={onClick}
+    >
       {children}
     </button>
   );

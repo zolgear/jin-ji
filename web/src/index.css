@@ -164,6 +164,10 @@ body {
   outline: 2px solid var(--focus);
   outline-offset: 2px;
 }
+/* tabindex="-1" はプログラムから移すだけの焦点（パネルの見出しなど）。キーボードで辿らないので枠を出さない */
+[tabindex="-1"]:focus {
+  outline: none;
+}
 
 .tabular {
   font-variant-numeric: tabular-nums;

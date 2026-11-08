@@ -48,8 +48,13 @@ public static class Roles
     /// </summary>
     public const string OrgAdmin = "org_admin";
 
+    /// <summary>
+    /// 施設管理者（総務・ファシリティを想定。ADR-0013 決定 12）。全拠点の建物・階・配置図の改訂を直接登録できる。人の情報・取込の作業領域・監査ログ・内示は広がらない。
+    /// </summary>
+    public const string FacilityAdmin = "facility_admin";
+
     /// <summary>既知のロール。</summary>
-    public static readonly IReadOnlySet<string> Known = new HashSet<string>(StringComparer.Ordinal) { HrAdmin, HrCorrector, OrgAdmin };
+    public static readonly IReadOnlySet<string> Known = new HashSet<string>(StringComparer.Ordinal) { HrAdmin, HrCorrector, OrgAdmin, FacilityAdmin };
 }
 
 /// <summary>
@@ -205,6 +210,9 @@ public sealed class ViewerContext
 
     /// <summary>全社の直接登録の範囲を持つか（人事管理者か組織管理者。AI エージェントは委任元のロール。ADR-0013）。</summary>
     public bool ManagesAllOrgs => IsHrAdmin || Roles.Contains(Policy.Roles.OrgAdmin);
+
+    /// <summary>配置図（建物・階・配置図の改訂）を直接登録できるか（人事管理者か施設管理者の人。ADR-0013 決定 12）。</summary>
+    public bool ManagesLayouts => Actor == ActorType.User && (IsHrAdmin || Roles.Contains(Policy.Roles.FacilityAdmin));
 
     /// <summary>人のユーザー。</summary>
     public static ViewerContext ForUser(

@@ -85,6 +85,11 @@ public sealed class FieldManagementService
             throw Invalid($"メモは {MaxNoteLength} 文字以内で、改行などの制御文字を含めないでください。");
         }
 
+        if (!FieldDomains.Modes(domain).Contains(mode))
+        {
+            throw Invalid($"この領域に設定できる管理元は {string.Join(" / ", FieldDomains.Modes(domain).Select(FieldDomains.Key))} です。");
+        }
+
         var current = (await ModesAsync(viewer, cancellationToken))[domain];
         if (current == mode)
         {

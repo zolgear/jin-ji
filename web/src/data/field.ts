@@ -50,6 +50,13 @@ export interface GroupInput {
   visibility: "all" | "members";
 }
 
+/** 配置図の直接登録の入力（document は jin-ji の配置図の形式 v1）。 */
+export interface LayoutRegistrationInput {
+  effective_date: string;
+  note: string | null;
+  document: Record<string, unknown>;
+}
+
 /** 直接登録の状態を進める操作。 */
 export type RegistrationAction = "confirm" | "consent" | "withdraw" | "discard";
 
@@ -74,6 +81,8 @@ export interface FieldAdapter {
   registrations(query: { mine: boolean }): Promise<FieldRegistration[]>;
   registration(id: string): Promise<FieldRegistration>;
   register(input: RegistrationInput): Promise<FieldRegistration>;
+  /** 配置図（jin-ji の配置図の形式 v1 の JSON）を直接登録する（施設管理者・人事管理者）。 */
+  registerLayout(input: LayoutRegistrationInput): Promise<FieldRegistration>;
   transition(id: string, action: RegistrationAction): Promise<FieldRegistration>;
 
   groups(): Promise<Group[]>;
@@ -103,13 +112,23 @@ export const DOMAIN_LABEL: Record<FieldDomain, string> = {
   person_site: "人の拠点・リモートワーク",
   person_contact: "内線・社用携帯",
   workplace: "人の席・持ち場",
+  floor_layout: "配置図",
 };
 
-export const MODE_LABEL: Record<FieldManagementMode, string> = { hr: "人事パッケージ", field: "jin-ji（現場）", both: "両方" };
+export const MODE_LABEL: Record<FieldManagementMode, string> = { hr: "人事パッケージ", field: "jin-ji（現場）", both: "両方", approval: "承認あり" };
 
-/** 管理元の表示名。席・持ち場は人事が関わらないので、取込の元を施設管理システムとして示す。 */
+/**
+ * 管理元の表示名。席・持ち場は人事が関わらないので、取込の元を施設管理システムとして示す。
+ * 配置図は施設管理者が登録するので、承認の有無で示す。
+ */
 export function modeLabel(domain: FieldDomain, mode: FieldManagementMode): string {
+  if (domain === "floor_layout") return mode === "approval" ? "承認あり" : "承認なし";
   return domain === "workplace" && mode === "hr" ? "取込（施設管理システム）" : MODE_LABEL[mode];
+}
+
+/** 領域に設定できる管理元（配置図は承認の有無だけ。API の FieldDomains.Modes と同じ）。 */
+export function modesOf(domain: FieldDomain): FieldManagementMode[] {
+  return domain === "floor_layout" ? ["field", "approval"] : ["hr", "field", "both"];
 }
 
 export const REGISTRATION_STATUS_LABEL: Record<FieldRegistrationStatus, string> = {
@@ -161,4 +180,9 @@ export const VALUE_LABEL: Record<string, string> = {
 /** 組織管理者・人事管理者（全社の範囲）か。ボタンの有無にだけ使う。 */
 export function managesAllOrgs(session: { kind: string; roles: string[] } | null | undefined): boolean {
   return session?.kind === "person" && (session.roles.includes("org_admin") || session.roles.includes("hr_admin"));
+}
+
+/** 配置図を登録・承認できるか（施設管理者・人事管理者の人。ADR-0013 決定 12）。 */
+export function managesLayouts(session: { kind: string; roles: string[] } | null | undefined): boolean {
+  return session?.kind === "person" && (session.roles.includes("facility_admin") || session.roles.includes("hr_admin"));
 }

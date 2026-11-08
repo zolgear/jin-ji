@@ -1,4 +1,5 @@
 using JinJi.Application.Ingest;
+using JinJi.Domain.Organization;
 using JinJi.Policy;
 
 namespace JinJi.Application.FieldManagement;
@@ -23,6 +24,16 @@ public enum FieldRegistrationStatus
 
     /// <summary>下書き・同意待ちのまま期限を過ぎた。</summary>
     Expired,
+}
+
+/// <summary>直接登録の種類（field_registration.kind）。</summary>
+public enum FieldRegistrationKind
+{
+    /// <summary>組織と人（組織長・担当・組織管理者・人事管理者の範囲）。</summary>
+    Org,
+
+    /// <summary>配置図（建物・階・配置図の改訂。施設管理者・人事管理者。0026）。</summary>
+    Layout,
 }
 
 /// <summary>直接登録の変更の種類（入力。1 つの変更が 1 つの変更提案になる）。</summary>
@@ -63,10 +74,28 @@ public sealed record FieldChangeInput(FieldChangeKind Kind, Guid? TargetId, IRea
 /// <summary>直接登録の入力。</summary>
 public sealed record FieldRegistrationInput(DateOnly EffectiveDate, string? Note, IReadOnlyList<FieldChangeInput> Changes);
 
+/// <summary>配置図の直接登録の入力（0026）。</summary>
+/// <param name="Document">配置図の JSON（取込と同じ jin-ji の配置図の形式 v1。建物・階・配置図の改訂。layout.valid_from は使わず有効日で切り替える）。</param>
+public sealed record LayoutRegistrationInput(DateOnly EffectiveDate, string? Note, ReadOnlyMemory<byte> Document);
+
+/// <summary>配置図の JSON から作った変更提案（建物・階の新設と版の差分・配置図の改訂。反映の順）と、登録できない理由。</summary>
+public sealed record LayoutDocumentPlan(IReadOnlyList<ChangeProposalRecord> Proposals, IReadOnlyList<string> Problems);
+
+/// <summary>配置図の JSON を、取込と同じ正規化と検査で変更提案にする（JinJi.Ingest が実装する）。</summary>
+public interface ILayoutDocumentPlanner
+{
+    /// <summary>計画する。形式が違う・構造が不正なら <see cref="FormatException"/>。</summary>
+    /// <param name="snapshot">有効日の組織・建物・階・配置図（登録者の見え方）。</param>
+    LayoutDocumentPlan Plan(OrgSnapshot snapshot, ReadOnlyMemory<byte> document, DateOnly effectiveDate, DateOnly today, Guid registrant);
+}
+
 /// <summary>直接登録（field_registration の 1 行と、その変更提案）。</summary>
 public sealed record FieldRegistration
 {
     public required Guid Id { get; init; }
+
+    /// <summary>種類（組織と人 / 配置図）。</summary>
+    public FieldRegistrationKind Kind { get; init; } = FieldRegistrationKind.Org;
 
     public required FieldRegistrationStatus Status { get; init; }
 

@@ -225,6 +225,11 @@ export interface components {
       visibility?: "all" | "members" | null;
       valid_from?: string | null; // date
     };
+    CreateLayoutRegistrationRequest: {
+      effective_date?: string | null; // date
+      note?: string | null;
+      document?: components["schemas"]["JsonElement"] | null;
+    };
     CreateLoginBindingRequest: {
       person_id: string; // uuid
       unbound_login_id: string | null; // uuid
@@ -290,8 +295,8 @@ export interface components {
       revoked_at: string | null; // date-time
     };
     FieldModeResponse: {
-      domain: "org_structure" | "org_site" | "assignment" | "person_site" | "person_contact" | "workplace";
-      mode: "hr" | "field" | "both";
+      domain: "org_structure" | "org_site" | "assignment" | "person_site" | "person_contact" | "workplace" | "floor_layout";
+      mode: "hr" | "field" | "both" | "approval";
     };
     FieldRegistrationChangeResponse: {
       id: string; // uuid
@@ -308,6 +313,7 @@ export interface components {
     };
     FieldRegistrationResponse: {
       id: string; // uuid
+      kind: "org" | "layout";
       status: "draft" | "pending_consent" | "applied" | "withdrawn" | "discarded" | "expired";
       effective_date: string; // date
       note: string | null;
@@ -334,8 +340,8 @@ export interface components {
     };
     FieldSettingResponse: {
       id: string; // uuid
-      domain: "org_structure" | "org_site" | "assignment" | "person_site" | "person_contact" | "workplace";
-      mode: "hr" | "field" | "both";
+      domain: "org_structure" | "org_site" | "assignment" | "person_site" | "person_contact" | "workplace" | "floor_layout";
+      mode: "hr" | "field" | "both" | "approval";
       status: "proposed" | "approved" | "rejected" | "superseded";
       note: string | null;
       proposed_by: string; // uuid
@@ -862,8 +868,8 @@ export interface components {
       note: string | null;
     };
     ProposeFieldSettingRequest: {
-      domain?: "org_structure" | "org_site" | "assignment" | "person_site" | "person_contact" | "workplace" | null;
-      mode?: "hr" | "field" | "both" | null;
+      domain?: "org_structure" | "org_site" | "assignment" | "person_site" | "person_contact" | "workplace" | "floor_layout" | null;
+      mode?: "hr" | "field" | "both" | "approval" | null;
       note?: string | null;
     };
     RecoveryCodesResponse: {
@@ -1331,6 +1337,15 @@ export interface paths {
       response: components["schemas"]["FieldGrantResponse"];
     };
   };
+  "/api/v1/field/layouts": {
+    /** 配置図（建物・階・配置図の改訂）を直接登録する（施設管理者・人事管理者の人）（CreateLayoutRegistration） */
+    post: {
+      path: Record<string, never>;
+      query: Record<string, never>;
+      body: components["schemas"]["CreateLayoutRegistrationRequest"];
+      response: components["schemas"]["FieldRegistrationResponse"];
+    };
+  };
   "/api/v1/field/modes": {
     /** 領域ごとの管理元（hr / field / both）（GetFieldModes） */
     get: {
@@ -1382,7 +1397,7 @@ export interface paths {
     };
   };
   "/api/v1/field/registrations/{registrationId}/consent": {
-    /** 同意待ちの登録に同意して反映する（相手側の組織の範囲を持つ、登録者とは別の人）（ConsentFieldRegistration） */
+    /** 同意待ちの登録に同意して反映する（相手側の組織の範囲を持つ、登録者とは別の人。配置図の登録は別の施設管理者・人事管理者の承認）（ConsentFieldRegistration） */
     post: {
       path: {
         registrationId: string;
@@ -1393,7 +1408,7 @@ export interface paths {
     };
   };
   "/api/v1/field/registrations/{registrationId}/discard": {
-    /** 下書き・同意待ちの登録を破棄する（登録者か、組織管理者・人事管理者）（DiscardFieldRegistration） */
+    /** 下書き・同意待ちの登録を破棄する（登録者か、組織管理者・人事管理者。配置図の登録は施設管理者・人事管理者）（DiscardFieldRegistration） */
     post: {
       path: {
         registrationId: string;
@@ -1404,7 +1419,7 @@ export interface paths {
     };
   };
   "/api/v1/field/registrations/{registrationId}/withdraw": {
-    /** 反映済みの登録を有効日の前に取り消す（登録者か、登録の組織すべての範囲を持つ人）（WithdrawFieldRegistration） */
+    /** 反映済みの登録を有効日の前に取り消す（登録者か、登録の組織すべての範囲を持つ人。配置図の登録は施設管理者・人事管理者も）（WithdrawFieldRegistration） */
     post: {
       path: {
         registrationId: string;

@@ -16,9 +16,17 @@ import {
   type SeatStatus,
   type WorkplaceAdapter,
 } from "../data/types";
+import type { LayoutDocument } from "../data/layoutDocument";
 import type { DemoDirectory, PersonField } from "./directory";
 import type { DemoPerson } from "./model";
 import type { DemoFloor, DemoSeat, DemoSeatAssignment, DemoWorkplace, DemoZone } from "./workplace";
+
+let layoutCounter = 0;
+/** デモで足す建物・階・席・ゾーン・改訂の ID（安全なコンテキストでなくても使えるよう、数え上げで作る）。 */
+const newLayoutId = () => {
+  layoutCounter += 1;
+  return `00000000-0000-7000-9000-${layoutCounter.toString(16).padStart(12, "0")}`;
+};
 
 interface SeatInfo {
   seat: DemoSeat;
@@ -49,11 +57,80 @@ export class DemoWorkplaceService {
     this.today = dir.businessDate;
     this.floorById = new Map(wp.floors.map((f) => [f.id, f]));
     this.personById = new Map(dir.data.people.map((p) => [p.id, p]));
-    for (const layout of wp.layouts.values()) {
+    this.indexSeats();
+    this.index();
+  }
+
+  private indexSeats() {
+    this.seatById.clear();
+    for (const layout of this.wp.layouts.values()) {
       const floor = this.floorById.get(layout.floor_id)!;
       const zones = new Map(layout.zones.map((z) => [z.zone_key, z]));
       for (const seat of layout.seats) this.seatById.set(seat.seat_id, { seat, floor, zone: seat.zone_key ? zones.get(seat.zone_key) : undefined });
     }
+  }
+
+  /**
+   * 配置図の直接登録をデモの建物・階・配置図に反映する（拠点コードの中の建物コード・階の表示名で突合し、無ければ足す。席番号が同じなら同じ席、
+   * ゾーンは名前が同じなら同じゾーン）。デモの配置図は改訂を 1 つしか持たないので、有効日にかかわらずすぐに置き換える。配置図の無い階は足さない。
+   * 形の検査は API だけが行う。端末のメモリだけで、再読み込みで元に戻る。
+   */
+  applyLayoutDocument(doc: LayoutDocument, from: string) {
+    const site = this.dir.data.sites.find((x) => x.code === doc.site_code);
+    if (!site) throw new ApiError(400, `拠点コード ${doc.site_code} の拠点がありません。`);
+    for (const b of doc.buildings) {
+      let building = this.wp.buildings.find((x) => x.site_id === site.id && x.code === b.code);
+      if (!building) {
+        building = { id: newLayoutId(), site_id: site.id, code: b.code, name: b.name ?? b.code, sort_order: b.sort_order ?? 0 };
+        this.wp.buildings.push(building);
+      } else if (b.name) {
+        building.name = b.name;
+      }
+      for (const f of b.floors) {
+        if (!f.layout) continue;
+        let floor = this.wp.floors.find((x) => x.building_id === building.id && x.label === f.label);
+        if (!floor) {
+          floor = { id: newLayoutId(), building_id: building.id, label: f.label, level_order: f.level_order ?? 0, kind: f.kind ?? "office" };
+          this.wp.floors.push(floor);
+          this.floorById.set(floor.id, floor);
+        }
+        const current = this.wp.layouts.get(floor.id);
+        const zones: DemoZone[] = (f.layout.zones ?? []).map((z) => ({
+          zone_key: current?.zones.find((c) => c.name === z.name)?.zone_key ?? newLayoutId(),
+          name: z.name,
+          kind: z.kind ?? "office",
+          polygon: z.polygon,
+        }));
+        const seats: DemoSeat[] = (f.layout.seats ?? []).map((x) => {
+          const old = current?.seats.find((c) => c.code === x.code);
+          const kind = x.kind ?? "fixed";
+          return {
+            seat_id: old?.seat_id ?? newLayoutId(),
+            code: x.code,
+            zone_key: x.zone ? (zones.find((z) => z.name === x.zone)?.zone_key ?? null) : null,
+            x_mm: x.x_mm,
+            y_mm: x.y_mm,
+            rotation_deg: x.rotation_deg ?? 0,
+            desk_type: x.desk_type ?? (kind === "station" ? "station" : "desk_1200"),
+            seat_kind: kind,
+            capacity: x.capacity ?? 1,
+            features: (x.features ?? []) as DemoSeat["features"],
+            out_of_service: x.out_of_service ?? old?.out_of_service ?? false,
+          };
+        });
+        this.wp.layouts.set(floor.id, {
+          layout_id: newLayoutId(),
+          floor_id: floor.id,
+          valid_from: from,
+          outline: f.layout.outline,
+          fixtures: (f.layout.fixtures ?? []).map((x) => ({ kind: x.kind, name: x.name ?? null, polygon: x.polygon })),
+          grid_mm: f.layout.grid_mm ?? 100,
+          zones,
+          seats,
+        });
+      }
+    }
+    this.indexSeats();
     this.index();
   }
 

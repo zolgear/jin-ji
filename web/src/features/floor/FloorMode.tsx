@@ -11,7 +11,9 @@ import { useOrgTree, usePerson } from "../../app/hooks";
 import { useNav } from "../../app/nav";
 import { HelpTip } from "../../components/popover";
 import { ErrorNote, Spinner } from "../../components/ui";
+import { useSession } from "../../auth/session";
 import { useAdapter } from "../../data/adapterContext";
+import { managesLayouts } from "../../data/field";
 import { useQuery } from "../../data/query";
 import { describeError, type Building, type FloorSummary, type Person } from "../../data/types";
 import { workplaceOf } from "../../data/workplace";
@@ -30,6 +32,7 @@ import {
 import { isLowEndDevice, placeBuildings, stackFloors } from "./floorLayout3d";
 import { buildFloorView, groupResolver, presenceOverlayOn, slotColorVar, type FloorView } from "./floorModel";
 import { FloorEditor } from "./FloorEditor";
+import { LayoutPanel } from "./LayoutPanel";
 import { FloorPlan2D } from "./FloorPlan2D";
 import { FloorScene3D, type FloorLabel, type SceneBuilding } from "./FloorScene3D";
 import { FloorHowToRead, ModeSwitch, PRESENCE_NOTE } from "./FloorParts";
@@ -196,8 +199,11 @@ export function FloorMode() {
   const tree = useOrgTree(asOf);
   const sites = useQuery(adapter, `sites:${asOf}`, () => adapter.listSites({ asOf }));
   const [fitRequest, setFitRequest] = useState(0);
-  // 席の変更を反映したら、建物の席数と階の人を取り直す
+  // 席の変更を反映したら、建物の席数と階の人を取り直す。配置図を登録したら配置図も取り直す
   const [rev, setRev] = useState(0);
+  const [layoutRev, setLayoutRev] = useState(0);
+  const session = useSession();
+  const canRegisterLayout = adapter.kind === "demo" || managesLayouts(session?.session);
   const [narrow, setNarrow] = useState(() => window.innerWidth < 1024);
   useEffect(() => {
     const onResize = () => setNarrow(window.innerWidth < 1024);
@@ -229,8 +235,8 @@ export function FloorMode() {
   // 表示する建物（建物を選んでいなければ拠点のすべての建物）と、その階の配置図
   const shown = useMemo(() => (building ? [building] : buildingList), [building, buildingList]);
   const floorIds = useMemo(() => shown.flatMap((b) => b.floors.map((f) => f.id)), [shown]);
-  const layouts = useFloorLayouts(floorIds, asOf);
-  const layout = useFloorLayout(floorId, asOf);
+  const layouts = useFloorLayouts(floorIds, asOf, layoutRev);
+  const layout = useFloorLayout(floorId, asOf, layoutRev);
   const occupants = useFloorOccupants(floorId, asOf, rev);
   const isToday = asOf === adapter.businessDate;
   const presence = useFloorPresence(isToday ? floorId : null, isToday ? adapter.businessDate : null);
@@ -359,6 +365,17 @@ export function FloorMode() {
             <ToolbarButton pressed={editing} onClick={() => route.set({ edit: editing ? null : "1" }, false)}>
               編集
             </ToolbarButton>
+          )}
+          {canRegisterLayout && !editing && (
+            <LayoutPanel
+              building={building}
+              siteCode={siteList.find((s) => s.id === siteId)?.code ?? null}
+              asOf={asOf}
+              onRegistered={() => {
+                setRev((n) => n + 1);
+                setLayoutRev((n) => n + 1);
+              }}
+            />
           )}
           <ToolbarButton
             onClick={() => {

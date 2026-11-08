@@ -25,13 +25,14 @@ public sealed class NpgsqlFieldRegistrationStore : IFieldRegistrationStore
         """
         id, status, effective_date, note, registered_by_person_id, registered_via, registered_via_client_id, created_at, expires_at,
         org_unit_ids, person_ids, consent_org_unit_ids, consented_by_person_id, consented_at, applied_by_person_id, applied_at,
-        withdrawn_by_person_id, withdrawn_at, closed_by_person_id, closed_at
+        withdrawn_by_person_id, withdrawn_at, closed_by_person_id, closed_at, kind
         """;
 
     /// <summary>取り消しで戻す公開側の表（記録期間を持つもの）。</summary>
     private static readonly HashSet<string> BitemporalTables = new(StringComparer.Ordinal)
     {
         "org_unit_version", "person_version", "assignment", "personnel_action", "workplace_assignment",
+        "building_version", "floor_version", "floor_layout",
     };
 
     private readonly NpgsqlDataSource _dataSource;
@@ -53,8 +54,8 @@ public sealed class NpgsqlFieldRegistrationStore : IFieldRegistrationStore
         await using (var insert = tx.CreateCommand(
             """
             INSERT INTO field_registration (id, effective_date, note, registered_by_person_id, registered_via, registered_via_client_id,
-                                            created_at, expires_at, org_unit_ids, person_ids, consent_org_unit_ids)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+                                            created_at, expires_at, org_unit_ids, person_ids, consent_org_unit_ids, kind)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
             """))
         {
             insert.Parameters.Add(P(registration.Id));
@@ -68,6 +69,7 @@ public sealed class NpgsqlFieldRegistrationStore : IFieldRegistrationStore
             insert.Parameters.Add(P(registration.OrgUnitIds.ToArray()));
             insert.Parameters.Add(P(registration.PersonIds.ToArray()));
             insert.Parameters.Add(P(registration.ConsentOrgUnitIds.ToArray()));
+            insert.Parameters.Add(P(registration.Kind == FieldRegistrationKind.Layout ? "layout" : "org"));
             await insert.ExecuteNonQueryAsync(cancellationToken);
         }
 
@@ -244,6 +246,7 @@ public sealed class NpgsqlFieldRegistrationStore : IFieldRegistrationStore
 
             foreach (var (table, row) in toRestore)
             {
+                var restored = Guid.CreateVersion7();
                 await ExecuteAsync(
                     tx,
                     $"""
@@ -253,7 +256,26 @@ public sealed class NpgsqlFieldRegistrationStore : IFieldRegistrationStore
                     """,
                     cancellationToken,
                     P(row),
-                    P(Guid.CreateVersion7()));
+                    P(restored));
+                if (table == "floor_layout")
+                {
+                    // 改訂の中身（ゾーン・席の置き場所）は改訂の ID に付くので、戻した改訂にも写す
+                    await ExecuteAsync(
+                        tx,
+                        "INSERT INTO layout_zone (layout_id, zone_key, name, zone_kind, polygon) SELECT $2, zone_key, name, zone_kind, polygon FROM layout_zone WHERE layout_id = $1",
+                        cancellationToken,
+                        P(row),
+                        P(restored));
+                    await ExecuteAsync(
+                        tx,
+                        """
+                        INSERT INTO layout_seat (layout_id, floor_id, seat_id, zone_key, x_mm, y_mm, rotation_deg, desk_type, seat_kind, capacity, features, out_of_service)
+                        SELECT $2, floor_id, seat_id, zone_key, x_mm, y_mm, rotation_deg, desk_type, seat_kind, capacity, features, out_of_service FROM layout_seat WHERE layout_id = $1
+                        """,
+                        cancellationToken,
+                        P(row),
+                        P(restored));
+                }
             }
         }
         catch (PostgresException ex) when (ex.SqlState.StartsWith("23", StringComparison.Ordinal))
@@ -466,6 +488,7 @@ public sealed class NpgsqlFieldRegistrationStore : IFieldRegistrationStore
                 WithdrawnAt = r.IsDBNull(17) ? null : r.GetFieldValue<DateTimeOffset>(17),
                 ClosedBy = r.IsDBNull(18) ? null : r.GetGuid(18),
                 ClosedAt = r.IsDBNull(19) ? null : r.GetFieldValue<DateTimeOffset>(19),
+                Kind = r.GetString(20) == "layout" ? FieldRegistrationKind.Layout : FieldRegistrationKind.Org,
             });
         }
 

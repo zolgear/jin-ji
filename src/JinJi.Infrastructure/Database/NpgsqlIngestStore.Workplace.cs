@@ -142,13 +142,14 @@ public sealed partial class NpgsqlIngestStore
             await ExecuteAsync(tx, "UPDATE floor_layout SET recorded_period = tstzrange(lower(recorded_period), now()) WHERE id = $1", cancellationToken, P(id));
             if (start < from)
             {
-                // 区切った写しの改訂（中身・起案者・承認者は元の改訂のまま）
+                // 区切った写しの改訂（中身・起案者・承認者・書いた直接登録は元の改訂のまま）
                 var copy = Guid.CreateVersion7();
                 await ExecuteAsync(
                     tx,
                     """
-                    INSERT INTO floor_layout (id, floor_id, outline, fixtures, grid_mm, proposed_by_person_id, approved_by_person_id, valid_period)
-                    SELECT $1, floor_id, outline, fixtures, grid_mm, proposed_by_person_id, approved_by_person_id, daterange(lower(valid_period), $3) FROM floor_layout WHERE id = $2
+                    INSERT INTO floor_layout (id, floor_id, outline, fixtures, grid_mm, proposed_by_person_id, approved_by_person_id, field_registration_id, valid_period)
+                    SELECT $1, floor_id, outline, fixtures, grid_mm, proposed_by_person_id, approved_by_person_id, field_registration_id, daterange(lower(valid_period), $3)
+                    FROM floor_layout WHERE id = $2
                     """,
                     cancellationToken,
                     P(copy),

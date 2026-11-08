@@ -54,7 +54,12 @@ export function createDemoAdapterFrom(data: DemoDataset, label = DEMO_LABEL): Di
     canViewFuture: false,
     corrections: createDemoCorrections(dir),
     workplace: createDemoWorkplaceAdapter(workplace, later),
-    field: createDemoField(dir, later, (moves, from) => workplace.applySeatMoves(moves, from)),
+    field: createDemoField(
+      dir,
+      later,
+      (moves, from) => workplace.applySeatMoves(moves, from),
+      (document, from) => workplace.applyLayoutDocument(document, from),
+    ),
     getOrgTree: (asOf) => later(() => dir.orgTree(asOf)),
     getOrgStats: (asOf) => later(() => dir.stats(asOf)),
     listOrgMembers: (orgId, q) =>

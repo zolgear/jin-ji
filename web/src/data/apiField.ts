@@ -34,6 +34,7 @@ export function createApiField(client: ApiClient, baseUrl = ""): FieldAdapter {
     registrations: (q) => get("/api/v1/field/registrations", {}, { mine: q.mine ? "true" : undefined }),
     registration: (id) => get("/api/v1/field/registrations/{registrationId}", { registrationId: id }),
     register: (i) => post("/api/v1/field/registrations", {}, { effective_date: i.effective_date, note: i.note, changes: changes(i.changes) }),
+    registerLayout: (i) => post("/api/v1/field/layouts", {}, { effective_date: i.effective_date, note: i.note, document: i.document }),
     transition: (id, action) => post(`/api/v1/field/registrations/{registrationId}/${action}`, { registrationId: id }),
 
     groups: () => get("/api/v1/groups"),

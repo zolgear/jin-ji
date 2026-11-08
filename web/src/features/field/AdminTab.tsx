@@ -5,7 +5,7 @@ import { Button, Notice } from "../../auth/ui";
 import { HelpTip } from "../../components/popover";
 import { Spinner } from "../../components/ui";
 import { useAdapter } from "../../data/adapterContext";
-import { DOMAIN_LABEL, MODE_LABEL, modeLabel, type FieldDomain, type FieldGrant, type FieldManagementMode, type FieldMode, type FieldSetting } from "../../data/field";
+import { DOMAIN_LABEL, modeLabel, modesOf, type FieldDomain, type FieldGrant, type FieldManagementMode, type FieldMode, type FieldSetting } from "../../data/field";
 import { useQuery } from "../../data/query";
 import { describeError } from "../../data/types";
 import { inputClass, OrgSelect, PersonPicker, useNamers } from "./shared";
@@ -37,7 +37,7 @@ export function AdminTab({ canManage }: { canManage: boolean }) {
         <h3 className="m-0 flex items-center gap-1 text-sm font-bold">
           管理元
           <HelpTip label="管理元の説明">
-            人事パッケージ: 取込だけで変わります。jin-ji（現場）: 範囲を持つ人の登録だけで変わり、取込の差分は「人事パッケージとの差」になります。両方: どちらでも変わります。変えるには、起案した人とは別の人の承認が要ります。
+            人事パッケージ: 取込だけで変わります。jin-ji（現場）: 範囲を持つ人の登録だけで変わり、取込の差分は「人事パッケージとの差」になります。両方: どちらでも変わります。配置図は施設管理者が登録し、承認ありにすると登録した人と別の施設管理者・人事管理者の承認で反映します。変えるには、起案した人とは別の人の承認が要ります。
           </HelpTip>
         </h3>
         <table className="w-full max-w-2xl border-collapse text-sm">
@@ -80,7 +80,7 @@ function ModeRow({ mode, canManage, onPropose }: { mode: FieldMode; canManage: b
         <td className="py-2">
           <span className="flex gap-1">
             <select className={inputClass} value={next} onChange={(e) => setNext(e.target.value as FieldManagementMode)} aria-label={`${DOMAIN_LABEL[mode.domain]}の新しい管理元`}>
-              {(Object.keys(MODE_LABEL) as FieldManagementMode[]).map((m) => (
+              {modesOf(mode.domain).map((m) => (
                 <option key={m} value={m}>
                   {modeLabel(mode.domain, m)}
                 </option>

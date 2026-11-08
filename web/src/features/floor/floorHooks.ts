@@ -65,9 +65,9 @@ export function useBuildings(siteId: string | null, asOf: string, rev = 0) {
   return useQuery(adapter, siteId ? `buildings:${siteId}:${asOf}:${rev}` : null, () => adapter.workplace.listBuildings(siteId!, asOf));
 }
 
-export function useFloorLayout(floorId: string | null, asOf: string) {
+export function useFloorLayout(floorId: string | null, asOf: string, rev = 0) {
   const { adapter } = useAdapter();
-  return useQuery(adapter, floorId ? `layout:${floorId}:${asOf}` : null, () => adapter.workplace.getFloorLayout(floorId!, asOf));
+  return useQuery(adapter, floorId ? `layout:${floorId}:${asOf}:${rev}` : null, () => adapter.workplace.getFloorLayout(floorId!, asOf));
 }
 
 export function useFloorOccupants(floorId: string | null, asOf: string, rev = 0) {
@@ -91,7 +91,7 @@ export function findFloor(buildings: readonly Building[] | undefined, floorId: s
 }
 
 /** 複数の階の配置図（建物の段でほかの階の点を描くため）。取得できた分から返す。 */
-export function useFloorLayouts(floorIds: readonly string[], asOf: string): ReadonlyMap<string, FloorLayout> {
+export function useFloorLayouts(floorIds: readonly string[], asOf: string, rev = 0): ReadonlyMap<string, FloorLayout> {
   const { adapter } = useAdapter();
   const key = floorIds.join(",");
   const [state, setState] = useState<{ key: string; map: Map<string, FloorLayout> }>({ key: "", map: new Map() });
@@ -99,17 +99,17 @@ export function useFloorLayouts(floorIds: readonly string[], asOf: string): Read
     if (!key) return;
     let cancelled = false;
     const ids = key.split(",");
-    Promise.allSettled(ids.map((id) => fetchCached(adapter, `layout:${id}:${asOf}`, () => adapter.workplace.getFloorLayout(id, asOf)).promise)).then((results) => {
+    Promise.allSettled(ids.map((id) => fetchCached(adapter, `layout:${id}:${asOf}:${rev}`, () => adapter.workplace.getFloorLayout(id, asOf)).promise)).then((results) => {
       if (cancelled) return;
       const map = new Map<string, FloorLayout>();
       results.forEach((r, i) => {
         if (r.status === "fulfilled") map.set(ids[i]!, r.value);
       });
-      setState({ key: `${asOf}|${key}`, map });
+      setState({ key: `${asOf}|${key}|${rev}`, map });
     });
     return () => {
       cancelled = true;
     };
-  }, [adapter, key, asOf]);
+  }, [adapter, key, asOf, rev]);
   return state.map;
 }

@@ -1,21 +1,51 @@
 // 簡単な xlsx（Office Open XML のブック）の読み書き。依存を足さず（ADR-0001・ADR-0003: Excel のライブラリは API・画面に入れない）、
-// ブラウザの標準機能（DecompressionStream）だけで、値の表（文字と数）を扱う。
-// - 書く: シートごとの行（1 行目は見出し。太字・固定）、列の幅、列ごとの選択肢（入力規則のドロップダウン）。ZIP は無圧縮で書く
-// - 読む: 共有文字列・インラインの文字・数・真偽を値として読む。書式・数式（キャッシュの値は読む）・結合セル・日付の解釈はしない
+// ブラウザの標準機能（DecompressionStream）だけで、方眼紙のような表（文字と数・罫線と塗り・セル結合）を扱う。
+// - 書く: シートごとの行、セルの見た目（決まった数種類）、セル結合、列の幅・行の高さ、固定する行と列。ZIP は無圧縮で書く
+// - 読む: 共有文字列・インラインの文字・数・真偽を値として読み、あわせてセル結合と、セルが在るか・塗られているかを返す。
+//   数式（キャッシュの値は読む）・日付の解釈・色の種類はしない
 // 読むのは利用者が選んだファイルで、値は文字として返すだけ（式の評価や外部の参照はしない）。
 
 export type CellValue = string | number | null;
 
+/** セルの見た目。header は太字の見出し、grid は方眼（細い罫線）、shade は灰色の塗り、box* は枠（濃い罫線・中央寄せ・縮小して表示）、ruler は目盛り。 */
+export type CellStyle = "header" | "grid" | "shade" | "box" | "boxBlue" | "boxAmber" | "boxGray" | "ruler" | "wrap";
+
+/** セル結合の範囲（0 始まり。両端を含む）。 */
+export interface MergeRange {
+  r1: number;
+  c1: number;
+  r2: number;
+  c2: number;
+}
+
 export interface SheetData {
   name: string;
   rows: CellValue[][];
-  /** 列の幅（文字数の目安）。 */
+  /** セルの見た目（rows と同じ並び）。見た目のあるセルは空でも書く。 */
+  styles?: Array<Array<CellStyle | null | undefined>>;
+  merges?: MergeRange[];
+  /** 列の幅（文字数の目安）。widths に無い列は defaultWidth。 */
   widths?: number[];
-  /** 列（0 始まり）ごとの選択肢。2 行目から maxRows 行目までにドロップダウンを付ける。 */
-  choices?: Record<number, string[]>;
+  defaultWidth?: number;
+  /** 行の高さ（ポイント）。 */
+  rowHeight?: number;
+  /** 固定する行と列の数（既定は 1 行目だけ）。 */
+  freeze?: { rows: number; cols: number };
+}
+
+export interface ReadSheet {
+  name: string;
+  /** 値（文字。空のセルは null）。 */
+  rows: Array<Array<string | null>>;
+  merges: MergeRange[];
+  /** 在るセル（値か見た目のあるセル）の "行,列"。 */
+  present: Set<string>;
+  /** 塗りのある（白以外の）セルの "行,列"。 */
+  shaded: Set<string>;
 }
 
 const MAX_ROWS = 2000;
+const MAX_COLS = 500;
 
 // ---------------------------------------------------------------------------
 // 書く
@@ -40,38 +70,70 @@ export function columnName(index: number): string {
   return s;
 }
 
+// styles.xml の cellXfs の並び（0 は既定）
+const STYLE_INDEX: Record<CellStyle, number> = { header: 1, grid: 2, shade: 3, box: 4, boxBlue: 5, boxAmber: 6, boxGray: 7, ruler: 8, wrap: 9 };
+const STYLES_XML =
+  '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
+  '<fonts count="4"><font><sz val="11"/><name val="Yu Gothic"/></font><font><b/><sz val="11"/><name val="Yu Gothic"/></font>' +
+  '<font><sz val="9"/><name val="Yu Gothic"/></font><font><sz val="8"/><color rgb="FF808080"/><name val="Yu Gothic"/></font></fonts>' +
+  '<fills count="7"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill>' +
+  ["FFE8EEF5", "FFBFBFBF", "FFDDEBF7", "FFFFF2CC", "FFE7E6E6"].map((c) => `<fill><patternFill patternType="solid"><fgColor rgb="${c}"/></patternFill></fill>`).join("") +
+  "</fills>" +
+  '<borders count="3"><border/>' +
+  ["FFD9D9D9", "FF404040"].map((c) => `<border>${["left", "right", "top", "bottom"].map((e) => `<${e} style="thin"><color rgb="${c}"/></${e}>`).join("")}<diagonal/></border>`).join("") +
+  "</borders>" +
+  '<cellStyleXfs count="1"><xf/></cellStyleXfs><cellXfs count="10"><xf/>' +
+  '<xf fontId="1" fillId="2" applyFont="1" applyFill="1"/>' +
+  '<xf borderId="1" applyBorder="1"/>' +
+  '<xf fillId="3" borderId="1" applyFill="1" applyBorder="1"/>' +
+  [0, 4, 5, 6]
+    .map((fill) => `<xf fontId="2" fillId="${fill}" borderId="2" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" shrinkToFit="1"/></xf>`)
+    .join("") +
+  '<xf fontId="3" applyFont="1"/>' +
+  '<xf applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf>' +
+  "</cellXfs></styleSheet>";
+
 function sheetXml(sheet: SheetData): string {
-  const cols = sheet.widths?.length
-    ? `<cols>${sheet.widths.map((w, i) => `<col min="${i + 1}" max="${i + 1}" width="${w}" customWidth="1"/>`).join("")}</cols>`
-    : "";
-  const rows = sheet.rows
-    .map((row, r) => {
-      const cells = row
-        .map((v, c) => {
-          if (v === null || v === "") return "";
-          const ref = `${columnName(c)}${r + 1}`;
-          const style = r === 0 ? ' s="1"' : "";
-          return typeof v === "number" && Number.isFinite(v)
-            ? `<c r="${ref}"${style}><v>${v}</v></c>`
-            : `<c r="${ref}"${style} t="inlineStr"><is><t xml:space="preserve">${escapeXml(String(v))}</t></is></c>`;
-        })
-        .join("");
-      return `<row r="${r + 1}">${cells}</row>`;
-    })
-    .join("");
-  const validations = Object.entries(sheet.choices ?? {})
-    .map(([col, values]) => {
-      const c = columnName(Number(col));
-      const list = values.map((v) => v.replace(/"/g, "")).join(",");
-      return `<dataValidation type="list" allowBlank="1" showErrorMessage="1" sqref="${c}2:${c}${MAX_ROWS}"><formula1>"${escapeXml(list)}"</formula1></dataValidation>`;
-    })
-    .join("");
-  const dv = validations ? `<dataValidations count="${Object.keys(sheet.choices ?? {}).length}">${validations}</dataValidations>` : "";
+  const width = Math.max(sheet.widths?.length ?? 0, ...sheet.rows.map((r) => r.length), ...(sheet.styles ?? []).map((r) => r.length));
+  const colDefs: string[] = [];
+  for (let i = 0; i < width; i++) {
+    const w = sheet.widths?.[i] ?? sheet.defaultWidth;
+    if (w !== undefined) colDefs.push(`<col min="${i + 1}" max="${i + 1}" width="${w}" customWidth="1"/>`);
+  }
+  const cols = colDefs.length ? `<cols>${colDefs.join("")}</cols>` : "";
+  const height = sheet.rowHeight === undefined ? "" : ` ht="${sheet.rowHeight}" customHeight="1"`;
+  const freeze = sheet.freeze ?? { rows: 1, cols: 0 };
+  const rowCount = Math.max(sheet.rows.length, sheet.styles?.length ?? 0);
+  const rows: string[] = [];
+  for (let r = 0; r < rowCount; r++) {
+    const values = sheet.rows[r] ?? [];
+    const styles = sheet.styles?.[r] ?? [];
+    const cells: string[] = [];
+    for (let c = 0; c < Math.max(values.length, styles.length); c++) {
+      const v = values[c] ?? null;
+      const styleName = styles[c] ?? (r === 0 && !sheet.styles ? "header" : null);
+      if ((v === null || v === "") && !styleName) continue;
+      const ref = `${columnName(c)}${r + 1}`;
+      const style = styleName ? ` s="${STYLE_INDEX[styleName]}"` : "";
+      if (v === null || v === "") cells.push(`<c r="${ref}"${style}/>`);
+      else if (typeof v === "number" && Number.isFinite(v)) cells.push(`<c r="${ref}"${style}><v>${v}</v></c>`);
+      else cells.push(`<c r="${ref}"${style} t="inlineStr"><is><t xml:space="preserve">${escapeXml(String(v))}</t></is></c>`);
+    }
+    rows.push(`<row r="${r + 1}"${height}>${cells.join("")}</row>`);
+  }
+  const ref = (r: number, c: number) => `${columnName(c)}${r + 1}`;
+  const merges = sheet.merges?.length ? `<mergeCells count="${sheet.merges.length}">${sheet.merges.map((m) => `<mergeCell ref="${ref(m.r1, m.c1)}:${ref(m.r2, m.c2)}"/>`).join("")}</mergeCells>` : "";
+  const topLeft = ref(freeze.rows, freeze.cols);
+  const pane =
+    freeze.rows || freeze.cols
+      ? `<pane${freeze.cols ? ` xSplit="${freeze.cols}"` : ""}${freeze.rows ? ` ySplit="${freeze.rows}"` : ""} topLeftCell="${topLeft}" activePane="${freeze.rows && freeze.cols ? "bottomRight" : freeze.rows ? "bottomLeft" : "topRight"}" state="frozen"/>`
+      : "";
   return (
     '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
     '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">' +
-    '<sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>' +
-    `${cols}<sheetData>${rows}</sheetData>${dv}</worksheet>`
+    `<sheetViews><sheetView workbookViewId="0">${pane}</sheetView></sheetViews>` +
+    (sheet.rowHeight === undefined ? "" : `<sheetFormatPr defaultRowHeight="${sheet.rowHeight}" customHeight="1"/>`) +
+    `${cols}<sheetData>${rows.join("")}</sheetData>${merges}</worksheet>`
   );
 }
 
@@ -104,14 +166,7 @@ export function writeXlsx(sheets: SheetData[]): Uint8Array {
         sheets.map((_, i) => `<Relationship Id="rId${i + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${i + 1}.xml"/>`).join("") +
         `<Relationship Id="rId${sheets.length + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`,
     ],
-    [
-      "xl/styles.xml",
-      '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
-        '<fonts count="2"><font><sz val="11"/><name val="Yu Gothic"/></font><font><b/><sz val="11"/><name val="Yu Gothic"/></font></fonts>' +
-        '<fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFE8EEF5"/></patternFill></fill></fills>' +
-        '<borders count="1"><border/></borders><cellStyleXfs count="1"><xf/></cellStyleXfs>' +
-        '<cellXfs count="2"><xf/><xf fontId="1" fillId="2" applyFont="1" applyFill="1"/></cellXfs></styleSheet>',
-    ],
+    ["xl/styles.xml", STYLES_XML],
     ...sheets.map((s, i): [string, string] => [`xl/worksheets/sheet${i + 1}.xml`, sheetXml(s)]),
   ];
   return zipStore(files.map(([name, text]) => [name, enc.encode(text)]));
@@ -262,12 +317,39 @@ function columnIndex(ref: string): number {
   return n - 1;
 }
 
-/** xlsx のシートを、名前と値の表（文字。空のセルは null）で読む。 */
-export async function readXlsx(bytes: Uint8Array, options: { maxBytes?: number } = {}): Promise<Array<{ name: string; rows: Array<Array<string | null>> }>> {
+function cellAt(ref: string): { r: number; c: number } | null {
+  const m = /^\$?([A-Z]+)\$?(\d+)$/.exec(ref);
+  return m ? { r: Number(m[2]) - 1, c: columnIndex(m[1]!) } : null;
+}
+
+/** styles.xml から、cellXfs の並びごとに塗りがある（白以外）かを返す。 */
+function shadedStyles(xml: string | null): boolean[] {
+  if (!xml) return [];
+  const fills = [...(/<fills\b[^>]*>([\s\S]*?)<\/fills>/.exec(xml)?.[1] ?? "").matchAll(/<fill>([\s\S]*?)<\/fill>|<fill\/>/g)].map((m) => {
+    const body = m[1] ?? "";
+    const pattern = /<patternFill\b[^>]*>/.exec(body)?.[0];
+    const type = pattern ? attr(pattern, "patternType") : null;
+    if (/<gradientFill\b/.test(body)) return true;
+    if (!type || type === "none") return false;
+    const fg = /<fgColor\b[^>]*>/.exec(body)?.[0] ?? "";
+    // 白（rgb の FFFFFF・テーマの背景 1・既定の色番号 9）は塗りとみなさない
+    const rgb = attr(fg, "rgb")?.toUpperCase();
+    if (rgb && /^(FF)?FFFFFF$/.test(rgb)) return false;
+    if (attr(fg, "theme") === "0" && !attr(fg, "tint")) return false;
+    if (attr(fg, "indexed") === "9") return false;
+    return true;
+  });
+  const xfs = /<cellXfs\b[^>]*>([\s\S]*?)<\/cellXfs>/.exec(xml)?.[1] ?? "";
+  return [...xfs.matchAll(/<xf\b[^>]*>/g)].map((m) => fills[Number(attr(m[0], "fillId") ?? 0)] ?? false);
+}
+
+/** xlsx のシートを、名前と値の表（文字。空のセルは null）・セル結合・在るセルと塗りのあるセルで読む。 */
+export async function readXlsx(bytes: Uint8Array, options: { maxBytes?: number } = {}): Promise<ReadSheet[]> {
   const files = await unzip(bytes, options.maxBytes ?? 50 * 1024 * 1024);
+  // 要素の名前空間の接頭辞（<x:sheet> など。Excel 以外のツールが付ける）は外して読む
   const text = (name: string) => {
     const f = files.get(name);
-    return f ? dec.decode(f) : null;
+    return f ? dec.decode(f).replace(/<(\/?)[A-Za-z_][\w.-]*:(?=[A-Za-z_])/g, "<$1") : null;
   };
   const workbook = text("xl/workbook.xml");
   if (!workbook) throw new Error("Excel（xlsx）のファイルとして読めません。");
@@ -278,21 +360,25 @@ export async function readXlsx(bytes: Uint8Array, options: { maxBytes?: number }
     if (id && target) rels.set(id, target.startsWith("/") ? target.slice(1) : `xl/${target}`);
   }
   const shared = [...(text("xl/sharedStrings.xml") ?? "").matchAll(/<si\b[^>]*>([\s\S]*?)<\/si>/g)].map((m) => textOf(m[1]!));
-  const sheets: Array<{ name: string; rows: Array<Array<string | null>> }> = [];
+  const shadedStyle = shadedStyles(text("xl/styles.xml"));
+  const sheets: ReadSheet[] = [];
   for (const m of workbook.matchAll(/<sheet\b[^>]*\/?>/g)) {
     const name = attr(m[0], "name") ?? "";
     const id = attr(m[0], "r:id");
     const xml = id && rels.get(id) ? text(rels.get(id)!) : null;
     if (!xml) continue;
     const rows: Array<Array<string | null>> = [];
-    for (const row of xml.matchAll(/<row\b([^>]*)>([\s\S]*?)<\/row>/g)) {
-      const r = Number(attr(row[0], "r") ?? rows.length + 1) - 1;
-      if (r >= MAX_ROWS * 10) break;
+    const present = new Set<string>();
+    const shaded = new Set<string>();
+    for (const row of xml.matchAll(/<row\b([^>]*?)(?:\/>|>([\s\S]*?)<\/row>)/g)) {
+      const r = Number(attr(row[0].slice(0, row[0].indexOf(">") + 1), "r") ?? rows.length + 1) - 1;
+      if (r >= MAX_ROWS) break;
       const cells: Array<string | null> = [];
-      for (const c of row[2]!.matchAll(/<c\b([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g)) {
+      for (const c of (row[2] ?? "").matchAll(/<c\b([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g)) {
         const head = c[0].slice(0, c[0].indexOf(">") + 1);
         const ref = attr(head, "r");
         const col = ref ? columnIndex(ref) : cells.length;
+        if (col >= MAX_COLS) continue;
         const type = attr(head, "t");
         const inner = c[2] ?? "";
         const v = /<v\b[^>]*>([\s\S]*?)<\/v>/.exec(inner)?.[1];
@@ -303,11 +389,20 @@ export async function readXlsx(bytes: Uint8Array, options: { maxBytes?: number }
         else if (v !== undefined) value = decodeXml(v);
         while (cells.length < col) cells.push(null);
         cells[col] = value === "" ? null : value;
+        present.add(`${r},${col}`);
+        if (shadedStyle[Number(attr(head, "s") ?? 0)]) shaded.add(`${r},${col}`);
       }
       while (rows.length < r) rows.push([]);
       rows[r] = cells;
     }
-    sheets.push({ name, rows });
+    const merges: MergeRange[] = [];
+    for (const mc of xml.matchAll(/<mergeCell\b[^>]*>/g)) {
+      const [a, b] = (attr(mc[0], "ref") ?? "").split(":");
+      const from = a ? cellAt(a) : null;
+      const to = b ? cellAt(b) : from;
+      if (from && to) merges.push({ r1: Math.min(from.r, to.r), c1: Math.min(from.c, to.c), r2: Math.max(from.r, to.r), c2: Math.max(from.c, to.c) });
+    }
+    sheets.push({ name, rows, merges, present, shaded });
   }
   return sheets;
 }

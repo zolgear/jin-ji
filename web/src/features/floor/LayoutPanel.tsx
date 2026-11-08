@@ -1,15 +1,15 @@
-// フロアの帯の「配置図」: 建物の今の配置図の Excel（ひな形を兼ねる）・JSON（jin-ji の配置図の形式 v1）の書き出しと、
-// Excel か JSON を選んでの直接登録（施設管理者・人事管理者。0026）。Excel はブラウザで読み書きし、API には JSON で送る。
+// フロアの帯の「配置図」: 建物の今の配置図の Excel 方眼紙（layoutWorkbook.ts）・JSON（jin-ji の配置図の形式 v1）の書き出しと、
+// Excel か JSON を選んでの直接登録（施設管理者・人事管理者。0026）。Excel はブラウザで読み書きし、今の配置図と突き合わせて API には JSON で送る。
 // 登録は管理元の設定（配置図: 承認なし / 承認あり）に従い、すぐに反映するか承認待ちになる。形の検査は API が行う。
 import { useId, useState } from "react";
 import { Button, Notice } from "../../auth/ui";
 import { HelpTip, Popover } from "../../components/popover";
 import { useAdapter } from "../../data/adapterContext";
 import { readLayoutDocument, toLayoutDocument, type LayoutDocument } from "../../data/layoutDocument";
-import { fromLayoutSheets, toLayoutSheets } from "../../data/layoutWorkbook";
 import { readXlsx, writeXlsx } from "../../lib/xlsx";
 import { describeError, type Building, type FloorLayout } from "../../data/types";
 import { inputClass } from "../field/shared";
+import { fromLayoutSheets, toLayoutSheets } from "./layoutWorkbook";
 
 const triggerClass = "h-8 shrink-0 rounded-md border border-border px-3 whitespace-nowrap hover:bg-surface-2";
 const linkClass = "self-start text-xs text-accent underline disabled:text-muted disabled:no-underline";
@@ -51,9 +51,10 @@ export function LayoutPanel({ building, siteCode, asOf, onRegistered }: { buildi
     setMessage(null);
     try {
       const doc = await current();
-      const base = doc ? `${siteCode}-${building!.code}-配置図` : "配置図のひな形";
+      if (!doc) return;
+      const base = `${siteCode}-${building!.code}-配置図`;
       if (kind === "xlsx") save(writeXlsx(toLayoutSheets(doc)), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", `${base}.xlsx`);
-      else if (doc) save(JSON.stringify(doc, null, 2), "application/json", `${base}.json`);
+      else save(JSON.stringify(doc, null, 2), "application/json", `${base}.json`);
     } catch (e) {
       setMessage({ tone: "error", text: describeError(e) });
     }
@@ -71,7 +72,9 @@ export function LayoutPanel({ building, siteCode, asOf, onRegistered }: { buildi
       if (/\.json$/i.test(chosen.name)) {
         doc = readLayoutDocument(await chosen.text()).document;
       } else {
-        const read = fromLayoutSheets(await readXlsx(new Uint8Array(await chosen.arrayBuffer())));
+        const now = await current();
+        if (!now) throw new Error("建物を選んでから Excel を選んでください。");
+        const read = fromLayoutSheets(await readXlsx(new Uint8Array(await chosen.arrayBuffer())), now);
         if (!read.document) {
           setProblems(read.problems);
           return;
@@ -106,10 +109,12 @@ export function LayoutPanel({ building, siteCode, asOf, onRegistered }: { buildi
         <div className="flex items-center gap-1 text-xs font-bold">
           配置図
           <HelpTip label="配置図の説明" width={320}>
-            建物・階・机とエリアの置き場所を Excel（取込と同じ JSON も可）で登録します。書き出した Excel を直して登録できます。書き方は Excel の「記入のしかた」のシートにあります。席番号が同じ席は同じ席として、人の席の割り当てが続きます。設定で「承認あり」にすると、登録した人と別の施設管理者・人事管理者が「組織の変更」の反映の記録で承認したときに反映します。
+            書き出した Excel の方眼紙（1 マス 600mm）でマスを結合して罫線で囲み、席・会議室・EV などを置いて登録します。書き方は Excel の「記入のしかた」のシートにあります。取込と同じ JSON でも登録できます。席番号が同じ席は同じ席として、人の席の割り当てが続きます。設定で「承認あり」にすると、登録した人と別の施設管理者・人事管理者が「組織の変更」の反映の記録で承認したときに反映します。
           </HelpTip>
         </div>
-        <Button onClick={() => void exportAs("xlsx")}>{building ? `${building.name}の Excel を書き出す` : "Excel のひな形"}</Button>
+        <Button disabled={!building || !siteCode} onClick={() => void exportAs("xlsx")}>
+          {building ? `${building.name}の Excel を書き出す` : "Excel を書き出す"}
+        </Button>
         <button type="button" className={linkClass} disabled={!building || !siteCode} onClick={() => void exportAs("json")}>
           JSON で書き出す
         </button>

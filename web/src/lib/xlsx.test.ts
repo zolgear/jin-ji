@@ -45,13 +45,34 @@ describe("xlsx の読み書き", () => {
 
   it("書いたシートを、無圧縮でも deflate でも同じ値で読める（記号・改行を含む文字、数、空のセル）", async () => {
     const bytes = writeXlsx([
-      { name: "席", rows: [["席番号", "X(mm)", "メモ"], ["A-01", 1200, "a&b <c> \"d\"\n次の行"], ["A-02", null, null]], choices: { 0: ["はい", "いいえ"] } },
+      { name: "席", rows: [["席番号", "X(mm)", "メモ"], ["A-01", 1200, "a&b <c> \"d\"\n次の行"], ["A-02", null, null]] },
       { name: "空", rows: [] },
     ]);
     for (const file of [bytes, await recompress(bytes)]) {
       const sheets = await readXlsx(file);
       expect(sheets.map((s) => s.name)).toEqual(["席", "空"]);
       expect(sheets[0]!.rows).toEqual([["席番号", "X(mm)", "メモ"], ["A-01", "1200", "a&b <c> \"d\"\n次の行"], ["A-02"]]);
+    }
+  });
+
+  it("セル結合と、見た目だけの空のセル・塗りのあるセルを読める", async () => {
+    const bytes = writeXlsx([
+      {
+        name: "3F",
+        rows: [[null, "0m"], [null, "A01"]],
+        styles: [[null, "ruler"], ["shade", "boxBlue", "boxBlue", "grid"]],
+        merges: [{ r1: 1, c1: 1, r2: 1, c2: 2 }],
+        defaultWidth: 2.7,
+        rowHeight: 18,
+        freeze: { rows: 1, cols: 1 },
+      },
+    ]);
+    for (const file of [bytes, await recompress(bytes)]) {
+      const [sheet] = await readXlsx(file);
+      expect(sheet!.merges).toEqual([{ r1: 1, c1: 1, r2: 1, c2: 2 }]);
+      expect([...sheet!.present].sort()).toEqual(["0,1", "1,0", "1,1", "1,2", "1,3"]);
+      // 枠の淡い色も塗りとして返す（床かどうかは呼ぶ側が枠を先に除いて決める）
+      expect([...sheet!.shaded].sort()).toEqual(["1,0", "1,1", "1,2"]);
     }
   });
 

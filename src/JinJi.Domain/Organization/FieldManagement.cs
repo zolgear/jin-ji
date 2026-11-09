@@ -17,6 +17,12 @@ public enum FieldDomain
 
     /// <summary>内線・社用携帯。</summary>
     PersonContact,
+
+    /// <summary>人の決まった席・持ち場（主の席。0025）。</summary>
+    Workplace,
+
+    /// <summary>配置図（建物・階・配置図の改訂。値は field か approval だけ。0026）。</summary>
+    FloorLayout,
 }
 
 /// <summary>領域の管理元（DB の field_domain_setting.mode）。</summary>
@@ -30,6 +36,9 @@ public enum FieldManagementMode
 
     /// <summary>両方（取込の差分のうち直接登録した値を変えるものは要確認にする）。</summary>
     Both,
+
+    /// <summary>承認あり（配置図だけ。直接登録を、登録者と別の施設管理者・人事管理者の承認で反映する）。</summary>
+    Approval,
 }
 
 /// <summary>領域・管理元のコード値（DB・API の値）。</summary>
@@ -42,6 +51,8 @@ public static class FieldDomains
         [FieldDomain.Assignment] = "assignment",
         [FieldDomain.PersonSite] = "person_site",
         [FieldDomain.PersonContact] = "person_contact",
+        [FieldDomain.Workplace] = "workplace",
+        [FieldDomain.FloorLayout] = "floor_layout",
     };
 
     private static readonly Dictionary<FieldManagementMode, string> ModeKeys = new()
@@ -49,6 +60,7 @@ public static class FieldDomains
         [FieldManagementMode.Hr] = "hr",
         [FieldManagementMode.Field] = "field",
         [FieldManagementMode.Both] = "both",
+        [FieldManagementMode.Approval] = "approval",
     };
 
     /// <summary>すべての領域（定義の順）。</summary>
@@ -90,6 +102,19 @@ public static class FieldDomains
         mode = default;
         return false;
     }
+
+    /// <summary>
+    /// 承認済みの設定が無いときの管理元。席・持ち場は現場の組織が決めるもので人事は関わらないので field、配置図は施設管理者が承認なしに登録するので field、
+    /// ほかは hr（DB の jinji_field_domain_mode() と同じ）。
+    /// </summary>
+    public static FieldManagementMode Default(FieldDomain domain) =>
+        domain is FieldDomain.Workplace or FieldDomain.FloorLayout ? FieldManagementMode.Field : FieldManagementMode.Hr;
+
+    /// <summary>領域に設定できる管理元（配置図は field・approval、ほかは hr・field・both。DB の CHECK 制約と同じ）。</summary>
+    public static IReadOnlyList<FieldManagementMode> Modes(FieldDomain domain) =>
+        domain == FieldDomain.FloorLayout
+            ? [FieldManagementMode.Field, FieldManagementMode.Approval]
+            : [FieldManagementMode.Hr, FieldManagementMode.Field, FieldManagementMode.Both];
 
     /// <summary>直接登録を許すか（field・both）。</summary>
     public static bool AllowsDirectRegistration(this FieldManagementMode mode) => mode != FieldManagementMode.Hr;

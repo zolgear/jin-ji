@@ -18,11 +18,14 @@ namespace JinJi.Application.FieldManagement;
 /// <see cref="PendingDays"/> 日で期限切れになる</item>
 /// <item>取り消しは有効日の前だけ。登録者か、登録の組織すべての範囲を持つ人（組織管理者・人事管理者を含む）が行える</item>
 /// <item>操作はすべて監査ログに残す（拒否・失敗も）。最終的な線（範囲・管理元・人の版の列・権限を生む変更）は DB も引く（0021）</item>
+/// <item>配置図（建物・階・配置図の改訂）は施設管理者・人事管理者の人が登録する（決定 12。0026）。管理元の領域 floor_layout が approval なら
+/// 同意待ちにし、登録者と別の施設管理者・人事管理者の同意（承認）で反映する。取り消し・破棄も施設管理者・人事管理者が行える</item>
 /// </list>
 /// </remarks>
 public sealed class FieldRegistrationService
 {
     public const string RegisterAction = "field.registration.register";
+    public const string RegisterLayoutAction = "field.registration.register_layout";
     public const string ConfirmAction = "field.registration.confirm";
     public const string ConsentAction = "field.registration.consent";
     public const string WithdrawAction = "field.registration.withdraw";
@@ -45,6 +48,7 @@ public sealed class FieldRegistrationService
     private readonly AuditWriter _audit;
     private readonly TimeProvider _timeProvider;
     private readonly IOrgDataChangeNotifier? _changes;
+    private readonly ILayoutDocumentPlanner? _layouts;
 
     public FieldRegistrationService(
         IFieldRegistrationStore store,
@@ -52,7 +56,8 @@ public sealed class FieldRegistrationService
         IOrgSnapshotProvider snapshots,
         AuditWriter audit,
         TimeProvider timeProvider,
-        IOrgDataChangeNotifier? changes = null)
+        IOrgDataChangeNotifier? changes = null,
+        ILayoutDocumentPlanner? layouts = null)
     {
         ArgumentNullException.ThrowIfNull(store);
         ArgumentNullException.ThrowIfNull(management);
@@ -65,6 +70,7 @@ public sealed class FieldRegistrationService
         _audit = audit;
         _timeProvider = timeProvider;
         _changes = changes;
+        _layouts = layouts;
     }
 
     /// <summary>
@@ -119,6 +125,85 @@ public sealed class FieldRegistrationService
         return registration with { Status = next };
     }
 
+    /// <summary>
+    /// 配置図を直接登録する（施設管理者・人事管理者の人）。管理元の領域 floor_layout が field ならすぐに反映し、approval なら同意待ちにする。
+    /// </summary>
+    public async Task<FieldRegistration> RegisterLayoutAsync(ViewerContext viewer, LayoutRegistrationInput input, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(viewer);
+        ArgumentNullException.ThrowIfNull(input);
+        if (!viewer.ManagesLayouts || viewer.PersonId is not { } registrant)
+        {
+            await _audit.RecordAsync(viewer, RegisterLayoutAction, AuditOutcome.Denied, [], cancellationToken, TargetType);
+            throw new FieldManagementException(FieldManagementError.Forbidden, "配置図は、施設管理者か人事管理者の人だけが登録できます。");
+        }
+
+        if (_layouts is null)
+        {
+            throw new InvalidOperationException("配置図の計画（ILayoutDocumentPlanner）が登録されていません。");
+        }
+
+        var today = BusinessDate.Today(_timeProvider);
+        var now = _timeProvider.GetUtcNow();
+        LayoutDocumentPlan plan;
+        FieldManagementMode mode;
+        try
+        {
+            if (input.EffectiveDate < today && !viewer.IsHrAdmin)
+            {
+                throw new FieldManagementException(FieldManagementError.Invalid, "有効日は今日以降にしてください（過去の日付の訂正は人事管理者だけが行えます）。");
+            }
+
+            _ = Note(input.Note);
+            mode = (await _management.ModesAsync(viewer, cancellationToken))[FieldDomain.FloorLayout];
+            var snapshot = await _snapshots.LoadAsync(viewer, input.EffectiveDate, today, cancellationToken);
+            try
+            {
+                plan = _layouts.Plan(snapshot, input.Document, input.EffectiveDate, today, registrant);
+            }
+            catch (FormatException ex)
+            {
+                throw new FieldManagementException(FieldManagementError.Invalid, ex.Message, ex);
+            }
+
+            if (plan.Problems.Count > 0)
+            {
+                const int Shown = 10;
+                var more = plan.Problems.Count > Shown ? $"（ほか {plan.Problems.Count - Shown} 件）" : string.Empty;
+                throw new FieldManagementException(FieldManagementError.Invalid, "配置図を登録できません: " + string.Join(" / ", plan.Problems.Take(Shown)) + more);
+            }
+
+            if (plan.Proposals.Count == 0)
+            {
+                throw new FieldManagementException(FieldManagementError.Invalid, "今の建物・階・配置図と同じです（変更がありません）。");
+            }
+        }
+        catch (FieldManagementException ex)
+        {
+            await _audit.RecordAsync(viewer, RegisterLayoutAction, Outcome(ex), [], cancellationToken, TargetType);
+            throw;
+        }
+
+        var registration = new FieldRegistration
+        {
+            Id = Guid.CreateVersion7(),
+            Kind = FieldRegistrationKind.Layout,
+            Status = FieldRegistrationStatus.Draft,
+            EffectiveDate = input.EffectiveDate,
+            Note = Note(input.Note),
+            RegisteredBy = registrant,
+            RegisteredVia = ActorType.User,
+            CreatedAt = now,
+            ExpiresAt = now.AddDays(PendingDays),
+            Proposals = plan.Proposals,
+        };
+
+        var next = mode == FieldManagementMode.Approval ? FieldRegistrationStatus.PendingConsent : FieldRegistrationStatus.Applied;
+        await SaveAsync(viewer, RegisterLayoutAction, registration, [], next == FieldRegistrationStatus.Applied, cancellationToken, () =>
+            _store.SaveAsync(viewer, registration, next, today, cancellationToken));
+        return registration with { Status = next };
+    }
+
     /// <summary>AI エージェントの下書きを、委任元の人が確定する（範囲の中ならすぐに反映し、相手側の同意が要れば同意待ちにする）。</summary>
     public async Task<FieldRegistration> ConfirmAsync(ViewerContext viewer, Guid id, CancellationToken cancellationToken)
     {
@@ -158,10 +243,20 @@ public sealed class FieldRegistrationService
         }
 
         var today = BusinessDate.Today(_timeProvider);
-        var scope = await _management.ScopeAsync(viewer, today, cancellationToken);
-        if (!registration.ConsentOrgUnitIds.All(u => scope.Covers(u)))
+        if (registration.Kind == FieldRegistrationKind.Layout)
         {
-            await Deny(viewer, ConsentAction, registration, "同意が要る組織の範囲を持ちません。", cancellationToken);
+            if (!viewer.ManagesLayouts)
+            {
+                await Deny(viewer, ConsentAction, registration, "配置図の登録を承認できるのは、登録者と別の施設管理者か人事管理者です。", cancellationToken);
+            }
+        }
+        else
+        {
+            var scope = await _management.ScopeAsync(viewer, today, cancellationToken);
+            if (!registration.ConsentOrgUnitIds.All(u => scope.Covers(u)))
+            {
+                await Deny(viewer, ConsentAction, registration, "同意が要る組織の範囲を持ちません。", cancellationToken);
+            }
         }
 
         await AdvanceAsync(viewer, ConsentAction, registration, FieldRegistrationStatus.Applied, consent: true, today, cancellationToken);
@@ -185,7 +280,14 @@ public sealed class FieldRegistrationService
             await Fail(viewer, WithdrawAction, registration, FieldManagementError.Conflict, "有効日を迎えた登録は取り消せません。新しく登録し直してください。", cancellationToken);
         }
 
-        if (person != registration.RegisteredBy && !viewer.ManagesAllOrgs)
+        if (registration.Kind == FieldRegistrationKind.Layout)
+        {
+            if (person != registration.RegisteredBy && !viewer.ManagesLayouts)
+            {
+                await Deny(viewer, WithdrawAction, registration, "配置図の登録を取り消せるのは、登録者か、施設管理者・人事管理者です。", cancellationToken);
+            }
+        }
+        else if (person != registration.RegisteredBy && !viewer.ManagesAllOrgs)
         {
             var scope = await _management.ScopeAsync(viewer, today, cancellationToken);
             if (!registration.OrgUnitIds.All(u => scope.Covers(u)))
@@ -231,9 +333,10 @@ public sealed class FieldRegistrationService
             await Fail(viewer, DiscardAction, registration, FieldManagementError.Conflict, "下書き・同意待ちの登録だけを破棄できます。", cancellationToken);
         }
 
-        if (viewer.Actor != ActorType.User || viewer.PersonId is not { } person || (person != registration.RegisteredBy && !viewer.ManagesAllOrgs))
+        var managesAll = registration.Kind == FieldRegistrationKind.Layout ? viewer.ManagesLayouts : viewer.ManagesAllOrgs;
+        if (viewer.Actor != ActorType.User || viewer.PersonId is not { } person || (person != registration.RegisteredBy && !managesAll))
         {
-            await Deny(viewer, DiscardAction, registration, "破棄できるのは、登録者か、組織管理者・人事管理者の人です。", cancellationToken);
+            await Deny(viewer, DiscardAction, registration, "破棄できるのは、登録者か、組織管理者・人事管理者（配置図は施設管理者・人事管理者）の人です。", cancellationToken);
             throw new InvalidOperationException();
         }
 

@@ -427,7 +427,11 @@
         },
         "approved_by_person_id": {
           "category": "認可",
-          "description": "改訂の承認者（起案者とは別人）"
+          "description": "改訂の承認者（取込は起案者とは別人。直接登録は反映した人）"
+        },
+        "field_registration_id": {
+          "category": "直接登録",
+          "description": "改訂を書いた直接登録（施設管理者の配置図の登録。取込の改訂は空）"
         },
         "valid_period": {
           "category": "システム管理用",
@@ -3184,6 +3188,10 @@
         "consent_org_unit_ids": {
           "category": "直接登録",
           "description": "登録者の範囲の外で、相手側の同意が要る組織"
+        },
+        "kind": {
+          "category": "直接登録",
+          "description": "登録の種類（組織と人 / 配置図）"
         },
         "consented_by_person_id": {
           "category": "直接登録",

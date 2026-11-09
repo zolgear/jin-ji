@@ -55,7 +55,8 @@ public sealed class FieldApiTests : IAsyncLifetime
     public async Task Register_List_Withdraw()
     {
         var (_, modes) = await _host.GetJsonAsync("/api/v1/field/modes", Head);
-        Assert.All(modes.EnumerateArray(), m => Assert.Equal("hr", m.GetProperty("mode").GetString()));
+        // 既定は席・持ち場（現場が決める）と配置図（施設管理者が承認なしで登録する）だけ field、ほかは hr
+        Assert.All(modes.EnumerateArray(), m => Assert.Equal(m.GetProperty("domain").GetString() is "workplace" or "floor_layout" ? "field" : "hr", m.GetProperty("mode").GetString()));
         Assert.Equal(HttpStatusCode.Forbidden, (await PostAsync("/api/v1/field/registrations", Transfer("takahashi", "S2", IngestDatabase.Today), Head)).Status);
 
         await EnableAssignmentAsync();

@@ -172,7 +172,13 @@ export function usePeopleNames(ids: string[], asOf: string): Map<string, string>
 /** 変更の説明（組織・人は名前で）。 */
 export function describeChange(
   change: PlanChange,
-  names: { org: (id: string | null | undefined) => string; person: (id: string | null | undefined) => string; group?: (id: string | null | undefined) => string },
+  names: {
+    org: (id: string | null | undefined) => string;
+    person: (id: string | null | undefined) => string;
+    group?: (id: string | null | undefined) => string;
+    /** 席番号（フロアの編集だけが知っている。無ければ「席」とだけ出す）。 */
+    seat?: (id: string) => string | null;
+  },
 ): string {
   const v = change.values;
   switch (change.kind) {
@@ -194,6 +200,8 @@ export function describeChange(
       const ids = (v.person_ids ?? "").split(",").filter(Boolean);
       return `${names.org(change.target_id)}: ${ids.slice(0, 3).map((id) => names.person(id)).join("・")}${ids.length > 3 ? ` ほか ${ids.length - 3} 名` : ""} の順`;
     }
+    case "workplace":
+      return v.seat_id ? `${names.person(change.target_id)} の席 → ${names.seat?.(v.seat_id) ?? "別の席"}` : `${names.person(change.target_id)} の席を外す`;
     case "group_join":
       return `${names.person(v.person_id)} を ${names.group?.(change.target_id) ?? "グループ"} に加える（${GROUP_ROLE_LABEL[(v.role as GroupRole) ?? "member"] ?? ""}）`;
     case "group_leave":
@@ -387,7 +395,7 @@ export function ChangeList({
 export function useNamers(asOf: string, changes: PlanChange[], groups: Group[], extraUnits: Array<{ id: string; name: string }> = []) {
   const units = useOrgUnits(asOf);
   const personIds = changes.flatMap((c) => [
-    ...(c.kind === "assignment" || c.kind === "person" ? [c.target_id ?? ""] : []),
+    ...(c.kind === "assignment" || c.kind === "person" || c.kind === "workplace" ? [c.target_id ?? ""] : []),
     c.values.head_person_id ?? "",
     c.values.person_id ?? "",
     // 並び順は先頭の数人だけ名前で出す

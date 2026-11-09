@@ -1,5 +1,6 @@
 // 反映の記録のタブ: 編集から反映した変更（直接登録）の一覧（自分の・同意した・自分の範囲の）と、確定・同意・取り消し・破棄。
 // 範囲・管理元の判定は API が行う（範囲の外は 403）。AI エージェントの下書きは、名義の人が確定したときだけ反映される。
+// 配置図の登録（施設管理者）は、承認ありの設定では「承認待ち」になり、別の施設管理者・人事管理者の承認（同意の操作）で反映する。
 import { useCallback, useState } from "react";
 import { Button, Notice } from "../../auth/ui";
 import { Spinner } from "../../components/ui";
@@ -67,19 +68,24 @@ export function RegistrationsTab() {
           <ul className="m-0 flex list-none flex-col gap-2 p-0">
             {list.map((r) => (
               <li key={r.id} className="flex flex-wrap items-center gap-2 rounded-md border border-border px-3 py-2 text-sm">
-                <span className="rounded-sm bg-surface-2 px-1.5 text-xs font-bold">{REGISTRATION_STATUS_LABEL[r.status]}</span>
+                <span className="rounded-sm bg-surface-2 px-1.5 text-xs font-bold">
+                  {r.kind === "layout" && r.status === "pending_consent" ? "承認待ち" : REGISTRATION_STATUS_LABEL[r.status]}
+                </span>
                 <span>有効日 {r.effective_date}</span>
-                <span className="text-muted">{r.person_ids.length} 人</span>
+                <span className="text-muted">{r.kind === "layout" ? "配置図" : `${r.person_ids.length} 人`}</span>
                 {r.registered_via === "agent" && <span className="text-xs text-muted">AI エージェントの下書き</span>}
                 {r.note && <span className="min-w-0 flex-1 truncate text-muted">{r.note}</span>}
                 <span className="ml-auto flex gap-1">
                   {(ACTIONS[r.status] ?? [])
                     .filter((a) => a.action !== "withdraw" || r.effective_date > adapter.businessDate)
-                    .map((a) => (
-                      <Button key={a.action} variant={a.action === "discard" || a.action === "withdraw" ? "danger" : "secondary"} busy={busy === r.id} onClick={() => void act(r, a.action, a.label)}>
-                        {a.label}
-                      </Button>
-                    ))}
+                    .map((a) => {
+                      const label = r.kind === "layout" && a.action === "consent" ? "承認" : a.label;
+                      return (
+                        <Button key={a.action} variant={a.action === "discard" || a.action === "withdraw" ? "danger" : "secondary"} busy={busy === r.id} onClick={() => void act(r, a.action, label)}>
+                          {label}
+                        </Button>
+                      );
+                    })}
                 </span>
               </li>
             ))}

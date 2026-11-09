@@ -54,7 +54,7 @@ internal sealed class SavePlanTool : McpTool
               "items": {
                 "type": "object",
                 "properties": {
-                  "kind": { "type": "string", "enum": ["assignment", "person", "org_update", "org_create", "org_abolish", "member_order", "group_join", "group_leave"] },
+                  "kind": { "type": "string", "enum": ["assignment", "person", "org_update", "org_create", "org_abolish", "member_order", "workplace", "group_join", "group_leave"] },
                   "target_id": { "type": "string", "format": "uuid" },
                   "values": { "type": "object", "additionalProperties": { "type": ["string", "null"] } }
                 },

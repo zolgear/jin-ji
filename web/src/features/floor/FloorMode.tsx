@@ -3,6 +3,7 @@
 // 段: 拠点（建物を並べる）→ 建物（分解した階の積層）→ 階（選んだ階の詳細）→ 人を探す（その席へカメラが移る）。
 // 2D の簡易フロアマップ（plan=1）は同じ画面で切り替える（3D と並べると、右の詳細のパネルと合わせて 3 列になり狭いため）。
 // WebGL が使えない環境では、3D の代わりに 2D の平面図を出す。
+// 「編集」（edit=1）では、階の平面図の上で人を席へ動かして席替えを組み立てる（FloorEditor）。
 // 席は人の決まった席・持ち場の割り当てだけ。タイムマシンで見た日の割り当てが、その日の所在になる。
 // 外部から届いた今日の所在（§5.7）は、提供元があって今日を表示しているときだけ重ねる（過去・将来の日には出さない）。
 import { Component, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
@@ -10,7 +11,9 @@ import { useOrgTree, usePerson } from "../../app/hooks";
 import { useNav } from "../../app/nav";
 import { HelpTip } from "../../components/popover";
 import { ErrorNote, Spinner } from "../../components/ui";
+import { useSession } from "../../auth/session";
 import { useAdapter } from "../../data/adapterContext";
+import { managesLayouts } from "../../data/field";
 import { useQuery } from "../../data/query";
 import { describeError, type Building, type FloorSummary, type Person } from "../../data/types";
 import { workplaceOf } from "../../data/workplace";
@@ -28,6 +31,8 @@ import {
 } from "./floorHooks";
 import { isLowEndDevice, placeBuildings, stackFloors } from "./floorLayout3d";
 import { buildFloorView, groupResolver, presenceOverlayOn, slotColorVar, type FloorView } from "./floorModel";
+import { FloorEditor } from "./FloorEditor";
+import { LayoutPanel } from "./LayoutPanel";
 import { FloorPlan2D } from "./FloorPlan2D";
 import { FloorScene3D, type FloorLabel, type SceneBuilding } from "./FloorScene3D";
 import { FloorHowToRead, ModeSwitch, PRESENCE_NOTE } from "./FloorParts";
@@ -194,6 +199,11 @@ export function FloorMode() {
   const tree = useOrgTree(asOf);
   const sites = useQuery(adapter, `sites:${asOf}`, () => adapter.listSites({ asOf }));
   const [fitRequest, setFitRequest] = useState(0);
+  // 席の変更を反映したら、建物の席数と階の人を取り直す。配置図を登録したら配置図も取り直す
+  const [rev, setRev] = useState(0);
+  const [layoutRev, setLayoutRev] = useState(0);
+  const session = useSession();
+  const canRegisterLayout = adapter.kind === "demo" || managesLayouts(session?.session);
   const [narrow, setNarrow] = useState(() => window.innerWidth < 1024);
   useEffect(() => {
     const onResize = () => setNarrow(window.innerWidth < 1024);
@@ -204,7 +214,7 @@ export function FloorMode() {
   // 拠点: URL か、本社（無ければ最初の拠点）
   const siteList = sites.data ?? [];
   const siteId = route.siteId && siteList.some((s) => s.id === route.siteId) ? route.siteId : (siteList.find((s) => s.type === "head_office") ?? siteList[0])?.id ?? null;
-  const buildings = useBuildings(siteId, asOf);
+  const buildings = useBuildings(siteId, asOf, rev);
   const buildingList = useMemo(() => buildings.data ?? [], [buildings.data]);
   const building = buildingList.find((b) => b.id === route.buildingId) ?? (buildingList.length === 1 ? buildingList[0]! : null);
   const floor = building?.floors.find((f) => f.id === route.floorId) ?? null;
@@ -225,9 +235,9 @@ export function FloorMode() {
   // 表示する建物（建物を選んでいなければ拠点のすべての建物）と、その階の配置図
   const shown = useMemo(() => (building ? [building] : buildingList), [building, buildingList]);
   const floorIds = useMemo(() => shown.flatMap((b) => b.floors.map((f) => f.id)), [shown]);
-  const layouts = useFloorLayouts(floorIds, asOf);
-  const layout = useFloorLayout(floorId, asOf);
-  const occupants = useFloorOccupants(floorId, asOf);
+  const layouts = useFloorLayouts(floorIds, asOf, layoutRev);
+  const layout = useFloorLayout(floorId, asOf, layoutRev);
+  const occupants = useFloorOccupants(floorId, asOf, rev);
   const isToday = asOf === adapter.businessDate;
   const presence = useFloorPresence(isToday ? floorId : null, isToday ? adapter.businessDate : null);
   const presenceOn = presenceOverlayOn(asOf, adapter.businessDate, Boolean(presence.data), route.presenceParam);
@@ -273,6 +283,7 @@ export function FloorMode() {
     openPerson(p.id);
   };
   const plan = route.plan;
+  const editing = route.edit && Boolean(floorId);
   const sheet = narrow && Boolean(route.personId);
 
   const planView = view ? (
@@ -350,6 +361,22 @@ export function FloorMode() {
         <PersonFinder onPick={pickPerson} />
         {(buildings.loading || layout.loading || occupants.loading) && <Spinner />}
         <ChartToolbarEnd>
+          {floorId && (
+            <ToolbarButton pressed={editing} onClick={() => route.set({ edit: editing ? null : "1" }, false)}>
+              編集
+            </ToolbarButton>
+          )}
+          {canRegisterLayout && !editing && (
+            <LayoutPanel
+              building={building}
+              siteCode={siteList.find((s) => s.id === siteId)?.code ?? null}
+              asOf={asOf}
+              onRegistered={() => {
+                setRev((n) => n + 1);
+                setLayoutRev((n) => n + 1);
+              }}
+            />
+          )}
           <ToolbarButton
             onClick={() => {
               if (route.personId) openPerson(null);
@@ -375,6 +402,21 @@ export function FloorMode() {
           </div>
         ) : buildings.data && buildingList.length === 0 ? (
           <p className="p-6 text-muted">この拠点には建物・階が登録されていません。</p>
+        ) : editing && layout.data?.floor_id === floorId && occupants.data ? (
+          <FloorEditor
+            key={floorId}
+            title={`${building?.name ?? ""} ${floor?.label ?? ""}`}
+            asOf={asOf}
+            layout={layout.data}
+            occupants={occupants.data}
+            groupOf={groupOf}
+            monochrome={route.monochrome}
+            onReflected={() => setRev((n) => n + 1)}
+          />
+        ) : editing ? (
+          <div className="p-4">
+            <Spinner />
+          </div>
         ) : plan ? (
           planView
         ) : sceneBuildings.length > 0 ? (
@@ -409,7 +451,7 @@ export function FloorMode() {
             <Spinner />
           </div>
         )}
-        {building && !plan && <FloorList building={building} selectedId={floorId} onSelect={(id) => selectFloor(id === floorId ? null : id)} />}
+        {building && !plan && !editing && <FloorList building={building} selectedId={floorId} onSelect={(id) => selectFloor(id === floorId ? null : id)} />}
       </div>
     </div>
   );

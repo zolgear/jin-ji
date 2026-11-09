@@ -3920,7 +3920,7 @@
           "FieldEndpoints"
         ],
         "summary": "直接登録する（範囲の中ならすぐに反映。AI エージェントは下書き）",
-        "description": "changes の kind: assignment（異動・役職）/ person（拠点・リモートワーク・内線・社用携帯）/ org_update（名称・略称・段・上位組織・組織長・拠点）/ org_create（新設）/ org_abolish（廃止）。values のキーは項目名（org_unit_id など）。有効日は今日以降（遡及は組織管理者・人事管理者）。相手側の組織の範囲が要れば pending_consent。変える人は 50 人まで。範囲の外は 403、値の誤りは 400、作成後に対象が変わっていれば 409。",
+        "description": "changes の kind: assignment（異動・役職）/ person（拠点・リモートワーク・内線・社用携帯）/ org_update（名称・略称・段・上位組織・組織長・拠点）/ org_create（新設）/ org_abolish（廃止）/ member_order（組織の中の並び順）/ workplace（人の主の席・持ち場）。values のキーは項目名（org_unit_id など）。有効日は今日以降（遡及は組織管理者・人事管理者）。相手側の組織の範囲が要れば pending_consent。変える人は 50 人まで。範囲の外は 403、値の誤りは 400、作成後に対象が変わっていれば 409。",
         "operationId": "CreateFieldRegistration",
         "requestBody": {
           "content": {
@@ -4077,6 +4077,88 @@
         }
       }
     },
+    "/api/v1/field/layouts": {
+      "post": {
+        "tags": [
+          "FieldEndpoints"
+        ],
+        "summary": "配置図（建物・階・配置図の改訂）を直接登録する（施設管理者・人事管理者の人）",
+        "description": "document は取込と同じ jin-ji の配置図の形式 v1（format: jinji-floor-layout/v1。拠点コード・建物・階・外形・固定の部分・ゾーン・席）。建物・階は拠点の中の建物コード・階の表示名で突合し、無ければ新設する。席番号が同じなら改訂をまたいで同じ席。layout.valid_from は使わず effective_date から切り替える。管理元の領域 floor_layout が field（既定）ならすぐに反映し、approval なら pending_consent にして、登録者と別の施設管理者・人事管理者の consent で反映する。施設管理者・人事管理者でなければ 403、形式・形の誤り・保持しない情報らしき値・今と同じ配置図は 400。",
+        "operationId": "CreateLayoutRegistration",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateLayoutRegistrationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FieldRegistrationResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/field/registrations/{registrationId}/confirm": {
       "post": {
         "tags": [
@@ -4173,7 +4255,7 @@
         "tags": [
           "JinJi.IntegrationTests"
         ],
-        "summary": "同意待ちの登録に同意して反映する（相手側の組織の範囲を持つ、登録者とは別の人）",
+        "summary": "同意待ちの登録に同意して反映する（相手側の組織の範囲を持つ、登録者とは別の人。配置図の登録は別の施設管理者・人事管理者の承認）",
         "operationId": "ConsentFieldRegistration",
         "parameters": [
           {
@@ -4264,7 +4346,7 @@
         "tags": [
           "JinJi.IntegrationTests"
         ],
-        "summary": "反映済みの登録を有効日の前に取り消す（登録者か、登録の組織すべての範囲を持つ人）",
+        "summary": "反映済みの登録を有効日の前に取り消す（登録者か、登録の組織すべての範囲を持つ人。配置図の登録は施設管理者・人事管理者も）",
         "operationId": "WithdrawFieldRegistration",
         "parameters": [
           {
@@ -4355,7 +4437,7 @@
         "tags": [
           "JinJi.IntegrationTests"
         ],
-        "summary": "下書き・同意待ちの登録を破棄する（登録者か、組織管理者・人事管理者）",
+        "summary": "下書き・同意待ちの登録を破棄する（登録者か、組織管理者・人事管理者。配置図の登録は施設管理者・人事管理者）",
         "operationId": "DiscardFieldRegistration",
         "parameters": [
           {
@@ -9321,6 +9403,34 @@
           }
         }
       },
+      "CreateLayoutRegistrationRequest": {
+        "type": "object",
+        "properties": {
+          "effective_date": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "note": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "document": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            ]
+          }
+        }
+      },
       "CreateLoginBindingRequest": {
         "required": [
           "person_id",
@@ -9577,6 +9687,7 @@
               "org_create",
               "org_abolish",
               "member_order",
+              "workplace",
               null
             ],
             "type": [
@@ -9673,7 +9784,9 @@
               "org_site",
               "assignment",
               "person_site",
-              "person_contact"
+              "person_contact",
+              "workplace",
+              "floor_layout"
             ],
             "type": "string"
           },
@@ -9681,7 +9794,8 @@
             "enum": [
               "hr",
               "field",
-              "both"
+              "both",
+              "approval"
             ],
             "type": "string"
           }
@@ -9770,6 +9884,7 @@
       "FieldRegistrationResponse": {
         "required": [
           "id",
+          "kind",
           "status",
           "effective_date",
           "note",
@@ -9793,6 +9908,13 @@
           "id": {
             "type": "string",
             "format": "uuid"
+          },
+          "kind": {
+            "enum": [
+              "org",
+              "layout"
+            ],
+            "type": "string"
           },
           "status": {
             "enum": [
@@ -9967,7 +10089,9 @@
               "org_site",
               "assignment",
               "person_site",
-              "person_contact"
+              "person_contact",
+              "workplace",
+              "floor_layout"
             ],
             "type": "string"
           },
@@ -9975,7 +10099,8 @@
             "enum": [
               "hr",
               "field",
-              "both"
+              "both",
+              "approval"
             ],
             "type": "string"
           },
@@ -12138,6 +12263,7 @@
               "org_create",
               "org_abolish",
               "member_order",
+              "workplace",
               "group_join",
               "group_leave",
               null
@@ -13021,6 +13147,8 @@
               "assignment",
               "person_site",
               "person_contact",
+              "workplace",
+              "floor_layout",
               null
             ],
             "type": [
@@ -13033,6 +13161,7 @@
               "hr",
               "field",
               "both",
+              "approval",
               null
             ],
             "type": [

@@ -495,7 +495,7 @@ public sealed class PlanService
                 case PlanChangeKind.OrgUpdate or PlanChangeKind.OrgAbolish or PlanChangeKind.MemberOrder when c.TargetId is { } unit:
                     orgs.Add(unit);
                     break;
-                case PlanChangeKind.Assignment or PlanChangeKind.Person when c.TargetId is { } person:
+                case PlanChangeKind.Assignment or PlanChangeKind.Person or PlanChangeKind.Workplace when c.TargetId is { } person:
                     if (snapshot.AssignmentsOf(person).FirstOrDefault(a => a.Type == AssignmentType.Primary) is { } a)
                     {
                         orgs.Add(a.OrgUnitId);

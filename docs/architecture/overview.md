@@ -310,7 +310,7 @@ ADR-0002「拠点とリモートワーク」の実装の規則。コードでは
 - 扱うのは人事が持つ決まった席・持ち場（固定席・工場のライン / 持ち場・倉庫のエリア・副の席）だけ。当日の所在・座席予約・フリーアドレス・会議室などの施設の予約と管理は持たない（人事の範疇を超える施設管理で、連携先の範疇）
 - 建物・階・配置図の改訂・人の席は二つの時間軸（§4.1）を持ち、組織のスナップショット（`OrgSnapshot.Workplace`）に時点の行として読む。将来の版・改訂・割り当て（席替えの予定）は内示と同じ線（`jinji_viewer_horizon()`）で RLS とアプリが隠す
 - 人の階・エリア（項目 `workplace`）は「主の席 → 主のゾーンの割り当て」で解決し（組織からは引き継がない）、席（項目 `seat`）は別の項目にする。席の状態は空席（割り当ての無い席）・使用中・使えない席の 3 つで、閲覧者に `seat` が見えない人の席は使えない席にする（保守中と区別しない）
-- 改訂の起案は取込の作業領域の変更提案で、別の人事管理者の承認で `floor_layout`（承認済みだけ）になる（起案者 ≠ 承認者は CHECK 制約）。席の同一性（`seat`）と置き場所（`layout_seat`）を分け、階の整合は複合外部キーで守る。割り当ての変更・配置図の改訂は人の変更として変更フィードに届く
+- 改訂の起案は変更提案で、取込なら別の人事管理者の承認で、施設管理者の直接登録（§5.7）なら登録の時点（承認ありの設定では別の人の承認）で `floor_layout` になる（取込の改訂は起案者 ≠ 承認者の CHECK 制約）。席の同一性（`seat`）と置き場所（`layout_seat`）を分け、階の整合は複合外部キーで守る。割り当ての変更・配置図の改訂は人の変更として変更フィードに届く
 - **所在は保持せず、外部の提供を注入して表示する**（リアルタイムの所在は連携先の範疇）。拡張点は `IPresenceProvider`（既定は `NoPresenceProvider` = 提供なし）で、配備側は `JinJiHost.RunAsync(args, services => …)` で差し替える。返った所在には必ず jin-ji の認可を適用する（項目 `presence` の組み込みの公開範囲〔既定は本人と同じ部〕・ポリシー・個人単位の例外・項目の上限。`*` は `presence` を含まない）。人事管理者の全項目の閲覧は `presence` には効かない（人事管理者を含め、所在だけは全員を一覧できる立場を作らない）。今日だけ問い合わせ（`as_of` では呼ばない）、キャッシュ・永続化せず、変更フィード・Webhook・監査ログに記録しない。応答は `Cache-Control: no-store`
 
 ## 5. 認可モデル（公開範囲）
@@ -475,16 +475,16 @@ ADR-0002「拠点とリモートワーク」の実装の規則。コードでは
 [ADR-0013](../adr/0013-field-managed-changes.md) の管理元・担当の指名・範囲の判定・直接登録の実装の規則。コードでは `JinJi.Domain.Organization.FieldManagement`（`FieldDomain`・`FieldManagementMode`・`OrgEditorGrant`・`RegistrationScope`）、`JinJi.Application.FieldManagement`（`FieldManagementService`・`FieldRegistrationService`・`FieldRegistrationPlanner`）、`JinJi.Infrastructure.Database`（`NpgsqlFieldManagementStore`・`NpgsqlFieldRegistrationStore`）、`JinJi.Ingest.FieldModeFilter`、REST の `/api/v1/field`（`JinJi.Api.FieldEndpoints`）、MCP の `draft_field_registration`・`list_field_registrations`、`db/migrations/0020_field_management.sql`・`0021_field_registration.sql` に対応する。
 
 - ロール `org_admin`（組織管理者。IT 部門を想定）を足した。全社の範囲を持ち、管理元の起案・承認と担当の指名ができる。人事管理者と違い、氏名の履歴・取込の作業領域・監査ログ・内示は見えない。付与は `hr_corrector` と同じ流儀（管理 CLI `grant-role --role org_admin`。自分には付与できない）
-- 管理元（`field_domain_setting`）: 領域（`org_structure`・`org_site`・`assignment`・`person_site`・`person_contact`）ごとに `hr` / `field` / `both`。承認済みの行が無い領域は `hr`（`jinji_field_domain_mode()`）。起案 → 別人の承認で反映し、同じ領域の承認済みの行を置き換える（先行提供の日数と同じ形。起案者 ≠ 承認者は CHECK 制約、状態の遷移と中身の不変はトリガー）。起案・承認は人事管理者か `org_admin` の「人」だけ（AI エージェントは不可。アプリと RLS）。参照は閲覧者なら誰でも（設定データで、人事データの値ではない）
+- 管理元（`field_domain_setting`）: 領域（`org_structure`・`org_site`・`assignment`・`person_site`・`person_contact`・`workplace`）ごとに `hr` / `field` / `both`、配置図（`floor_layout`）は `field`（承認なし）/ `approval`（承認あり）。承認済みの行が無い領域は `hr`（`workplace`・`floor_layout` は `field`。`jinji_field_domain_mode()`）。起案 → 別人の承認で反映し、同じ領域の承認済みの行を置き換える（先行提供の日数と同じ形。起案者 ≠ 承認者は CHECK 制約、状態の遷移と中身の不変はトリガー）。起案・承認は人事管理者か `org_admin` の「人」だけ（AI エージェントは不可。アプリと RLS）。参照は閲覧者なら誰でも（設定データで、人事データの値ではない）
 - 担当の指名（`org_editor_grant`）: 組織に結び付け、期間（始まりと終わり。今日以降に始まり 366 日まで）を持つ。指名・取り消しは、その組織の組織長としての範囲（上位の組織長を含む）か、人事管理者・`org_admin` の「人」。担当としての範囲では指名できない（再指名の禁止）。自分は指名できない（CHECK 制約）。同じ組織・同じ人の有効な指名の期間は重ならない（排他制約）。参照は人の閲覧者（AI エージェントは委任元）と jin-ji 自身で、社内システムには見せない
 - 範囲（`RegistrationScope`・RLS の `jinji_viewer_scope_covers(組織, 日付, 担当を含めるか)`）: 人事管理者・`org_admin` は全社。それ以外は、その日の組織の祖先（自分を含む）のいずれかで組織長か、有効な担当の指名を持つこと。AI エージェントは委任元の範囲。権限を生む変更（組織長の任免・上位組織の付け替え）は一つ上の組織の範囲を要し（`CoversParentOf`）、最上位の組織は全社の範囲だけ。アプリと RLS は同じ規則で、テストで両方を突き合わせる
 - RLS の線: 将来の組織の版は人事管理者以外に見えないので、将来の日付の範囲は（人事管理者・`org_admin` を除き）今日の組織の構造で判定される。指名の表の書き込みの方針だけが範囲の関数を呼び、参照の方針は呼ばない（方針の再帰を作らない）
-- 監査ログ: `field.domain.propose`・`field.domain.approve`・`field.domain.reject`・`field.editor.grant`・`field.editor.revoke`・`field.registration.register`・`field.registration.confirm`・`field.registration.consent`・`field.registration.withdraw`・`field.registration.discard`（拒否・失敗も）
+- 監査ログ: `field.domain.propose`・`field.domain.approve`・`field.domain.reject`・`field.editor.grant`・`field.editor.revoke`・`field.registration.register`・`field.registration.register_layout`・`field.registration.confirm`・`field.registration.consent`・`field.registration.withdraw`・`field.registration.discard`（拒否・失敗も）
 
 **直接登録（`field_registration`）**
 
 - 登録は変更提案（`change_proposal.field_registration_id`。取込単位は持たない）をまとめたもので、反映は取込の承認と同じ `NpgsqlIngestStore.ApplyInTransactionAsync` を、登録の提案ごとに 1 トランザクションの中で呼ぶ（旧値の照合・段の検査・発令・変更フィード・Webhook・同期計画が同じに効く）。職務分掌の CHECK（反映者 ≠ 起案者）は直接登録の提案だけ外す。取込の承認・却下の API からは直接登録の提案を扱えない
-- 変更の種類は `assignment`（主務の異動・役職）・`person`（拠点・リモートワーク・内線・社用携帯）・`org_update`・`org_create`・`org_abolish`・`member_order`（組織の中の並び順。決定 10。人ごとの主務の所属の行の `sort_order` の変更になり、発令は作らない。同じ登録で異動する人は異動の提案に並び順を足す。異動すると並び順は外れる。`db/migrations/0024_member_order.sql`）。旧値は有効日の組織スナップショット（登録者の見え方）から取り、反映時に DB の行と照合する。反映の順は 組織の新設 → 組織の変更 → 所属 → 人 → 組織の廃止（新しい組織への異動・異動で空にした組織の廃止を 1 回で登録できる）
+- 変更の種類は `assignment`（主務の異動・役職）・`person`（拠点・リモートワーク・内線・社用携帯）・`org_update`・`org_create`・`org_abolish`・`member_order`（組織の中の並び順。決定 10。人ごとの主務の所属の行の `sort_order` の変更になり、発令は作らない。同じ登録で異動する人は異動の提案に並び順を足す。異動すると並び順は外れる。`db/migrations/0024_member_order.sql`）・`workplace`（人の主の席・持ち場。決定 11。席は現場の組織が決めるので、管理元の既定は `field`（ほかの領域は `hr`）。範囲は人の主務の組織。定員 1 の席は今使っている人の席を同じ登録で変えるときだけ使え、空く席を先に動かす順で反映する。`db/migrations/0025_field_workplace.sql`）。旧値は有効日の組織スナップショット（登録者の見え方）から取り、反映時に DB の行と照合する。反映の順は 組織の新設 → 組織の変更 → 所属 → 人 → 組織の廃止 → 席（新しい組織への異動・異動で空にした組織の廃止を 1 回で登録できる）。登録の提案は ID の順に読んで反映するので、計画の最後に反映の順で ID を振り直す
 - 範囲: 今日の範囲で判定する。異動・上位組織の付け替えは出し側と受け側の両方を要し、片側しか持たなければもう片側を「同意が要る組織」にして同意待ち（`pending_consent`）にする（どちらも持たなければ 403）。同意は登録者とは別の、同意が要る組織すべての範囲を持つ人の 1 回の操作で、同意者として記録してから反映する。組織長の任免・上位組織の付け替えは元の上位組織の範囲を要し、同意では補えない
 - 有効日は今日以降（遡及は `org_admin`・人事管理者）。変える人は 50 人まで（同じく除く）。下書き・同意待ちは 14 日で期限切れ（参照のときに期限切れにする）。取り消しは有効日の前だけで、登録者か、登録の組織すべての範囲を持つ人
 - AI エージェントの登録は委任元の名義の下書き（`draft`）で、反映は委任元の人の確定（`confirm`）だけ。確定のときに範囲を見直す
@@ -493,6 +493,7 @@ ADR-0002「拠点とリモートワーク」の実装の規則。コードでは
 - 未来日の行の秘匿: 反映の間は GUC `jinji.field_registration` を設定し、トリガーが書いた行を `field_registration_row` に記録する。未来日の行（内示と同じに人事管理者以外に見せない行）は、その登録の関係者（`field_registration_viewer`: 登録者・同意者・取り消した人）と `org_admin` にだけ見せる。対象の本人には見せない。関係者の表の参照の方針は範囲の関数を使わない（公開側の表の参照の方針から読まれるので、方針の再帰を作らない）
 - 取り消し: 登録が追加した行の記録期間を閉じ、閉じた行を写して戻す（同じ登録で追加して閉じた途中の行は差し引きで何もしない）。登録の後に同じ行が変わっていれば 409
 - 登録の参照: 人事管理者・`org_admin`・登録者・同意者と、関係する組織の範囲を持つ人（AI エージェントは委任元）
+- 配置図（決定 12。`db/migrations/0026_facility_layout.sql`）: ロール `facility_admin`（施設管理者）が、取込と同じ配置図の JSON を `POST /field/layouts` で登録する（`field_registration.kind = layout`）。JSON は取込と同じ正規化・検査・計画（`JinJi.Ingest.LayoutDocumentPlanner`。API からはポート `ILayoutDocumentPlanner` で呼ぶ）で建物・階・改訂の提案にし、修正依頼になる要素があれば登録しない。管理元 `floor_layout` が `approval` なら同意待ちにし、登録者と別の施設管理者・人事管理者の同意で反映する（承認を経ない反映はトリガー `jinji_guard_layout_registration` が止める）。改訂は書いた登録（`floor_layout.field_registration_id`）を持ち、職務分掌の CHECK は取込の改訂だけ。施設管理者の書き込みは建物・階・席・改訂の表だけで、将来の建物・階・改訂も見える。取り消しは改訂をゾーン・席の置き場所ごと戻す
 - 取込との関係（`FieldModeFilter`）: 管理元が `field` の領域の差分は承認できない要確認（`basis.code = field_managed`。「人事パッケージとの差」）にする。人の版・組織の版は項目の領域で分け、`hr` の領域の分だけを起案中に残す。`both` の領域で、今日有効な値を直接登録が書いた対象の差分は、起案中のまま `field_registered` の印を付ける（承認するまで上書きしない）
 
 ### 5.8 グループ（ADR-0014）

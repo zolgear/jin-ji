@@ -108,17 +108,30 @@ internal static class FieldEndpoints
             .WithSummary("直接登録する（範囲の中ならすぐに反映。AI エージェントは下書き）")
             .WithDescription(
                 "changes の kind: assignment（異動・役職）/ person（拠点・リモートワーク・内線・社用携帯）/ org_update（名称・略称・段・上位組織・組織長・拠点）/ " +
-                "org_create（新設）/ org_abolish（廃止）。values のキーは項目名（org_unit_id など）。有効日は今日以降（遡及は組織管理者・人事管理者）。" +
+                "org_create（新設）/ org_abolish（廃止）/ member_order（組織の中の並び順）/ workplace（人の主の席・持ち場）。values のキーは項目名（org_unit_id など）。有効日は今日以降（遡及は組織管理者・人事管理者）。" +
                 $"相手側の組織の範囲が要れば pending_consent。変える人は {FieldRegistrationService.MaxPeople} 人まで。範囲の外は 403、値の誤りは 400、作成後に対象が変わっていれば 409。")
             .WithMetadata(new RequestKindMetadata(RequestKind.Field, false))
             .Produces<FieldRegistrationResponse>()
             .ProducesProblem(StatusCodes.Status403Forbidden)
             .ProducesProblem(StatusCodes.Status409Conflict);
 
+        api.MapPost("/field/layouts", RegisterLayoutAsync)
+            .WithName("CreateLayoutRegistration")
+            .WithSummary("配置図（建物・階・配置図の改訂）を直接登録する（施設管理者・人事管理者の人）")
+            .WithDescription(
+                "document は取込と同じ jin-ji の配置図の形式 v1（format: jinji-floor-layout/v1。拠点コード・建物・階・外形・固定の部分・ゾーン・席）。" +
+                "建物・階は拠点の中の建物コード・階の表示名で突合し、無ければ新設する。席番号が同じなら改訂をまたいで同じ席。layout.valid_from は使わず effective_date から切り替える。" +
+                "管理元の領域 floor_layout が field（既定）ならすぐに反映し、approval なら pending_consent にして、登録者と別の施設管理者・人事管理者の consent で反映する。" +
+                "施設管理者・人事管理者でなければ 403、形式・形の誤り・保持しない情報らしき値・今と同じ配置図は 400。")
+            .WithMetadata(new RequestKindMetadata(RequestKind.Field, false))
+            .Produces<FieldRegistrationResponse>()
+            .ProducesProblem(StatusCodes.Status403Forbidden)
+            .ProducesProblem(StatusCodes.Status409Conflict);
+
         MapTransition(api, "confirm", "ConfirmFieldRegistration", "AI エージェントの下書きを確定する（下書きの名義の人）", (s, v, id, ct) => s.ConfirmAsync(v, id, ct));
-        MapTransition(api, "consent", "ConsentFieldRegistration", "同意待ちの登録に同意して反映する（相手側の組織の範囲を持つ、登録者とは別の人）", (s, v, id, ct) => s.ConsentAsync(v, id, ct));
-        MapTransition(api, "withdraw", "WithdrawFieldRegistration", "反映済みの登録を有効日の前に取り消す（登録者か、登録の組織すべての範囲を持つ人）", (s, v, id, ct) => s.WithdrawAsync(v, id, ct));
-        MapTransition(api, "discard", "DiscardFieldRegistration", "下書き・同意待ちの登録を破棄する（登録者か、組織管理者・人事管理者）", (s, v, id, ct) => s.DiscardAsync(v, id, ct));
+        MapTransition(api, "consent", "ConsentFieldRegistration", "同意待ちの登録に同意して反映する（相手側の組織の範囲を持つ、登録者とは別の人。配置図の登録は別の施設管理者・人事管理者の承認）", (s, v, id, ct) => s.ConsentAsync(v, id, ct));
+        MapTransition(api, "withdraw", "WithdrawFieldRegistration", "反映済みの登録を有効日の前に取り消す（登録者か、登録の組織すべての範囲を持つ人。配置図の登録は施設管理者・人事管理者も）", (s, v, id, ct) => s.WithdrawAsync(v, id, ct));
+        MapTransition(api, "discard", "DiscardFieldRegistration", "下書き・同意待ちの登録を破棄する（登録者か、組織管理者・人事管理者。配置図の登録は施設管理者・人事管理者）", (s, v, id, ct) => s.DiscardAsync(v, id, ct));
     }
 
     private static void MapTransition(
@@ -158,7 +171,7 @@ internal static class FieldEndpoints
     {
         if (!FieldDomains.TryParseDomain(body?.Domain, out var domain) || !FieldDomains.TryParseMode(body?.Mode, out var mode))
         {
-            return Problems.BadRequest(http, "domain（org_structure / org_site / assignment / person_site / person_contact）と mode（hr / field / both）を指定してください。");
+            return Problems.BadRequest(http, "domain（org_structure / org_site / assignment / person_site / person_contact / workplace）と mode（hr / field / both）を指定してください。");
         }
 
         return await Handle(http, async () => FieldSettingResponse.From(await service.ProposeModeAsync(http.Viewer(), domain, mode, body!.Note, cancellationToken)));
@@ -283,6 +296,18 @@ internal static class FieldEndpoints
 
         return await Handle(http, async () =>
             FieldRegistrationResponse.From(await service.RegisterAsync(http.Viewer(), new FieldRegistrationInput(date, body.Note, inputs), cancellationToken), withChanges: true));
+    }
+
+    private static async Task<IResult> RegisterLayoutAsync(CreateLayoutRegistrationRequest body, HttpContext http, FieldRegistrationService service, CancellationToken cancellationToken)
+    {
+        if (body?.EffectiveDate is not { } date || body.Document is not { ValueKind: System.Text.Json.JsonValueKind.Object } document)
+        {
+            return Problems.BadRequest(http, "effective_date と document（配置図の JSON のオブジェクト）を指定してください。");
+        }
+
+        var bytes = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(document);
+        return await Handle(http, async () =>
+            FieldRegistrationResponse.From(await service.RegisterLayoutAsync(http.Viewer(), new LayoutRegistrationInput(date, body.Note, bytes), cancellationToken), withChanges: true));
     }
 
     /// <summary>操作の誤りを応答に変える（範囲の外は 403、見えない・無いは 404、状態の衝突は 409、値の誤りは 400）。</summary>
@@ -463,7 +488,7 @@ public sealed record FieldChangeRequest
     /// <summary>対象の人・組織（新設では省略可。省略なら採番する）。</summary>
     public Guid? TargetId { get; init; }
 
-    /// <summary>変える項目（キーは org_unit_id・position_title・site_id・remote_work・extension_number・work_mobile_phone・code・name・short_name・level_key・parent_org_unit_id・head_person_id）。</summary>
+    /// <summary>変える項目（キーは org_unit_id・position_title・site_id・remote_work・extension_number・work_mobile_phone・code・name・short_name・level_key・parent_org_unit_id・head_person_id・person_ids・seat_id・floor_id・zone_key）。</summary>
     public IReadOnlyDictionary<string, string?>? Values { get; init; }
 }
 
@@ -477,6 +502,19 @@ public sealed record CreateFieldRegistrationRequest
     public string? Note { get; init; }
 
     public IReadOnlyList<FieldChangeRequest>? Changes { get; init; }
+}
+
+/// <summary>配置図の直接登録の要求。</summary>
+public sealed record CreateLayoutRegistrationRequest
+{
+    /// <summary>有効日（切り替える日。今日以降。遡及は人事管理者）。</summary>
+    public DateOnly? EffectiveDate { get; init; }
+
+    /// <summary>理由のメモ（任意。500 文字まで）。</summary>
+    public string? Note { get; init; }
+
+    /// <summary>配置図の JSON（jin-ji の配置図の形式 v1。format・site_code・buildings）。</summary>
+    public System.Text.Json.JsonElement? Document { get; init; }
 }
 
 /// <summary>直接登録の 1 つの変更（変更提案）。</summary>
@@ -521,6 +559,10 @@ public sealed record FieldRegistrationResponse
 {
     public required Guid Id { get; init; }
 
+    /// <summary>種類（org: 組織と人 / layout: 配置図）。</summary>
+    [OpenApiEnum("org", "layout")]
+    public required string Kind { get; init; }
+
     [OpenApiEnum(typeof(FieldRegistrationStatus))]
     public required string Status { get; init; }
 
@@ -564,6 +606,7 @@ public sealed record FieldRegistrationResponse
     internal static FieldRegistrationResponse From(FieldRegistration registration, bool withChanges) => new()
     {
         Id = registration.Id,
+        Kind = registration.Kind == FieldRegistrationKind.Layout ? "layout" : "org",
         Status = FieldRegistrationService.Code(registration.Status),
         EffectiveDate = registration.EffectiveDate,
         Note = registration.Note,

@@ -160,10 +160,10 @@ public sealed class FieldManagementTests : IAsyncLifetime
 
     // ---- 管理元 -------------------------------------------------------------------------------------------------------
 
-    [Fact(DisplayName = "管理元: 既定は全領域 hr。起案者と別の人が承認すると有効になり、次の承認で置き換わる")]
+    [Fact(DisplayName = "管理元: 既定は席・持ち場と配置図だけ field、ほかは hr。起案者と別の人が承認すると有効になり、次の承認で置き換わる")]
     public async Task Mode_ProposeAndApprove()
     {
-        Assert.All((await _service.ModesAsync(_db.User("member"), Ct)).Values, m => Assert.Equal(FieldManagementMode.Hr, m));
+        Assert.All(await _service.ModesAsync(_db.User("member"), Ct), m => Assert.Equal(m.Key is FieldDomain.Workplace or FieldDomain.FloorLayout ? FieldManagementMode.Field : FieldManagementMode.Hr, m.Value));
 
         var proposal = await _service.ProposeModeAsync(OrgAdmin, FieldDomain.Assignment, FieldManagementMode.Field, "異動は現場で登録する", Ct);
 

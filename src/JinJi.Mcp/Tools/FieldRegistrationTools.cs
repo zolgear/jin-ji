@@ -24,8 +24,8 @@ internal sealed class DraftFieldRegistrationTool : McpTool
               "items": {
                 "type": "object",
                 "properties": {
-                  "kind": { "type": "string", "enum": ["assignment", "person", "org_update", "org_create", "org_abolish", "member_order"],
-                    "description": "assignment（主務の異動・役職）/ person（拠点・リモートワーク・内線・社用携帯）/ org_update（名称・略称・段・上位組織・組織長・拠点）/ org_create（新設）/ org_abolish（廃止）/ member_order（組織の中の人の並び順。target_id は組織、values の person_ids に並べた人の ID をカンマでつなぐ）" },
+                  "kind": { "type": "string", "enum": ["assignment", "person", "org_update", "org_create", "org_abolish", "member_order", "workplace"],
+                    "description": "assignment（主務の異動・役職）/ person（拠点・リモートワーク・内線・社用携帯）/ org_update（名称・略称・段・上位組織・組織長・拠点）/ org_create（新設）/ org_abolish（廃止）/ member_order（組織の中の人の並び順。target_id は組織、values の person_ids に並べた人の ID をカンマでつなぐ）/ workplace（人の主の席。values の seat_id か、floor_id と zone_key。どれも空なら席を外す）" },
                   "target_id": { "type": "string", "format": "uuid", "description": "対象の人・組織の jin-ji ID（新設では省略可）" },
                   "values": { "type": "object", "additionalProperties": { "type": ["string", "null"] },
                     "description": "変える項目（キーは org_unit_id・position_title・site_id・remote_work〔true/false〕・extension_number・work_mobile_phone・code・name・short_name・level_key・parent_org_unit_id・head_person_id。ID は jin-ji ID）" }
@@ -106,7 +106,7 @@ internal sealed class DraftFieldRegistrationTool : McpTool
             var kind = Enum.GetValues<FieldChangeKind>().FirstOrDefault(k => McpCodes.Of(k) == kindElement.GetString(), (FieldChangeKind)(-1));
             if (!Enum.IsDefined(kind))
             {
-                throw McpToolException.Invalid("kind は assignment / person / org_update / org_create / org_abolish / member_order で指定してください。");
+                throw McpToolException.Invalid("kind は assignment / person / org_update / org_create / org_abolish / member_order / workplace で指定してください。");
             }
 
             Guid? target = null;

@@ -83,6 +83,8 @@ internal static class DatabaseRegistration
         services.TryAddSingleton<Application.FieldManagement.FieldManagementService>();
         // 直接登録（登録・同意・取り消し。0021）
         services.TryAddSingleton<Application.FieldManagement.IFieldRegistrationStore, NpgsqlFieldRegistrationStore>();
+        // 配置図の直接登録（0026）は、取込と同じ正規化・検査・計画で配置図の JSON を提案にする（取込系の実装を合成ルートで渡す）
+        services.TryAddSingleton<Application.FieldManagement.ILayoutDocumentPlanner, Ingest.LayoutDocumentPlanner>();
         services.TryAddSingleton<Application.FieldManagement.FieldRegistrationService>();
 
         // グループ（チーム・プロジェクト。0022。ADR-0014）

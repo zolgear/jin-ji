@@ -438,7 +438,8 @@ public sealed partial class ProposalPlanner
                 kind,
                 capacity,
                 features,
-                row[IngestFields.SeatOutOfService] == "true"));
+                // 使えない席の印を省いた席は、今の改訂の値を引き継ぐ（書き出した配置図には印が無い。閲覧者に見えない人の席と区別しないため）
+                row[IngestFields.SeatOutOfService] is { } outOfService ? outOfService == "true" : existing?.OutOfService ?? false));
     }
 
     /// <summary>今の改訂を起案の形にする（同じ配置図かの比較に使う）。</summary>

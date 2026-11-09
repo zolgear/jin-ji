@@ -296,7 +296,7 @@ jin-ji の値の誤りを、人事パッケージで直せる人に伝える（�
 
 | エンドポイント | 内容 | 使える人 | 応答 | 種別 |
 | --- | --- | --- | --- | --- |
-| `GET /field/modes` | 領域ごとの管理元 | 閲覧者 | `FieldModeResponse` の配列（`domain`・`mode`: `hr` / `field` / `both`） | `field` |
+| `GET /field/modes` | 領域ごとの管理元 | 閲覧者 | `FieldModeResponse` の配列（`domain`・`mode`: `hr` / `field` / `both`。配置図 `floor_layout` は `field`〔承認なし〕/ `approval`〔承認あり〕） | `field` |
 | `GET /field/settings` | 管理元の起案の一覧 | 閲覧者 | `FieldSettingResponse` の配列（新しい順） | `field` |
 | `POST /field/settings` | 管理元を起案する（`{"domain", "mode", "note"}`） | 人事管理者・組織管理者の人 | `FieldSettingResponse`。同じ領域の起案中があれば 409 | `field` |
 | `POST /field/settings/{id}/approve`・`/reject` | 起案を承認・却下する | 起案者とは別の人事管理者・組織管理者の人 | `FieldSettingResponse` | `field` |
@@ -307,10 +307,11 @@ jin-ji の値の誤りを、人事パッケージで直せる人に伝える（�
 | `GET /field/registrations` | 直接登録の一覧（`mine`・`status` のカンマ区切り） | 閲覧者に見える登録（自分の登録・同意した登録・自分の範囲の組織の登録） | `FieldRegistrationResponse` の配列（変更は含めない） | `field` |
 | `GET /field/registrations/{id}` | 参照 | 同上 | `FieldRegistrationResponse`（`changes` に変更提案の旧値・新値） | `field` |
 | `POST /field/registrations` | 登録する（`{"effective_date", "note", "changes": [{"kind", "target_id", "values"}]}`） | 人（範囲の中ならすぐに反映、相手側の範囲が要れば `pending_consent`）・AI エージェント（`draft`） | `FieldRegistrationResponse`。範囲の外・管理元が `hr` は 403、値の誤りは 400、対象が変わっていれば 409 | `field` |
+| `POST /field/layouts` | 配置図を登録する（`{"effective_date", "note", "document"}`。`document` は取込と同じ配置図の JSON `jinji-floor-layout/v1`） | 施設管理者・人事管理者の人（管理元 `floor_layout` が `field` ならすぐに反映、`approval` なら `pending_consent`） | `FieldRegistrationResponse`（`kind: layout`）。形の誤り・保持しない情報らしき値・今と同じ配置図は 400、施設管理者・人事管理者でなければ 403 | `field` |
 | `POST /field/registrations/{id}/confirm` | AI エージェントの下書きを確定する | 下書きの名義の人 | `FieldRegistrationResponse` | `field` |
-| `POST /field/registrations/{id}/consent` | 同意して反映する | 相手側の組織の範囲を持つ、登録者とは別の人 | 同上 | `field` |
-| `POST /field/registrations/{id}/withdraw` | 有効日の前に取り消す | 登録者か、登録の組織すべての範囲を持つ人 | 同上。有効日を迎えた登録は 409 | `field` |
-| `POST /field/registrations/{id}/discard` | 下書き・同意待ちを破棄する | 登録者・組織管理者・人事管理者の人 | 同上 | `field` |
+| `POST /field/registrations/{id}/consent` | 同意して反映する | 相手側の組織の範囲を持つ、登録者とは別の人（配置図は登録者とは別の施設管理者・人事管理者の承認） | 同上 | `field` |
+| `POST /field/registrations/{id}/withdraw` | 有効日の前に取り消す | 登録者か、登録の組織すべての範囲を持つ人（配置図は施設管理者・人事管理者も） | 同上。有効日を迎えた登録は 409 | `field` |
+| `POST /field/registrations/{id}/discard` | 下書き・同意待ちを破棄する | 登録者・組織管理者・人事管理者の人（配置図は施設管理者・人事管理者） | 同上 | `field` |
 
 `changes` の `kind` と `values` のキー:
 
@@ -322,6 +323,7 @@ jin-ji の値の誤りを、人事パッケージで直せる人に伝える（�
 | `org_create` | 新しい組織の ID（省略なら採番） | `code`・`name`・`parent_org_unit_id`（必須）・`short_name`・`level_key`・`head_person_id`・`site_id` |
 | `org_abolish` | 組織 | なし（所属者・配下の組織が残っていれば 400） |
 | `member_order` | 組織 | `person_ids`（並べた人の jin-ji ID をカンマでつなぐ。有効日にその組織の主務の所属者か、同じ登録で異動してくる人。500 人まで）。組織の範囲が要る（同意では補えない）。並べなかった人の並び順は変えない。発令は作らない |
+| `workplace` | 人 | `seat_id`（席）か、`floor_id` と `zone_key`（席の無い持ち場）。どれも空なら主の席を外す。範囲はその人の主務の組織（同意では補えない）。定員 1 の席を使っている人がいれば、同じ登録でその人の席も変えるか外す（入れ替えを 1 回で登録できる）。使えない席・持ち場の定員超えは 400。管理元の領域は `workplace`（既定は `field`。席を外部から取り込む導入先は `hr`） |
 
 ### グループ（チーム・プロジェクト。ADR-0014）
 

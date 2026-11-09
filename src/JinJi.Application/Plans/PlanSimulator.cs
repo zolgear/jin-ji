@@ -214,6 +214,9 @@ public static class PlanSimulator
                 case PlanChangeKind.MemberOrder when c.TargetId is { } unitId && units.ContainsKey(unitId):
                     // 並び順は人数・組織図を変えない
                     break;
+                case PlanChangeKind.Workplace when c.TargetId is { } personId && snapshot.FindPerson(personId) is not null:
+                    // 席は人数・組織図を変えない（席の配置はフロアの画面で重ねて見る）
+                    break;
                 default:
                     warnings.Add(new PlanWarning(i, "対象が見つからないか、適用できない変更です。"));
                     break;

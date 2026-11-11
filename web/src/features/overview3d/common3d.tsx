@@ -6,7 +6,52 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 
-export const PALETTE = {
+/** 「電脳空間」の見た目の案（cyber3d.tsx）で足す色と効果。無ければ従来の見た目。 */
+export interface Cyber {
+  /** 背景の上の方の色・地平の光の帯の色 */
+  sky: string;
+  horizon: string;
+  /** 外装の溝の光・輪郭の光 */
+  seam: string;
+  rim: string;
+  rimPower: number;
+  /** 外装の不透明度（1 = 不透明） */
+  glass: number;
+  /** 上面の板が自ら光る強さ */
+  plateGlow: number;
+  /** 段の円盤を点の行列にする・塵の濃さ（0 = 無し）・法人の光の柱・にじみの強さ（0 = 無し） */
+  dots: boolean;
+  dust: number;
+  pillars: boolean;
+  bloom: number;
+}
+
+export interface Palette {
+  bg: string;
+  primary: string;
+  deemph: string;
+  entity: string;
+  edge: string;
+  concurrent: string;
+  secondment: string;
+  dot: string;
+  site: readonly string[];
+  siteOther: string;
+  wire: string;
+  grid: string;
+  shell: string;
+  shellDeemph: string;
+  shellEntity: string;
+  signal: string;
+  signalInk: string;
+  /** 表示灯の色（無ければ signal） */
+  lamp?: string;
+  lampOff: string;
+  light: { ambient: number; key: number; env: number };
+  cyber?: Cyber;
+}
+
+export const PALETTE: Record<"light" | "dark", Palette> = {
   light: {
     bg: "#f4f6f8",
     primary: "#2a78d6",
@@ -53,8 +98,7 @@ export const PALETTE = {
     lampOff: "#3a4553",
     light: { ambient: 0.35, key: 1.3, env: 0.35 },
   },
-} as const;
-export type Palette = (typeof PALETTE)[keyof typeof PALETTE];
+};
 
 /** 視点の操作（ドラッグで回転・ホイールとピンチで拡大縮小・右ドラッグと 2 本指で移動）。 */
 export function useOrbitControls(reduced: boolean) {

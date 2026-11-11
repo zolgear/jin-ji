@@ -63,7 +63,8 @@ import { useResolvedTheme } from "../../lib/theme";
 import { useFloorRoute } from "../floor/floorHooks";
 import { FloorMode } from "../floor/FloorMode";
 import { ModeSwitch } from "../floor/FloorParts";
-import { GridFloor, PALETTE, setEnvironment, useOrbitControls, type Palette } from "./common3d";
+import { GridFloor, PALETTE, setEnvironment, useOrbitControls, type Cyber, type Palette } from "./common3d";
+import { Backdrop, Bloom, DataDust, DotDisc, Pillars, cyberPalette, cyberPlateShader, cyberShellShader, readLook } from "./cyber3d";
 import { boundingSphere, heightOf, layout3d, layout3dSplit, personDots, type Island3D, type Layer3D, type Placed3D, type Scene3D } from "./layout3d";
 import { buildModules, hazardRing } from "./modules3d";
 import { TIER_COUNT, TIER_NAMES, TIER_SHAPES } from "./shapes3d";
@@ -358,9 +359,22 @@ function applyTextures(materials: { shell: THREE.MeshStandardMaterial; plate: TH
   plate.needsUpdate = true;
 }
 
-function useModuleMaterials(textures: ModuleTextures) {
+function useModuleMaterials(textures: ModuleTextures, cyber: Cyber | undefined) {
   const materials = useMemo(
-    () => ({
+    () =>
+      cyber
+        ? {
+            // 電脳空間の案: 暗い外装（溝と輪郭が光る。glass < 1 では半透明）と、自ら光る板
+            shell: addFade(
+              new THREE.MeshStandardMaterial({ color: "#ffffff", vertexColors: true, roughness: 0.3, metalness: 0.35, transparent: cyber.glass < 1, opacity: cyber.glass }),
+              `fade-shell-cyber:${JSON.stringify(cyber)}`,
+              cyberShellShader(cyber),
+            ),
+            plate: addFade(new THREE.MeshStandardMaterial({ color: "#ffffff", roughness: 0.55, metalness: 0.05 }), `fade-plate-cyber:${cyber.plateGlow}`, cyberPlateShader(cyber)),
+            lamp: addFade(new THREE.MeshBasicMaterial({ color: "#ffffff", toneMapped: false }), "fade-lamp"),
+            pick: new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false }),
+          }
+        : {
       // 白い外装（粉体塗装の金属）。台座・溝は頂点色で黒鉛色、組織ごとの色（退かせる・法人）はインスタンスの色
       // 外装・板・表示灯は、選んだ組織に関係しないものを地の色へ寄せる（aFade。インスタンスごと）
       shell: addFade(new THREE.MeshStandardMaterial({ color: "#ffffff", vertexColors: true, roughness: 0.42, metalness: 0.18 }), "fade-shell"),
@@ -370,8 +384,8 @@ function useModuleMaterials(textures: ModuleTextures) {
       lamp: addFade(new THREE.MeshBasicMaterial({ color: "#ffffff", toneMapped: false }), "fade-lamp"),
       // 指す・選ぶの判定だけに使う（色も深度も書かない）
       pick: new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false }),
-    }),
-    [],
+    },
+    [cyber],
   );
   useEffect(() => applyTextures(materials, textures), [materials, textures]);
   useEffect(() => () => Object.values(materials).forEach((m) => m.dispose()), [materials]);
@@ -389,7 +403,7 @@ function Orgs({ scene, palette, focus, hoveredId, coloring, morph, onSelect, onH
   onHover: (p: Placed3D | null, e?: ThreeEvent<PointerEvent>) => void;
 }) {
   const textures = useModuleTextures();
-  const materials = useModuleMaterials(textures);
+  const materials = useModuleMaterials(textures, palette.cyber);
   const modules = useMemo(() => buildModules(), []);
   // 指す・選ぶの判定用の円柱（底を原点に置く）
   const pickGeometry = useMemo(() => new THREE.CylinderGeometry(1, 1, 1, 12).translate(0, 0.5, 0), []);
@@ -534,7 +548,7 @@ function Orgs({ scene, palette, focus, hoveredId, coloring, morph, onSelect, onH
         shell.set(entity ? palette.shellEntity : away ? palette.shellDeemph : palette.shell);
         meshes.shell?.setColorAt(k, shell);
         // 表示灯: 黄。退かせた組織は消し、選択・ホバーは明るく
-        lamp.set(away ? palette.lampOff : palette.signal);
+        lamp.set(away ? palette.lampOff : (palette.lamp ?? palette.signal));
         if (selected || hovered) lamp.lerp(white, 0.45);
         meshes.lamp?.setColorAt(k, lamp);
       });
@@ -908,7 +922,10 @@ function Layers({ scene, palette, active }: { scene: Scene3D; palette: Palette; 
   useLineFade(rings, keys, isActive);
   return (
     <group>
-      {scene.layers.map((l) => (
+      {scene.layers.map((l) =>
+        palette.cyber?.dots ? (
+          <DotDisc key={`${l.entityIndex}:${l.depth}`} x={l.x} y={l.y - 0.02} z={l.z} radius={l.radius} color={palette.wire} opacity={!active || active.layers.has(`${l.entityIndex}:${l.depth}`) ? 1 : 0.3} />
+        ) : (
         // ごく薄い面（段の重なりを読みやすくする）。関係する組織の無い段はさらに薄く
         <mesh key={`${l.entityIndex}:${l.depth}`} position={[l.x, l.y - 0.02, l.z]} rotation={[-Math.PI / 2, 0, 0]} raycast={() => null}>
           <circleGeometry args={[l.radius, 96]} />
@@ -920,7 +937,8 @@ function Layers({ scene, palette, active }: { scene: Scene3D; palette: Palette; 
             depthWrite={false}
           />
         </mesh>
-      ))}
+        ),
+      )}
       <lineSegments geometry={rings} material={ringMaterial} raycast={() => null} />
       <lineSegments geometry={lines} raycast={() => null}>
         <lineBasicMaterial color={palette.wire} transparent opacity={0.75} />
@@ -1656,6 +1674,10 @@ function SceneContent({ scene, byId, palette, focus, hoveredId, coloring, fitReq
   return (
     <>
       <color attach="background" args={[palette.bg]} />
+      {palette.cyber && <Backdrop palette={palette} />}
+      {palette.cyber && palette.cyber.dust > 0 && <DataDust scene={scene} palette={palette} />}
+      {palette.cyber?.pillars && <Pillars scene={scene} palette={palette} />}
+      {palette.cyber && palette.cyber.bloom > 0 && <Bloom strength={palette.cyber.bloom} />}
       <Atmosphere palette={palette} controls={controls} />
       <SpinClock reduced={reduced} />
       <hemisphereLight args={["#ffffff", palette.grid, palette.light.ambient]} />
@@ -1780,7 +1802,8 @@ function OrgOverview3D() {
   const tree = useOrgTree(asOf);
   const stats = useOrgStats(asOf);
   const theme = useResolvedTheme();
-  const palette = PALETTE[theme];
+  const [look] = useState(readLook);
+  const palette = cyberPalette(look, theme) ?? PALETTE[theme];
   const forest = useMemo(() => (tree.data ? buildForest(tree.data, stats.data ?? null) : null), [tree.data, stats.data]);
   const [splitMode, setSplitMode] = useSiteSplitMode();
   const split = useMemo(() => (forest && splitMode ? splitBySite(forest) : null), [forest, splitMode]);

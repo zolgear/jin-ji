@@ -64,7 +64,7 @@ import { useFloorRoute } from "../floor/floorHooks";
 import { FloorMode } from "../floor/FloorMode";
 import { ModeSwitch } from "../floor/FloorParts";
 import { GridFloor, PALETTE, setEnvironment, useOrbitControls, type Cyber, type Palette } from "./common3d";
-import { Backdrop, Bloom, DataDust, DotDisc, Pillars, cyberPalette, cyberPlateShader, cyberShellShader, readLook } from "./cyber3d";
+import { Backdrop, Bloom, DataDust, DotDisc, Frames, Pillars, Reticle, cyberPalette, cyberPlateShader, cyberShellShader, readLook } from "./cyber3d";
 import { boundingSphere, heightOf, layout3d, layout3dSplit, personDots, type Island3D, type Layer3D, type Placed3D, type Scene3D } from "./layout3d";
 import { buildModules, hazardRing } from "./modules3d";
 import { TIER_COUNT, TIER_NAMES, TIER_SHAPES } from "./shapes3d";
@@ -924,7 +924,7 @@ function Layers({ scene, palette, active }: { scene: Scene3D; palette: Palette; 
     <group>
       {scene.layers.map((l) =>
         palette.cyber?.dots ? (
-          <DotDisc key={`${l.entityIndex}:${l.depth}`} x={l.x} y={l.y - 0.02} z={l.z} radius={l.radius} color={palette.wire} opacity={!active || active.layers.has(`${l.entityIndex}:${l.depth}`) ? 1 : 0.3} />
+          <DotDisc key={`${l.entityIndex}:${l.depth}`} x={l.x} y={l.y - 0.02} z={l.z} radius={l.radius} color={palette.wire} opacity={!active || active.layers.has(`${l.entityIndex}:${l.depth}`) ? 1 : 0.3} square={!!palette.cyber.frames} />
         ) : (
         // ごく薄い面（段の重なりを読みやすくする）。関係する組織の無い段はさらに薄く
         <mesh key={`${l.entityIndex}:${l.depth}`} position={[l.x, l.y - 0.02, l.z]} rotation={[-Math.PI / 2, 0, 0]} raycast={() => null}>
@@ -1677,6 +1677,8 @@ function SceneContent({ scene, byId, palette, focus, hoveredId, coloring, fitReq
       {palette.cyber && <Backdrop palette={palette} />}
       {palette.cyber && palette.cyber.dust > 0 && <DataDust scene={scene} palette={palette} />}
       {palette.cyber?.pillars && <Pillars scene={scene} palette={palette} />}
+      {palette.cyber?.frames && <Frames scene={scene} palette={palette} activeLayers={active?.layers ?? null} />}
+      {palette.cyber?.frames && selected && <Reticle x={selected.x} y={selected.y + heightOf(selected) + 0.05} z={selected.z} reach={selected.reach} palette={palette} />}
       {palette.cyber && palette.cyber.bloom > 0 && <Bloom strength={palette.cyber.bloom} />}
       <Atmosphere palette={palette} controls={controls} />
       <SpinClock reduced={reduced} />

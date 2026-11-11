@@ -24,6 +24,8 @@ export interface Cyber {
   dust: number;
   pillars: boolean;
   bloom: number;
+  /** 直線と四角の語彙（段の四角い枠・床の区画・四角い点・選択の四角い照準） */
+  frames?: boolean;
 }
 
 export interface Palette {

@@ -2,6 +2,7 @@
 // - a: 静かな深層（不透明の暗い外装・溝の細い光・氷の白と鋼の青）
 // - b: ホログラム（半透明の外装・輪郭の光・点の行列の円盤・塵・光の柱）
 // - c: b に薄いにじみ（ブルーム。暗いテーマだけ）
+// - d: c に直線と四角（段の四角い枠・床の区画・四角い点・選択の四角い照準）
 import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useMemo } from "react";
 import * as THREE from "three";
@@ -12,10 +13,10 @@ import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPa
 import { PALETTE, type Cyber, type Palette } from "./common3d";
 import { heightOf, type Scene3D } from "./layout3d";
 
-export type Look = "a" | "b" | "c";
+export type Look = "a" | "b" | "c" | "d";
 
 export function readLook(): Look | null {
-  const m = /[?&]look=([abc])\b/.exec(window.location.hash);
+  const m = /[?&]look=([abcd])\b/.exec(window.location.hash);
   return m ? (m[1] as Look) : null;
 }
 
@@ -76,10 +77,10 @@ const LIGHT_B: Palette = {
 
 export function cyberPalette(look: Look | null, theme: "light" | "dark"): Palette | null {
   if (!look) return null;
-  if (theme === "light") return look === "a" ? LIGHT_A : LIGHT_B;
+  if (theme === "light") return look === "a" ? LIGHT_A : look === "d" ? { ...LIGHT_B, cyber: { ...LIGHT_B.cyber!, frames: true } } : LIGHT_B;
   if (look === "a") return DARK_A;
   if (look === "b") return DARK_B;
-  return { ...DARK_B, cyber: { ...DARK_B.cyber!, plateGlow: 0.35, bloom: 0.3 } };
+  return { ...DARK_B, cyber: { ...DARK_B.cyber!, plateGlow: 0.35, bloom: 0.3, frames: look === "d" } };
 }
 
 /** 外装: 溝を細い光の線にし、輪郭（視線に対して寝た面）をうっすら光らせる。glass < 1 では輪郭と溝だけ濃い半透明。 */
@@ -251,6 +252,7 @@ void main() {
 const DISC_FRAGMENT = /* glsl */ `
 uniform vec3 uColor;
 uniform float uOpacity;
+uniform float uSquare;
 varying vec2 vUv;
 varying vec3 vWorld;
 void main() {
@@ -258,7 +260,7 @@ void main() {
   // 点の行列（世界座標に固定）。縁へ近いほど濃く、中心は空ける
   vec2 c = vWorld.xz / 2.2;
   vec2 f = abs( fract( c ) - 0.5 );
-  float d = length( f ) / max( length( fwidth( c ) ), 1e-4 );
+  float d = mix( length( f ), max( f.x, f.y ) * 1.25, uSquare ) / max( length( fwidth( c ) ), 1e-4 );
   float dotA = 1.0 - smoothstep( 0.5, 1.3, d );
   float rim = smoothstep( 0.45, 1.0, r );
   float a = ( 0.03 + dotA * ( 0.03 + 0.22 * rim * rim ) ) * uOpacity;
@@ -268,7 +270,7 @@ void main() {
 `;
 
 /** 段の円盤の面: 薄い塗りの代わりに、細かい点の行列。 */
-export function DotDisc({ x, y, z, radius, color, opacity }: { x: number; y: number; z: number; radius: number; color: string; opacity: number }) {
+export function DotDisc({ x, y, z, radius, color, opacity, square }: { x: number; y: number; z: number; radius: number; color: string; opacity: number; square: boolean }) {
   const material = useMemo(
     () =>
       new THREE.ShaderMaterial({
@@ -277,12 +279,12 @@ export function DotDisc({ x, y, z, radius, color, opacity }: { x: number; y: num
         transparent: true,
         depthWrite: false,
         side: THREE.DoubleSide,
-        uniforms: { uColor: { value: new THREE.Color() }, uOpacity: { value: 1 } },
+        uniforms: { uColor: { value: new THREE.Color() }, uOpacity: { value: 1 }, uSquare: { value: 0 } },
       }),
     [],
   );
   useEffect(() => () => material.dispose(), [material]);
-  useEffect(() => setDiscUniforms(material, color, opacity), [material, color, opacity]);
+  useEffect(() => setDiscUniforms(material, color, opacity, square), [material, color, opacity, square]);
   return (
     <mesh position={[x, y, z]} rotation={[-Math.PI / 2, 0, 0]} material={material} raycast={() => null}>
       <circleGeometry args={[radius, 96]} />
@@ -291,7 +293,8 @@ export function DotDisc({ x, y, z, radius, color, opacity }: { x: number; y: num
 }
 
 // three のオブジェクトの変更（フックの外の関数で行う）
-function setDiscUniforms(material: THREE.ShaderMaterial, color: string, opacity: number) {
+function setDiscUniforms(material: THREE.ShaderMaterial, color: string, opacity: number, square: boolean) {
+  material.uniforms.uSquare!.value = square ? 1 : 0;
   (material.uniforms.uColor!.value as THREE.Color).set(color);
   material.uniforms.uOpacity!.value = opacity;
 }
@@ -314,4 +317,114 @@ export function Bloom({ strength }: { strength: number }) {
   }, [composer, gl, size]);
   useFrame(() => composer.render(), 1);
   return null;
+}
+
+/** 四隅の鉤（L 字）を足す。half＝中心から辺まで、len＝鉤の腕の長さ。 */
+function brackets(v: number[], x: number, y: number, z: number, half: number, len: number) {
+  for (const sx of [-1, 1]) {
+    for (const sz of [-1, 1]) {
+      const cx = x + sx * half;
+      const cz = z + sz * half;
+      v.push(cx, y, cz, cx - sx * len, y, cz, cx, y, cz, cx, y, cz - sz * len);
+    }
+  }
+}
+
+/** 四角の輪郭を足す。 */
+function squareLine(v: number[], x: number, y: number, z: number, half: number) {
+  const c: Array<[number, number]> = [[-1, -1], [1, -1], [1, 1], [-1, 1]];
+  c.forEach(([ax, az], i) => {
+    const [bx, bz] = c[(i + 1) % 4]!;
+    v.push(x + ax * half, y, z + az * half, x + bx * half, y, z + bz * half);
+  });
+}
+
+/**
+ * 直線と四角の語彙（回る輪・円盤の曲線に対して、動かない角を置く）。法人（島）ごとに、いちばん広い段に合わせた同じ大きさの四角を
+ * 各段の高さに重ね、四隅を床からの細い柱でつなぐ（円盤を収める棚）。床には一回り大きい四角い区画。
+ * - 段の四角: 細い輪郭と、濃い四隅の鉤・辺の中央の短い目盛り
+ * - 選んだ組織に関係しない段の鉤は薄くする
+ */
+export function Frames({ scene, palette, activeLayers }: { scene: Scene3D; palette: Palette; activeLayers: Set<string> | null }) {
+  const { strong, faint, plot } = useMemo(() => {
+    const on: number[] = [];
+    const off: number[] = [];
+    const floor: number[] = [];
+    // 同じ中心の段をまとめる
+    const stacks = new Map<string, { x: number; z: number; r: number; top: number }>();
+    const keyOf = (x: number, z: number) => `${Math.round(x * 10)}:${Math.round(z * 10)}`;
+    for (const l of scene.layers) {
+      const p = stacks.get(keyOf(l.x, l.z));
+      if (!p) stacks.set(keyOf(l.x, l.z), { x: l.x, z: l.z, r: l.radius, top: l.y });
+      else {
+        p.r = Math.max(p.r, l.radius);
+        p.top = Math.max(p.top, l.y);
+      }
+    }
+    for (const l of scene.layers) {
+      const half = stacks.get(keyOf(l.x, l.z))!.r * 1.05 + 1;
+      const v = !activeLayers || activeLayers.has(`${l.entityIndex}:${l.depth}`) ? on : off;
+      brackets(v, l.x, l.y, l.z, half, Math.max(1.4, half * 0.12));
+      const t = Math.max(0.6, half * 0.04);
+      v.push(l.x - half, l.y, l.z, l.x - half - t, l.y, l.z, l.x + half, l.y, l.z, l.x + half + t, l.y, l.z);
+      v.push(l.x, l.y, l.z - half, l.x, l.y, l.z - half - t, l.x, l.y, l.z + half, l.x, l.y, l.z + half + t);
+      squareLine(off, l.x, l.y, l.z, half);
+    }
+    const y = scene.floorY + 0.03;
+    for (const p of stacks.values()) {
+      const half = p.r * 1.05 + 1;
+      // 四隅の柱（床からいちばん上の段まで）
+      for (const sx of [-1, 1]) for (const sz of [-1, 1]) off.push(p.x + sx * half, y, p.z + sz * half, p.x + sx * half, p.top, p.z + sz * half);
+      squareLine(floor, p.x, y, p.z, half);
+      const outer = half + Math.max(2, half * 0.08);
+      brackets(floor, p.x, y, p.z, outer, outer * 0.1);
+      for (const sx of [-1, 1]) for (const sz of [-1, 1]) squareLine(floor, p.x + sx * half, y, p.z + sz * half, 0.6);
+    }
+    const geo = (v: number[]) => {
+      const g = new THREE.BufferGeometry();
+      g.setAttribute("position", new THREE.Float32BufferAttribute(v, 3));
+      return g;
+    };
+    return { strong: geo(on), faint: geo(off), plot: geo(floor) };
+  }, [scene, activeLayers]);
+  useEffect(
+    () => () => {
+      strong.dispose();
+      faint.dispose();
+      plot.dispose();
+    },
+    [strong, faint, plot],
+  );
+  const cyber = palette.cyber!;
+  return (
+    <group>
+      <lineSegments geometry={strong} raycast={() => null}>
+        <lineBasicMaterial color={cyber.rim} transparent opacity={0.9} />
+      </lineSegments>
+      <lineSegments geometry={faint} raycast={() => null}>
+        <lineBasicMaterial color={cyber.rim} transparent opacity={0.2} />
+      </lineSegments>
+      <lineSegments geometry={plot} raycast={() => null}>
+        <lineBasicMaterial color={palette.wire} transparent opacity={0.65} />
+      </lineSegments>
+    </group>
+  );
+}
+
+/** 選んだ組織を囲む四角い照準（四隅の鉤。縞の輪の外側）。 */
+export function Reticle({ x, y, z, reach, palette }: { x: number; y: number; z: number; reach: number; palette: Palette }) {
+  const geometry = useMemo(() => {
+    const v: number[] = [];
+    const half = reach * 1.25 + 1.1;
+    brackets(v, 0, 0, 0, half, half * 0.3);
+    const g = new THREE.BufferGeometry();
+    g.setAttribute("position", new THREE.Float32BufferAttribute(v, 3));
+    return g;
+  }, [reach]);
+  useEffect(() => () => geometry.dispose(), [geometry]);
+  return (
+    <lineSegments geometry={geometry} position={[x, y, z]} raycast={() => null} renderOrder={2}>
+      <lineBasicMaterial color={palette.lamp ?? palette.signal} fog={false} toneMapped={false} />
+    </lineSegments>
+  );
 }

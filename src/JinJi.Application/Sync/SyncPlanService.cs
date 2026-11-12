@@ -245,6 +245,13 @@ public sealed class SyncPlanService
     {
         ArgumentNullException.ThrowIfNull(viewer);
         var target = await PrepareExecutionAsync(viewer, ExportAction, planId, cancellationToken);
+        if (target.Plan.TargetSystem == TargetSystemEntraGroups)
+        {
+            // グループの計画のスクリプト出力はまだ無い（ADR-0015）。ユーザー用のスクリプトにグループの項目を流さない
+            await _audit.RecordAsync(viewer, ExportAction, AuditOutcome.Failed, Subjects(target.Items), cancellationToken, TargetType, planId);
+            throw new InvalidOperationException($"計画 {planId} はグループの計画です。スクリプト出力はまだ無いので、直接反映（sync-apply）を使ってください。");
+        }
+
         var bundle = _renderer.Render(target.Plan, target.Items);
         await _audit.RecordAsync(viewer, ExportAction, AuditOutcome.Success, Subjects(target.Items), cancellationToken, TargetType, planId);
         return bundle;

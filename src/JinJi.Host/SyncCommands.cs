@@ -23,7 +23,7 @@ namespace JinJi.Host;
 internal static partial class SyncCommands
 {
     public const string PlanUsage = "JinJi.Host sync-plan <entra_users.json> --executed-by <person-id> [--settings <sync.json>]";
-    public const string GroupPlanUsage = "JinJi.Host sync-group-plan <entra_groups.json> --executed-by <person-id> --settings <sync.json>";
+    public const string GroupPlanUsage = "JinJi.Host sync-group-plan <entra_groups.json | graph> --executed-by <person-id> --settings <sync.json>";
     public const string ScriptUsage = "JinJi.Host sync-script <plan-id> <出力先ディレクトリ>";
     public const string ResultUsage = "JinJi.Host sync-result <plan-id> <実行ログの JSON>";
     public const string ApplyUsage = "JinJi.Host sync-apply <plan-id> [--what-if true]";
@@ -75,6 +75,7 @@ internal static partial class SyncCommands
 
     /// <summary>
     /// 組織に対応するグループの計画を作る（ADR-0015）。入力は Entra のグループの一覧（メンバー・オーナーつき）の JSON、設定は <c>orgGroups</c> のある同期の設定。
+    /// 入力に <c>graph</c> と書くと、直接反映の設定（<c>JinJi:Sync:DirectApply</c>。有効なときだけ）のアプリで Graph API から読む。
     /// </summary>
     public static async Task<int> GroupPlanAsync(string[] args, TextWriter? output = null)
     {
@@ -90,12 +91,40 @@ internal static partial class SyncCommands
         using var host = Build(builder);
         return await RunAsync(host, "sync-group-plan", async (service, viewer) =>
         {
-            var content = await File.ReadAllBytesAsync(positional[0]);
             var settings = SyncSettings.Parse(await File.ReadAllBytesAsync(settingsPath));
-            var created = await service.CreateGroupPlanAsync(
-                viewer,
-                new GroupSyncPlanRequest(GraphDirectoryGroups.Parse(content), settings, Path.GetFileName(positional[0]), Convert.ToHexStringLower(SHA256.HashData(content)), executor),
-                CancellationToken.None);
+            IReadOnlyList<DirectoryGroup> groups;
+            string sourceName;
+            string sourceSha;
+            if (positional[0] == "graph")
+            {
+                var options = builder.Configuration.GetSection(DirectApplyOptions.SectionName).Get<DirectApplyOptions>() ?? new DirectApplyOptions();
+                if (!options.Enabled)
+                {
+                    throw new InvalidOperationException($"Graph API から読むには、直接反映の設定（{DirectApplyOptions.SectionName}:Enabled）が要ります。ファイルを渡すこともできます。");
+                }
+
+                options.Validate();
+                var time = host.Services.GetRequiredService<TimeProvider>();
+                IClientAssertionSource assertions = options.Credential == GraphCredentialKind.Certificate
+                    ? CertificateAssertionSource.FromOptions(options, time)
+                    : FederatedTokenFileAssertionSource.FromOptions(options);
+                using var http = new HttpClient { Timeout = options.Timeout + options.Timeout };
+                groups = await new GraphRestGroupClient(http, new ClientCredentialTokenSource(http, options, assertions, time), options).ReadGroupsAsync(CancellationToken.None);
+                sourceName = "graph";
+                // 読んだ内容（グループとメンバー）のハッシュ。順序に依らない
+                var canonical = string.Join('\n', groups.OrderBy(g => g.ObjectId, StringComparer.Ordinal).Select(g =>
+                    $"{g.ObjectId}|{g.DisplayName}|{g.Description}|{g.MailNickname}|{g.Unified}|{g.HasTeam}|{string.Join(',', (g.MemberIds ?? []).Order(StringComparer.Ordinal))}|{string.Join(',', (g.OwnerIds ?? []).Order(StringComparer.Ordinal))}"));
+                sourceSha = Convert.ToHexStringLower(SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(canonical)));
+            }
+            else
+            {
+                var content = await File.ReadAllBytesAsync(positional[0]);
+                groups = GraphDirectoryGroups.Parse(content);
+                sourceName = Path.GetFileName(positional[0]);
+                sourceSha = Convert.ToHexStringLower(SHA256.HashData(content));
+            }
+
+            var created = await service.CreateGroupPlanAsync(viewer, new GroupSyncPlanRequest(groups, settings, sourceName, sourceSha, executor), CancellationToken.None);
 
             var summary = created.Plan.Summary;
             await output.WriteLineAsync($"plan_id: {created.Plan.Id}");

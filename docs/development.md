@@ -43,7 +43,7 @@ jin-ji/
 │   ├── JinJi.Ingest/            # 許可リスト・正規化・名寄せ・提案の計画・LLM の問いの組み立てと検証（ワーカーだけが参照）
 │   ├── JinJi.Llm/               # LLM の呼び出し（OpenAI 公式 SDK を参照する唯一のプロジェクト。ワーカーだけが参照）
 │   ├── JinJi.Sync/              # Entra ID の同期計画の差分計算・PowerShell スクリプトと差分レポートの生成・実行ログの解釈・Graph REST の直接反映（既定は無効）
-│   └── JinJi.Host/              # 唯一の実行可能プロジェクト（--role / migrate / import / reconcile-work-locations / evaluate-ingest / sync-plan / sync-script / sync-result / sync-apply / evaluate-sync と管理 CLI）。Web/ に JWT の検証・入口の共通処理・レート制限・Prometheus の出力
+│   └── JinJi.Host/              # 唯一の実行可能プロジェクト（--role / migrate / import / reconcile-work-locations / evaluate-ingest / sync-plan / sync-group-plan / sync-script / sync-result / sync-apply / evaluate-sync と管理 CLI）。Web/ に JWT の検証・入口の共通処理・レート制限・Prometheus の出力
 ├── tests/
 │   └── JinJi.IntegrationTests/  # 実 PostgreSQL を使う結合テスト・構成のテスト
 ├── samples/

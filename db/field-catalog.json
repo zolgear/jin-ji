@@ -1564,6 +1564,18 @@
           "category": "業務連絡先",
           "description": "表示用の UPN（作成の推奨では作るときの UPN）"
         },
+        "org_unit_id": {
+          "category": "同期作業領域",
+          "description": "グループの計画: 対象の組織"
+        },
+        "group_object_id": {
+          "category": "識別",
+          "description": "グループの計画: Entra のグループのオブジェクト ID"
+        },
+        "group_display_name": {
+          "category": "同期作業領域",
+          "description": "グループの計画: 表示用のグループの名前"
+        },
         "in_script": {
           "category": "同期作業領域",
           "description": "スクリプト・直接反映で実行するか"

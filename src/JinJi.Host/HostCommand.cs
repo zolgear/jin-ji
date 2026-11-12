@@ -14,7 +14,7 @@ internal static class HostCommand
           JinJi.Host evaluate-ingest <サンプルのディレクトリ> [--output <path>] [--llm true --llm-model <モデル名>]
                                                     取込の精度の評価（一時 DB にサンプルを取り込み、正解データと比べる）
           JinJi.Host sync-plan <entra_users.json> --executed-by <person-id> [--settings <sync.json>]
-          JinJi.Host sync-group-plan <entra_groups.json> --executed-by <person-id> --settings <sync.json>
+          JinJi.Host sync-group-plan <entra_groups.json | graph> --executed-by <person-id> --settings <sync.json>
                                                     Entra ID への同期計画を作る（承認は別の人事管理者が REST API で行う）
           JinJi.Host sync-script <plan-id> <出力先ディレクトリ>
                                                     承認済みの計画の PowerShell スクリプト・データ・差分レポートを書き出す

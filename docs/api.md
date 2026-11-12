@@ -378,7 +378,9 @@ jin-ji の値の誤りを、人事パッケージで直せる人に伝える（�
 | `GET /sync/plans/{id}` | 計画の詳細 | 人事管理者 | `SyncPlanDetailResponse`（項目・Entra の現在値とあるべき値・根拠・最新の実行結果） | `sync` |
 | `POST /sync/plans/{id}/approve` | 承認 | 人事管理者（起案者は不可） | `SyncPlanResponse`。jin-ji のデータが変わった計画は 409 で古い計画（stale）になる | `sync` |
 | `POST /sync/plans/{id}/reject` | 却下 | 人事管理者（起案者は不可） | `SyncPlanResponse` | `sync` |
-| `GET /sync/plans/{id}/script` | 承認済みの計画のスクリプト一式 | 人事管理者 | ZIP（`.ps1`・`.data.json`・`.report.md`・`.report.csv`）。承認済みでない・古い計画は 409 | `sync` |
+| `GET /sync/plans/{id}/script` | 承認済みの計画のスクリプト一式 | 人事管理者 | ZIP（`.ps1`・`.data.json`・`.report.md`・`.report.csv`）。承認済みでない・古い計画、グループの計画（スクリプト出力はまだ無い）は 409 | `sync` |
+
+計画の種類は `target_system` で分かる: `entra_id`（ユーザー）と `entra_id_groups`（組織に対応するグループ。項目に `org_unit_id`・`group_object_id`・`group_display_name` を持つ）。
 
 使い方は [Entra ID への同期](entra-sync.md)。
 

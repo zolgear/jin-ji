@@ -1,6 +1,6 @@
 # Entra ID への同期
 
-jin-ji の公開データを Entra ID のユーザーの属性・アカウントの有効 / 無効に反映する使い方。反映はスクリプト出力が主で、管理者が実行する。直接反映は既定で無効。
+jin-ji の公開データを Entra ID のユーザーの属性・アカウントの有効 / 無効と、組織に対応するグループに反映する使い方。反映はスクリプト出力が主で、管理者が実行する。直接反映は既定で無効。
 
 設計は [アーキテクチャ概要 §8](architecture/overview.md#8-取り込み名寄せ同期) の「同期」と「同期の実装上の規則」、決定は [ADR-0010](adr/0010-entra-sync.md)。
 
@@ -67,6 +67,91 @@ scripts/dotnet.sh run --project src/JinJi.Host -- sync-result <plan-id> /src/out
 
 - `JinJi.Host sync-apply <plan-id> [--what-if true]`。同じ承認済みの計画を Graph REST（`PATCH /users/{id}`・`PUT /users/{id}/manager/$ref`）で適用する最小実装（HttpClient。Graph SDK は入れない）
 - 読み取りとは別の書き込み用のアプリの資格情報（証明書かワークロード ID）を `JinJi:Sync:DirectApply` で明示的に有効にしたときだけ（設定は [運用ガイド](operations.md#設定appsettingsjson--環境変数)）。REST API からは起動しない
+
+## 組織に対応するグループ
+
+規程上の組織ごとに Entra ID のグループを作り、メンバーを jin-ji の所属に合わせる（決定は [ADR-0015](adr/0015-entra-org-groups.md)）。ユーザーの同期とは別の計画で、承認・古い計画（stale）の扱いは同じ。
+
+```sh
+# 計画を作る（入力は Entra のグループの一覧。ファイルか、直接反映の設定があれば graph）
+scripts/dotnet.sh run --project src/JinJi.Host -- sync-group-plan /src/out/entra_groups.json --executed-by <person.id> --settings /src/out/entra_sync.json
+scripts/dotnet.sh run --project src/JinJi.Host -- sync-group-plan graph --executed-by <person.id> --settings /src/out/entra_sync.json
+# 別の人事管理者が REST API で承認する: POST /api/v1/sync/plans/{id}/approve
+# 承認済みの計画を Graph API で反映する（先に --what-if true でドライラン）
+scripts/dotnet.sh run --project src/JinJi.Host -- sync-apply <plan-id> --what-if true
+scripts/dotnet.sh run --project src/JinJi.Host -- sync-apply <plan-id>
+```
+
+- 反映は Graph API での直接反映（`sync-apply`）。直接反映の設定（`JinJi:Sync:DirectApply`）を有効にしたときだけ動く。**グループの計画のスクリプト出力はまだ無い**（`sync-script`・`GET /sync/plans/{id}/script` は 409 で断る）
+- 必要な Graph の権限（アプリケーション）: 読み取りに `Group.Read.All`・`GroupMember.Read.All`、反映に `Group.ReadWrite.All`・`User.Read.All`（チームを作るなら `Team.Create`）
+- 実テナントでの検証は未実施（テストは Graph の代役で行っている）
+
+### 設定（`orgGroups`）
+
+同期の設定に `orgGroups` を足す。`legalEntities`（対象の法人）・`exclude`（除外するユーザー。`objectId` か `employeeNumber`）・`planMaxAgeDays` はユーザーの同期と共通。
+
+```json
+{
+  "legalEntities": ["P"],
+  "orgGroups": {
+    "prefix": "JJ-",
+    "displayNameFormat": "{name}",
+    "mailNicknamePrefix": "jinji-",
+    "groupType": "security",
+    "createTeam": false,
+    "members": "subtree",
+    "includeConcurrent": true,
+    "includeSecondment": true,
+    "levels": [],
+    "retiredPrefix": "【廃止】",
+    "removeUnknownMembers": false
+  }
+}
+```
+
+| 項目 | 既定 | 内容 |
+| --- | --- | --- |
+| `prefix` | （必須） | 表示名の接頭辞。既存のグループと衝突しないように付ける |
+| `displayNameFormat` | `{name}` | 接頭辞の後ろの形式。`{name}`（組織の名前）・`{code}`（組織コード）・`{company}`（法人名）・`{entity_code}`（法人コード） |
+| `mailNicknamePrefix` | `jinji-` | `mailNickname` の接頭辞（ASCII）。後ろに「法人コード-組織コード」が付く |
+| `groupType` | `security` | `security`（セキュリティグループ）か `microsoft365`（Microsoft 365 グループ）。作った後は変えられない |
+| `createTeam` | `false` | Teams のチームも作る（`microsoft365` だけ。組織長をオーナーにする。組織長に Entra のアカウントの対応が無ければ作らない） |
+| `members` | `subtree` | `subtree`（その組織と配下の組織で働く人）か `direct`（直属だけ） |
+| `includeConcurrent` / `includeSecondment` | `true` | 兼務・出向の人を、兼務先・出向先の組織のグループに入れる |
+| `levels` | `[]` | 対象の組織の段のキー（空ならすべての組織） |
+| `retiredPrefix` | `【廃止】` | 廃止された組織のグループの表示名に付ける印 |
+| `removeUnknownMembers` | `false` | jin-ji の人に対応付かないメンバー（手で加えたアカウント）も外す |
+
+### 対応付けと衝突
+
+- jin-ji が作るグループは、説明に印（`[jinji-org:<組織の ID>]`）を持つ。以後の計画は、この印でグループと組織を対応付ける（名前では対応付けない。組織の改称は表示名の更新になる）
+- **印の無いグループは変更しない。** 同じ表示名・`mailNickname` の印の無いグループがあれば、作成を計画に入れず「衝突」（`group_conflict`）として出す。接頭辞を変えるか、管理者がそのグループの説明に印を書いて引き継ぐ
+- グループは削除しない。廃止された組織のグループは、表示名に廃止の印を付けてメンバーを外す（`retire_group`）
+
+### 計画の項目
+
+| 操作 | 内容 | 実行 |
+| --- | --- | --- |
+| `create_group` / `update_group` / `retire_group` | グループの作成、表示名・説明の更新、廃止の印 | する |
+| `add_group_member` / `remove_group_member` | メンバーの追加・削除（1 人 1 項目。外すのは jin-ji の人に対応付いたメンバー） | する |
+| `add_group_owner` / `create_team` | 組織長をオーナーにする、チームを作る（`microsoft365` だけ） | する |
+| `group_conflict` | 同じ名前の既存のグループ・種類の違い・印の重複 | しない |
+| `group_note` | アカウントの対応が無くて加えられない人・jin-ji の人に対応付かないメンバー・対象外のグループ | しない |
+
+- メンバーにできるのは、Entra のアカウントがちょうど 1 つ対応付いている人（ユーザーの同期と同じ外部 ID の対応）
+- 直接反映は、変更の前に今の状態を読む。既にあるべき状態なら何もしない（`already_applied`）。計画の後に Entra 側の表示名・説明が変わっていればスキップする（`skipped_precondition`）。エラーでも続行し、項目ごとに記録する
+
+### 入力のファイルの形
+
+Graph の `GET /groups` の JSON に、グループごとの全員の `members`・`owners`（`id` だけでよい）を足したもの。`graph` を指定すれば jin-ji が Graph API から読む（印の付いたグループだけメンバーを読む）。
+
+```json
+{ "value": [ { "id": "…", "displayName": "JJ-営業一課", "description": "… [jinji-org:…]", "mailNickname": "jinji-p-a050",
+               "groupTypes": [], "resourceProvisioningOptions": [], "members": [ { "id": "…" } ], "owners": [] } ] }
+```
+
+- `members` が無いグループは、メンバーが分からないものとして扱う（加える項目だけを作り、外す項目は作らない）
+- Graph の `$expand=members` は 20 件までなので、`/groups/{id}/members` をすべてのページ読んで入れる
 
 ## 監査
 

@@ -17,7 +17,7 @@ namespace JinJi.Sync;
 /// 同じ表示名・mailNickname の印の無いグループがあれば、作成せずに衝突として出す</item>
 /// <item>メンバーは「その組織（と配下）で働く人」のうち、Entra のアカウントがちょうど 1 つ対応付いている人。対応の無い人・複数ある人は参考として出す</item>
 /// <item>外すのは、jin-ji の人に対応付いたメンバーだけ（設定で、対応付かないメンバーも外せる）。設定で除外したユーザーは加えも外しもしない</item>
-/// <item>グループは削除しない。廃止された組織のグループは、表示名に廃止の印を付け、メンバーを外す</item>
+/// <item>グループは削除しない。廃止された組織のグループは、表示名に廃止の印を付ける。メンバーは引き継ぎのために残し、退職した人だけを外す</item>
 /// <item>メンバー・オーナーの一覧が入力に無いグループは、現在の状態が分からないので、加える項目だけを作る（実行時に確かめる）。外す項目は作らない</item>
 /// </list>
 /// </remarks>
@@ -288,15 +288,19 @@ public sealed class EntraGroupPlanner : IGroupSyncPlanner
             if (changes.Count > 0)
             {
                 drafts.Add(new Draft(SyncPriority.Normal, SyncAction.RetireGroup, null, group.ObjectId, null, group.ObjectId, group.DisplayName, true, changes, "org_abolished", [evidence],
-                    "組織が廃止されています。グループは削除せず、廃止の印を付けます。", group.SourceIndex));
+                    "組織が廃止されています。グループは削除せず、廃止の印を付けます。メンバーは引き継ぎのために残します。", group.SourceIndex));
             }
 
+            // メンバーは残す（引き継ぎ先が決まるまで、権限を持ったままにする。空のグループだけを残しても意味が無い）。
+            // 外すのは退職した人だけ（在籍していない人に権限を残さない）
             foreach (var objectId in group.MemberIds ?? [])
             {
-                if (personByObject.TryGetValue(objectId, out var personId) ? !Excluded(personId, objectId) : options.RemoveUnknownMembers && !excludedObjects.Contains(objectId))
+                if (personByObject.TryGetValue(objectId, out var personId) && !Excluded(personId, objectId)
+                    && (snapshot.FindPerson(personId) is not { } member || member.IsTerminatedOn(input.Today)))
                 {
-                    drafts.Add(new Draft(SyncPriority.High, SyncAction.RemoveGroupMember, personByObject.TryGetValue(objectId, out var p) ? p : null, objectId, null, group.ObjectId,
-                        group.DisplayName, true, [new SyncChange(GroupFields.Member, "true", "false")], "org_abolished", [evidence], null, group.SourceIndex));
+                    drafts.Add(new Draft(SyncPriority.High, SyncAction.RemoveGroupMember, personId, objectId, null, group.ObjectId, group.DisplayName, true,
+                        [new SyncChange(GroupFields.Member, "true", "false")], "member_retired",
+                        [new SyncEvidence(GroupFields.Member, "person", personId.ToString("D"), "業務日付時点で在籍していません")], null, group.SourceIndex));
                 }
             }
         }

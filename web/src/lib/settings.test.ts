@@ -41,12 +41,14 @@ describe("3D 表示のスキン", () => {
     expect(parseSettings((k) => (k === SETTING_KEYS.skin3d ? "壊れた値" : null)).skin3d).toBe("standard");
     expect(serializeSetting("skin3d", "standard")).toBeNull();
     expect(serializeSetting("skin3d", "cyber")).toBe("cyber");
+    expect(parseSettings((k) => (k === SETTING_KEYS.skin3d ? "industry" : null)).skin3d).toBe("industry");
   });
 
   it("URL の skin は設定より優先し、書かなければ設定に従う", () => {
     expect(resolveSkin3d(null, "cyber")).toBe("cyber");
     expect(resolveSkin3d("standard", "cyber")).toBe("standard");
     expect(resolveSkin3d("cyber", "standard")).toBe("cyber");
+    expect(resolveSkin3d("industry", "cyber")).toBe("industry");
     expect(resolveSkin3d("知らない値", "standard")).toBe("standard");
   });
 });

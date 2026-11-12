@@ -182,7 +182,7 @@ function DisplaySection() {
             ]}
           />
         </Row>
-        <Row label="3D 表示のスキン" help={<p className="m-0">3D 表示の組織モードの見た目です。「サイバー」はダークの配色のときだけ使い、ライトでは標準の見た目で表示します。</p>}>
+        <Row label="3D 表示のスキン" help={<p className="m-0">3D 表示の組織モードの見た目です。「サイバー」「インダストリー」はダークの配色のときだけ使い、ライトでは標準の見た目で表示します。</p>}>
           <Segmented<Skin3dSetting>
             label="3D 表示のスキン"
             value={settings.skin3d}
@@ -190,6 +190,7 @@ function DisplaySection() {
             options={[
               ["standard", "標準"],
               ["cyber", "サイバー"],
+              ["industry", "インダストリー"],
             ]}
           />
         </Row>

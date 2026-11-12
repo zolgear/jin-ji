@@ -6,7 +6,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 
-/** スキン「サイバー」（cyber3d.tsx）で足す色と効果。無ければ標準の見た目。 */
+/** スキン「サイバー」「インダストリー」（cyber3d.tsx）で足す色と効果。無ければ標準の見た目。 */
 export interface Cyber {
   /** 背景の上の方の色・地平の光の帯の色 */
   sky: string;
@@ -22,6 +22,8 @@ export interface Cyber {
   /** 塵の濃さ・にじみの強さ */
   dust: number;
   bloom: number;
+  /** 段を囲む四角を薄い板として塗る濃さ（0 = 塗らない） */
+  slab: number;
 }
 
 export interface Palette {

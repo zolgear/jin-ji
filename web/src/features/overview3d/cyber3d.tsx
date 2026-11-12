@@ -32,12 +32,31 @@ const CYBER_DARK: Palette = {
   lamp: "#e4fbff",
   lampOff: "#253142",
   light: { ambient: 0.5, key: 1.5, env: 0.6 },
-  cyber: { sky: "#030916", horizon: "#1c6aa0", seam: "#9af1ff", rim: "#43cfe8", rimPower: 0.9, glass: 0.5, plateGlow: 0.35, dust: 0.5, bloom: 0.32 },
+  cyber: { sky: "#030916", horizon: "#1c6aa0", seam: "#9af1ff", rim: "#43cfe8", rimPower: 0.9, glass: 0.5, plateGlow: 0.35, dust: 0.5, bloom: 0.32, slab: 0 },
 };
 
-/** スキンとテーマから 3D の色。サイバーはダークだけ（ライトは標準のまま）。 */
+/** スキン「インダストリー」: 黒鉛色の空間に、黄の線・ガラスの四角い板・黄の光の柱。データの色（上面の板）は青のまま。 */
+const INDUSTRY_DARK: Palette = {
+  ...PALETTE.dark,
+  bg: "#0a0a0b",
+  deemph: "#2a2a2c",
+  entity: "#d8d2b0",
+  edge: "#857f58",
+  dot: "#fff6c8",
+  wire: "#b79c0a",
+  grid: "#332e0d",
+  shell: "#1a1a1c",
+  shellDeemph: "#111112",
+  shellEntity: "#3a3620",
+  lampOff: "#2a2a2c",
+  light: { ambient: 0.5, key: 1.5, env: 0.6 },
+  cyber: { sky: "#040404", horizon: "#4a3f00", seam: "#ffd400", rim: "#ffd400", rimPower: 0.6, glass: 0.7, plateGlow: 0.3, dust: 0.35, bloom: 0.2, slab: 0.035 },
+};
+
+/** スキンとテーマから 3D の色。サイバー・インダストリーはダークだけ（ライトは標準のまま）。 */
 export function skinPalette(skin: Skin3dSetting, theme: "light" | "dark"): Palette {
-  return skin === "cyber" && theme === "dark" ? CYBER_DARK : PALETTE[theme];
+  if (theme !== "dark") return PALETTE[theme];
+  return skin === "cyber" ? CYBER_DARK : skin === "industry" ? INDUSTRY_DARK : PALETTE.dark;
 }
 
 /** 外装: 溝を細い光の線にし、輪郭（視線に対して寝た面）をうっすら光らせる。glass < 1 では輪郭と溝だけ濃い半透明。 */
@@ -326,14 +345,17 @@ export function stacksOf(scene: Scene3D): Map<string, Stack> {
  * - 選んだ組織に関係しない段の鉤は薄くする
  */
 export function Frames({ scene, palette, activeLayers }: { scene: Scene3D; palette: Palette; activeLayers: Set<string> | null }) {
-  const { strong, faint, plot } = useMemo(() => {
+  const { strong, faint, plot, slabs } = useMemo(() => {
+    const tiles: Array<{ key: string; x: number; y: number; z: number; size: number; on: boolean }> = [];
     const on: number[] = [];
     const off: number[] = [];
     const floor: number[] = [];
     const stacks = stacksOf(scene);
     for (const l of scene.layers) {
       const half = stacks.get(stackKey(l.x, l.z))!.half;
-      const v = !activeLayers || activeLayers.has(`${l.entityIndex}:${l.depth}`) ? on : off;
+      const lit = !activeLayers || activeLayers.has(`${l.entityIndex}:${l.depth}`);
+      const v = lit ? on : off;
+      tiles.push({ key: `${l.entityIndex}:${l.depth}`, x: l.x, y: l.y - 0.04, z: l.z, size: half * 2, on: lit });
       brackets(v, l.x, l.y, l.z, half, Math.max(1.4, half * 0.12));
       const t = Math.max(0.6, half * 0.04);
       v.push(l.x - half, l.y, l.z, l.x - half - t, l.y, l.z, l.x + half, l.y, l.z, l.x + half + t, l.y, l.z);
@@ -355,7 +377,7 @@ export function Frames({ scene, palette, activeLayers }: { scene: Scene3D; palet
       g.setAttribute("position", new THREE.Float32BufferAttribute(v, 3));
       return g;
     };
-    return { strong: geo(on), faint: geo(off), plot: geo(floor) };
+    return { strong: geo(on), faint: geo(off), plot: geo(floor), slabs: tiles };
   }, [scene, activeLayers]);
   useEffect(
     () => () => {
@@ -368,6 +390,14 @@ export function Frames({ scene, palette, activeLayers }: { scene: Scene3D; palet
   const cyber = palette.cyber!;
   return (
     <group>
+      {cyber.slab > 0 &&
+        slabs.map((t) => (
+          // 段を囲む四角を、薄いガラスの板として塗る（色は付けない。黄で塗ると重なって全体が黄色くかぶる）
+          <mesh key={t.key} position={[t.x, t.y, t.z]} rotation={[-Math.PI / 2, 0, 0]} raycast={() => null}>
+            <planeGeometry args={[t.size, t.size]} />
+            <meshBasicMaterial color="#dfe3e8" transparent opacity={cyber.slab * (t.on ? 1 : 0.3)} side={THREE.DoubleSide} depthWrite={false} />
+          </mesh>
+        ))}
       <lineSegments geometry={strong} raycast={() => null}>
         <lineBasicMaterial color={cyber.rim} transparent opacity={0.9} />
       </lineSegments>

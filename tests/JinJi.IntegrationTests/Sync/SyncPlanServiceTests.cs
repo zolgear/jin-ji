@@ -260,7 +260,7 @@ public sealed class SyncPlanServiceTests : IAsyncLifetime
         }
 
         Assert.Equal(
-            EntraFields.All.Order(StringComparer.Ordinal),
+            EntraFields.All.Concat(GroupFields.All).Order(StringComparer.Ordinal),
             (await _sync.Db.QueryAsync<string[]>(null, "SELECT jinji_sync_field_keys()", Ct)).Single().Order(StringComparer.Ordinal));
     }
 

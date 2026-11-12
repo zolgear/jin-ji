@@ -23,6 +23,7 @@ namespace JinJi.Host;
 internal static partial class SyncCommands
 {
     public const string PlanUsage = "JinJi.Host sync-plan <entra_users.json> --executed-by <person-id> [--settings <sync.json>]";
+    public const string GroupPlanUsage = "JinJi.Host sync-group-plan <entra_groups.json> --executed-by <person-id> --settings <sync.json>";
     public const string ScriptUsage = "JinJi.Host sync-script <plan-id> <出力先ディレクトリ>";
     public const string ResultUsage = "JinJi.Host sync-result <plan-id> <実行ログの JSON>";
     public const string ApplyUsage = "JinJi.Host sync-apply <plan-id> [--what-if true]";
@@ -55,6 +56,53 @@ internal static partial class SyncCommands
             await output.WriteLineAsync($"directory_users: {created.Plan.DirectoryUserCount}");
             await output.WriteLineAsync($"items: {summary.GetValueOrDefault("total")} (in_script {summary.GetValueOrDefault("in_script")})");
             await output.WriteLineAsync($"critical: {summary.GetValueOrDefault("priority:critical")} (disable_account {summary.GetValueOrDefault("action:disable_account")}, block_sign_in {summary.GetValueOrDefault("action:block_sign_in")})");
+            foreach (var (key, count) in summary.Where(s => s.Key.StartsWith("action:", StringComparison.Ordinal)))
+            {
+                await output.WriteLineAsync($"{key}: {count}");
+            }
+
+            foreach (var id in created.Superseded)
+            {
+                await output.WriteLineAsync($"superseded: {id}");
+            }
+
+            foreach (var warning in created.Warnings)
+            {
+                await output.WriteLineAsync($"warning: {warning}");
+            }
+        });
+    }
+
+    /// <summary>
+    /// 組織に対応するグループの計画を作る（ADR-0015）。入力は Entra のグループの一覧（メンバー・オーナーつき）の JSON、設定は <c>orgGroups</c> のある同期の設定。
+    /// </summary>
+    public static async Task<int> GroupPlanAsync(string[] args, TextWriter? output = null)
+    {
+        output ??= Console.Out;
+        var (positional, builder) = Parse(args);
+        if (positional.Count != 1 || !Guid.TryParse(builder.Configuration["executed-by"], CultureInfo.InvariantCulture, out var executor)
+            || builder.Configuration["settings"] is not { Length: > 0 } settingsPath)
+        {
+            await Console.Error.WriteLineAsync("使い方: " + GroupPlanUsage);
+            return 2;
+        }
+
+        using var host = Build(builder);
+        return await RunAsync(host, "sync-group-plan", async (service, viewer) =>
+        {
+            var content = await File.ReadAllBytesAsync(positional[0]);
+            var settings = SyncSettings.Parse(await File.ReadAllBytesAsync(settingsPath));
+            var created = await service.CreateGroupPlanAsync(
+                viewer,
+                new GroupSyncPlanRequest(GraphDirectoryGroups.Parse(content), settings, Path.GetFileName(positional[0]), Convert.ToHexStringLower(SHA256.HashData(content)), executor),
+                CancellationToken.None);
+
+            var summary = created.Plan.Summary;
+            await output.WriteLineAsync($"plan_id: {created.Plan.Id}");
+            await output.WriteLineAsync($"status: {SyncPlanService.Code(created.Plan.Status)}");
+            await output.WriteLineAsync($"business_date: {created.Plan.BusinessDate:yyyy-MM-dd}");
+            await output.WriteLineAsync($"directory_groups: {created.Plan.DirectoryUserCount}");
+            await output.WriteLineAsync($"items: {summary.GetValueOrDefault("total")} (in_script {summary.GetValueOrDefault("in_script")})");
             foreach (var (key, count) in summary.Where(s => s.Key.StartsWith("action:", StringComparison.Ordinal)))
             {
                 await output.WriteLineAsync($"{key}: {count}");

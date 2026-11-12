@@ -44,7 +44,7 @@ internal sealed class SyncEvaluator
         var time = new IngestEvaluator.FixedTimeProvider(_asOf);
         var audit = new AuditWriter(new NpgsqlAuditSink(dataSource), time);
         var service = new SyncPlanService(
-            new NpgsqlSyncPlanStore(dataSource, time), new NpgsqlOrgSnapshotProvider(dataSource), new EntraSyncPlanner(), new EntraScriptRenderer(), new SyncLogParser(), audit, time);
+            new NpgsqlSyncPlanStore(dataSource, time), new NpgsqlOrgSnapshotProvider(dataSource), new EntraSyncPlanner(), new EntraGroupPlanner(), new EntraScriptRenderer(), new SyncLogParser(), audit, time);
         var proposer = ViewerContext.ForUser(await SeedHrAdminAsync(dataSource, "EVAL04", "同期起案者", cancellationToken), [Roles.HrAdmin], Channel.Ui, FieldLimit.Unrestricted);
         var approver = ViewerContext.ForUser(await SeedHrAdminAsync(dataSource, "EVAL05", "同期承認者", cancellationToken), [Roles.HrAdmin], Channel.Ui, FieldLimit.Unrestricted);
 

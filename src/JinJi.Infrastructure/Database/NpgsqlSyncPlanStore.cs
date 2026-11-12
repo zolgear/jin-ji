@@ -107,8 +107,8 @@ public sealed class NpgsqlSyncPlanStore : ISyncPlanStore
                 var command = new NpgsqlBatchCommand(
                     """
                     INSERT INTO sync_plan_item (id, sync_plan_id, sequence, priority, action, person_id, employee_number, directory_object_id,
-                                                user_principal_name, in_script, changes, basis, note)
-                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+                                                user_principal_name, in_script, changes, basis, note, org_unit_id, group_object_id, group_display_name)
+                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
                     """);
                 AddAll(command.Parameters, 
                 [
@@ -125,6 +125,9 @@ public sealed class NpgsqlSyncPlanStore : ISyncPlanStore
                     Jsonb(item.Changes.Select(c => new StoredChange(c.Field, c.Current, c.Desired, c.CurrentKnown))),
                     Jsonb(item.Basis),
                     P(item.Note, NpgsqlDbType.Text),
+                    P(item.OrgUnitId, NpgsqlDbType.Uuid),
+                    P(item.GroupObjectId, NpgsqlDbType.Text),
+                    P(item.GroupDisplayName, NpgsqlDbType.Text),
                 ]);
                 batch.BatchCommands.Add(command);
             }
@@ -158,7 +161,7 @@ public sealed class NpgsqlSyncPlanStore : ISyncPlanStore
         await using var command = tx.CreateCommand(
             """
             SELECT id, sequence, priority, action, person_id, employee_number, directory_object_id, user_principal_name, in_script,
-                   changes::text, basis::text, note
+                   changes::text, basis::text, note, org_unit_id, group_object_id, group_display_name
             FROM sync_plan_item WHERE sync_plan_id = $1 ORDER BY sequence
             """);
         command.Parameters.Add(P(planId));
@@ -181,6 +184,9 @@ public sealed class NpgsqlSyncPlanStore : ISyncPlanStore
                 Changes = [.. changes.Select(c => new SyncChange(c.Field, c.Current, c.Desired, c.CurrentKnown))],
                 Basis = JsonSerializer.Deserialize<SyncBasis>(reader.GetString(10), Json) ?? new SyncBasis(),
                 Note = reader.IsDBNull(11) ? null : reader.GetString(11),
+                OrgUnitId = reader.IsDBNull(12) ? null : reader.GetGuid(12),
+                GroupObjectId = reader.IsDBNull(13) ? null : reader.GetString(13),
+                GroupDisplayName = reader.IsDBNull(14) ? null : reader.GetString(14),
             });
         }
 

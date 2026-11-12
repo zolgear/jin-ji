@@ -267,6 +267,14 @@ body {
   vertical-align: middle;
 }
 
+/* 3D 表示のスキン「インダストリー」の札: 角を丸めず、余白を広めにとり、角ばったゴシック体（端末のフォント。同梱はしない） */
+[data-skin="industry"] .label3d {
+  border-radius: 0;
+  padding: 3px 10px;
+  font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", "YuGothic", "Noto Sans JP", "Noto Sans CJK JP", "Meiryo", sans-serif;
+  letter-spacing: 0.04em;
+}
+
 /* 3D 俯瞰の HTML ラベル（位置は毎フレーム transform で動かす） */
 .label3d {
   position: absolute;

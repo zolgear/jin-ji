@@ -65,7 +65,7 @@ import { useFloorRoute } from "../floor/floorHooks";
 import { FloorMode } from "../floor/FloorMode";
 import { ModeSwitch } from "../floor/FloorParts";
 import { GridFloor, setEnvironment, useOrbitControls, type Cyber, type Palette } from "./common3d";
-import { Backdrop, Bloom, DataDust, DotDisc, FloatingCubes, Frames, Pillars, Reticle, cyberPlateShader, cyberShellShader, skinPalette, stacksOf } from "./cyber3d";
+import { Backdrop, Bloom, DataDust, DotDisc, FloatingCubes, Frames, IndustryDeck, OrgRings, Pillars, Reticle, cyberPlateShader, cyberShellShader, skinPalette, stacksOf } from "./cyber3d";
 import { boundingSphere, heightOf, layout3d, layout3dSplit, layoutFlat, personDots, type Island3D, type Layer3D, type Placed3D, type Scene3D } from "./layout3d";
 import { buildModules, hazardRing } from "./modules3d";
 import { TIER_COUNT, TIER_NAMES, TIER_SHAPES } from "./shapes3d";
@@ -925,7 +925,7 @@ function Layers({ scene, palette, active }: { scene: Scene3D; palette: Palette; 
   useLineFade(rings, keys, isActive);
   return (
     <group>
-      {scene.layers.map((l) =>
+      {!palette.cyber?.deck && scene.layers.map((l) =>
         palette.cyber ? (
           <DotDisc key={`${l.entityIndex}:${l.depth}`} x={l.x} y={l.y - 0.02} z={l.z} radius={l.radius} color={palette.wire} opacity={!active || active.layers.has(`${l.entityIndex}:${l.depth}`) ? 1 : 0.3} />
         ) : (
@@ -942,7 +942,7 @@ function Layers({ scene, palette, active }: { scene: Scene3D; palette: Palette; 
         </mesh>
         ),
       )}
-      <lineSegments geometry={rings} material={ringMaterial} raycast={() => null} />
+      {!palette.cyber?.deck && <lineSegments geometry={rings} material={ringMaterial} raycast={() => null} />}
       <lineSegments geometry={lines} raycast={() => null}>
         <lineBasicMaterial color={palette.wire} transparent opacity={0.75} />
       </lineSegments>
@@ -1538,9 +1538,9 @@ function LabelProjector({ specs, overlay, morph }: {
   return null;
 }
 
-function LabelOverlay({ specs, overlay }: { specs: LabelSpec[]; overlay: RefObject<HTMLDivElement | null> }) {
+function LabelOverlay({ specs, overlay, skin }: { specs: LabelSpec[]; overlay: RefObject<HTMLDivElement | null>; /** 札の見た目（index.css の [data-skin]）。 */ skin: string }) {
   return (
-    <div ref={overlay} className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+    <div ref={overlay} data-skin={skin} className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
       {/* 段の札の引き出し線（輪の縁の付け根の点から札まで。細い中間の灰色） */}
       <svg className="absolute inset-0 size-full overflow-visible">
         {specs
@@ -1696,7 +1696,14 @@ function SceneContent({ scene, byId, palette, focus, hoveredId, coloring, fitReq
           <DataDust scene={scene} palette={palette} />
           <Pillars scene={scene} palette={palette} />
           <FloatingCubes scene={scene} palette={palette} />
-          <Frames scene={scene} palette={palette} activeLayers={active?.layers ?? null} />
+          {palette.cyber.deck ? (
+            <>
+              <IndustryDeck scene={scene} palette={palette} activeLayers={active?.layers ?? null} />
+              <OrgRings scene={scene} palette={palette} related={focus?.related ?? null} morph={morph} />
+            </>
+          ) : (
+            <Frames scene={scene} palette={palette} activeLayers={active?.layers ?? null} />
+          )}
           {selected && <Reticle x={selected.x} y={selected.y + heightOf(selected) + 0.05} z={selected.z} reach={selected.reach} palette={palette} />}
           <Bloom strength={palette.cyber.bloom} />
         </>
@@ -2019,7 +2026,7 @@ function OrgOverview3D() {
       </WebGlBoundary>
       {/* 走査線（CSS。WebGL の描き直しを起こさない。動きを減らす設定では止まる） */}
       <div className="scan3d pointer-events-none absolute inset-0" aria-hidden="true" />
-      <LabelOverlay specs={labels} overlay={overlay} />
+      <LabelOverlay specs={labels} overlay={overlay} skin={theme === "dark" ? skin : "standard"} />
       {treeOpen && (
         <FloatingCard label="組織のツリー" title="ツリー" onClose={() => setTreeOpen(false)} side="left" top="sm:top-3 sm:max-h-[calc(100%-1.5rem)]">
           <OrgTreeList

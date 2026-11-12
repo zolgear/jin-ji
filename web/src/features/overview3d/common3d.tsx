@@ -22,8 +22,8 @@ export interface Cyber {
   /** 塵の濃さ・にじみの強さ */
   dust: number;
   bloom: number;
-  /** 段を囲む四角を薄い板として塗る濃さ（0 = 塗らない） */
-  slab: number;
+  /** 段を、円盤と輪の代わりに四角いガラスの板（縁の印・市松・黄の床）で描く（スキン「インダストリー」） */
+  deck?: boolean;
 }
 
 export interface Palette {

@@ -6,7 +6,7 @@
 // - 明るい線と板だけの薄いにじみ（ブルーム）
 // 黄（signal）は選択の印だけに使い、表示灯は白にする。
 import { useFrame, useThree } from "@react-three/fiber";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, type RefObject } from "react";
 import * as THREE from "three";
 import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
 import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass.js";
@@ -32,10 +32,10 @@ const CYBER_DARK: Palette = {
   lamp: "#e4fbff",
   lampOff: "#253142",
   light: { ambient: 0.5, key: 1.5, env: 0.6 },
-  cyber: { sky: "#030916", horizon: "#1c6aa0", seam: "#9af1ff", rim: "#43cfe8", rimPower: 0.9, glass: 0.5, plateGlow: 0.35, dust: 0.5, bloom: 0.32, slab: 0 },
+  cyber: { sky: "#030916", horizon: "#1c6aa0", seam: "#9af1ff", rim: "#43cfe8", rimPower: 0.9, glass: 0.5, plateGlow: 0.35, dust: 0.5, bloom: 0.32 },
 };
 
-/** スキン「インダストリー」: 黒鉛色の空間に、黄の線・ガラスの四角い板・黄の光の柱。データの色（上面の板）は青のまま。 */
+/** スキン「インダストリー」: 黒鉛色の空間に、段ごとの四角いガラスの板（IndustryDeck）・黄の床・黄の光の柱。データの色（上面の板）は青のまま。 */
 const INDUSTRY_DARK: Palette = {
   ...PALETTE.dark,
   bg: "#0a0a0b",
@@ -50,7 +50,7 @@ const INDUSTRY_DARK: Palette = {
   shellEntity: "#3a3620",
   lampOff: "#2a2a2c",
   light: { ambient: 0.5, key: 1.5, env: 0.6 },
-  cyber: { sky: "#040404", horizon: "#4a3f00", seam: "#ffd400", rim: "#ffd400", rimPower: 0.6, glass: 0.7, plateGlow: 0.3, dust: 0.35, bloom: 0.2, slab: 0.035 },
+  cyber: { sky: "#040404", horizon: "#4a3f00", seam: "#ffd400", rim: "#ffd400", rimPower: 0.6, glass: 0.7, plateGlow: 0.3, dust: 0.35, bloom: 0.2, deck: true },
 };
 
 /** スキンとテーマから 3D の色。サイバー・インダストリーはダークだけ（ライトは標準のまま）。 */
@@ -345,17 +345,14 @@ export function stacksOf(scene: Scene3D): Map<string, Stack> {
  * - 選んだ組織に関係しない段の鉤は薄くする
  */
 export function Frames({ scene, palette, activeLayers }: { scene: Scene3D; palette: Palette; activeLayers: Set<string> | null }) {
-  const { strong, faint, plot, slabs } = useMemo(() => {
-    const tiles: Array<{ key: string; x: number; y: number; z: number; size: number; on: boolean }> = [];
+  const { strong, faint, plot } = useMemo(() => {
     const on: number[] = [];
     const off: number[] = [];
     const floor: number[] = [];
     const stacks = stacksOf(scene);
     for (const l of scene.layers) {
       const half = stacks.get(stackKey(l.x, l.z))!.half;
-      const lit = !activeLayers || activeLayers.has(`${l.entityIndex}:${l.depth}`);
-      const v = lit ? on : off;
-      tiles.push({ key: `${l.entityIndex}:${l.depth}`, x: l.x, y: l.y - 0.04, z: l.z, size: half * 2, on: lit });
+      const v = !activeLayers || activeLayers.has(`${l.entityIndex}:${l.depth}`) ? on : off;
       brackets(v, l.x, l.y, l.z, half, Math.max(1.4, half * 0.12));
       const t = Math.max(0.6, half * 0.04);
       v.push(l.x - half, l.y, l.z, l.x - half - t, l.y, l.z, l.x + half, l.y, l.z, l.x + half + t, l.y, l.z);
@@ -377,7 +374,7 @@ export function Frames({ scene, palette, activeLayers }: { scene: Scene3D; palet
       g.setAttribute("position", new THREE.Float32BufferAttribute(v, 3));
       return g;
     };
-    return { strong: geo(on), faint: geo(off), plot: geo(floor), slabs: tiles };
+    return { strong: geo(on), faint: geo(off), plot: geo(floor) };
   }, [scene, activeLayers]);
   useEffect(
     () => () => {
@@ -390,14 +387,6 @@ export function Frames({ scene, palette, activeLayers }: { scene: Scene3D; palet
   const cyber = palette.cyber!;
   return (
     <group>
-      {cyber.slab > 0 &&
-        slabs.map((t) => (
-          // 段を囲む四角を、薄いガラスの板として塗る（色は付けない。黄で塗ると重なって全体が黄色くかぶる）
-          <mesh key={t.key} position={[t.x, t.y, t.z]} rotation={[-Math.PI / 2, 0, 0]} raycast={() => null}>
-            <planeGeometry args={[t.size, t.size]} />
-            <meshBasicMaterial color="#dfe3e8" transparent opacity={cyber.slab * (t.on ? 1 : 0.3)} side={THREE.DoubleSide} depthWrite={false} />
-          </mesh>
-        ))}
       <lineSegments geometry={strong} raycast={() => null}>
         <lineBasicMaterial color={cyber.rim} transparent opacity={0.9} />
       </lineSegments>
@@ -440,13 +429,14 @@ void main() {
 `;
 
 const CUBE_FRAGMENT = /* glsl */ `
+uniform float uFace;
 varying vec2 vUv;
 varying vec3 vTint;
 void main() {
   // 面はごく薄く、辺だけ細く明るく（画面上の太さをそろえる）
   vec2 d = min( vUv, 1.0 - vUv ) / max( fwidth( vUv ), vec2( 1e-5 ) );
   float e = 1.0 - smoothstep( 0.7, 1.7, min( d.x, d.y ) );
-  float a = max( e * 0.85, 0.04 );
+  float a = max( e * 0.85, uFace );
   gl_FragColor = vec4( vTint * a, 1.0 );
   #include <colorspace_fragment>
 }
@@ -468,6 +458,7 @@ export function FloatingCubes({ scene, palette }: { scene: Scene3D; palette: Pal
         transparent: true,
         depthWrite: false,
         side: THREE.DoubleSide,
+        uniforms: { uFace: { value: 0.04 } },
       }),
     [],
   );
@@ -533,5 +524,166 @@ export function FloatingCubes({ scene, palette }: { scene: Scene3D; palette: Pal
     [geometry, material],
   );
   useEffect(() => () => void mesh.dispose(), [mesh]);
+  return <primitive object={mesh} />;
+}
+
+/** 板の縁からの余白（段の組織を囲む円の外）。 */
+const DECK_PAD = 1.2;
+/** 板の厚み。 */
+const DECK_THICK = 0.5;
+
+/**
+ * スキン「インダストリー」の段: 円盤と回る輪の代わりに、段ごとの四角いガラスの板（厚みのある箱。辺だけが黄に光る）を積む。
+ * - 板の大きさは段ごと（その段の組織を囲む大きさ）。上の段ほど小さく、階段のように重なる
+ * - 板の手前の左の縁に、黄の三角の並び（向きの印）。奥の右の隅に、市松の小さな模様
+ * - 法人（島）ごとに、床に黄の面を敷く
+ * 選んだ組織に関係しない段の板は薄くする。
+ */
+export function IndustryDeck({ scene, palette, activeLayers }: { scene: Scene3D; palette: Palette; activeLayers: Set<string> | null }) {
+  const cyber = palette.cyber!;
+  const box = useMemo(() => new THREE.BoxGeometry(1, 1, 1), []);
+  const edgeMaterial = useMemo(
+    // 面は塗らない（大きな板の面を黄で足すと、寄ったときに画面全体が黄色くかぶる）
+    () => new THREE.ShaderMaterial({ vertexShader: CUBE_VERTEX, fragmentShader: CUBE_FRAGMENT, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, side: THREE.DoubleSide, uniforms: { uFace: { value: 0 } } }),
+    [],
+  );
+  useEffect(
+    () => () => {
+      box.dispose();
+      edgeMaterial.dispose();
+    },
+    [box, edgeMaterial],
+  );
+  const { slabs, glass, marks, checker, floor } = useMemo(() => {
+    const lit = (key: string) => !activeLayers || activeLayers.has(key);
+    const m = new THREE.InstancedMesh(box, edgeMaterial, Math.max(1, scene.layers.length));
+    const mat = new THREE.Matrix4();
+    const tint = new THREE.Color();
+    const tiles: Array<{ key: string; x: number; y: number; z: number; size: number; on: boolean }> = [];
+    const tri: number[] = [];
+    const chk: number[] = [];
+    scene.layers.forEach((l, i) => {
+      const key = `${l.entityIndex}:${l.depth}`;
+      const on = lit(key);
+      const half = l.radius + DECK_PAD;
+      mat.makeScale(half * 2, DECK_THICK, half * 2).setPosition(l.x, l.y - DECK_THICK / 2 - 0.03, l.z);
+      m.setMatrixAt(i, mat);
+      m.setColorAt(i, tint.set(cyber.rim).multiplyScalar(on ? 0.8 : 0.18));
+      tiles.push({ key, x: l.x, y: l.y - 0.03, z: l.z, size: half * 2, on });
+      if (!on) return;
+      const y = l.y + 0.01;
+      // 手前（+z）の左の縁に、右向きの三角を 4 つ
+      const t = Math.max(0.5, half * 0.045);
+      for (let k = 0; k < 4; k++) {
+        const x0 = l.x - half + t * 1.2 + k * t * 1.5;
+        const z0 = l.z + half - t * 1.6;
+        tri.push(x0, y, z0 - t * 0.6, x0, y, z0 + t * 0.6, x0 + t, y, z0);
+      }
+      // 奥（-z）の右の隅に、市松（6 × 3）
+      const c = Math.max(0.28, half * 0.022);
+      for (let cx = 0; cx < 6; cx++) {
+        for (let cz = 0; cz < 3; cz++) {
+          if ((cx + cz) % 2 !== 0) continue;
+          const x0 = l.x + half - c * 1.5 - (cx + 1) * c;
+          const z0 = l.z - half + c * 1.5 + cz * c;
+          chk.push(x0, y, z0, x0, y, z0 + c, x0 + c, y, z0, x0 + c, y, z0, x0, y, z0 + c, x0 + c, y, z0 + c);
+        }
+      }
+    });
+    m.count = scene.layers.length;
+    m.raycast = () => undefined;
+    m.frustumCulled = false;
+    const geo = (v: number[]) => {
+      const g = new THREE.BufferGeometry();
+      g.setAttribute("position", new THREE.Float32BufferAttribute(v, 3));
+      return g;
+    };
+    const plates = [...stacksOf(scene).values()].map((st) => ({ x: st.x, z: st.z, size: (st.half + 2.5) * 2 }));
+    return { slabs: m, glass: tiles, marks: geo(tri), checker: geo(chk), floor: plates };
+  }, [scene, activeLayers, cyber, box, edgeMaterial]);
+  useEffect(
+    () => () => {
+      slabs.dispose();
+      marks.dispose();
+      checker.dispose();
+    },
+    [slabs, marks, checker],
+  );
+  return (
+    <group>
+      {floor.map((f) => (
+        // 黄の床（法人の足元。霧で遠くは地に溶ける）
+        <mesh key={`${f.x}:${f.z}`} position={[f.x, scene.floorY + 0.02, f.z]} rotation={[-Math.PI / 2, 0, 0]} raycast={() => null}>
+          <planeGeometry args={[f.size, f.size]} />
+          <meshBasicMaterial color="#2e2700" transparent opacity={0.85} depthWrite={false} />
+        </mesh>
+      ))}
+      {glass.map((t) => (
+        // 板の上面（無色の薄いガラス。黄で塗ると重なって全体が黄色くかぶる）
+        <mesh key={t.key} position={[t.x, t.y, t.z]} rotation={[-Math.PI / 2, 0, 0]} raycast={() => null}>
+          <planeGeometry args={[t.size, t.size]} />
+          <meshBasicMaterial color="#dfe3e8" transparent opacity={t.on ? 0.05 : 0.015} side={THREE.DoubleSide} depthWrite={false} />
+        </mesh>
+      ))}
+      <primitive object={slabs} />
+      <mesh geometry={marks} raycast={() => null}>
+        <meshBasicMaterial color={cyber.rim} side={THREE.DoubleSide} toneMapped={false} />
+      </mesh>
+      <mesh geometry={checker} raycast={() => null}>
+        <meshBasicMaterial color="#e9e4c4" transparent opacity={0.55} side={THREE.DoubleSide} depthWrite={false} />
+      </mesh>
+    </group>
+  );
+}
+
+// three のオブジェクトの変更（フックの外の関数で行う）。変えたら true
+function setVisible(object: THREE.Object3D, visible: boolean): boolean {
+  if (object.visible === visible) return false;
+  object.visible = visible;
+  return true;
+}
+
+/**
+ * スキン「インダストリー」の、組織の足元の輪: 幅のある平らな輪（淡い黄）。法人は外にもう 1 本の太い輪。
+ * 線ではなく面で描くので、近づいても太さが保たれる。選んだ組織に関係しない組織の輪は地の色へ寄せる。
+ * 配置の補間の途中は出さない（輪は最後の位置にあるため）。
+ */
+export function OrgRings({ scene, palette, related, morph }: { scene: Scene3D; palette: Palette; related: Set<string> | null; morph: RefObject<{ active: boolean }> }) {
+  const { invalidate } = useThree();
+  const geometry = useMemo(() => new THREE.RingGeometry(1, 1.07, 72).rotateX(-Math.PI / 2), []);
+  const material = useMemo(() => new THREE.MeshBasicMaterial({ side: THREE.DoubleSide, toneMapped: false }), []);
+  useEffect(
+    () => () => {
+      geometry.dispose();
+      material.dispose();
+    },
+    [geometry, material],
+  );
+  const mesh = useMemo(() => {
+    const entities = scene.nodes.filter((p) => p.node.kind === "legal_entity").length;
+    const m = new THREE.InstancedMesh(geometry, material, Math.max(1, scene.nodes.length + entities));
+    const mat = new THREE.Matrix4();
+    const lit = new THREE.Color("#f3ecb0");
+    const dim = new THREE.Color("#f3ecb0").lerp(new THREE.Color(palette.bg), 0.85);
+    let i = 0;
+    for (const p of scene.nodes) {
+      const color = !related || related.has(p.node.id) ? lit : dim;
+      const r = p.reach + 0.4;
+      m.setMatrixAt(i, mat.makeScale(r, 1, r).setPosition(p.x, p.y + 0.03, p.z));
+      m.setColorAt(i++, color);
+      if (p.node.kind === "legal_entity") {
+        m.setMatrixAt(i, mat.makeScale(r * 1.9, 1, r * 1.9).setPosition(p.x, p.y + 0.03, p.z));
+        m.setColorAt(i++, color);
+      }
+    }
+    m.count = i;
+    m.raycast = () => undefined;
+    m.frustumCulled = false;
+    return m;
+  }, [scene, palette, related, geometry, material]);
+  useEffect(() => () => void mesh.dispose(), [mesh]);
+  useFrame(() => {
+    if (setVisible(mesh, !morph.current.active)) invalidate();
+  });
   return <primitive object={mesh} />;
 }

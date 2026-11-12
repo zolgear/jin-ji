@@ -26,6 +26,8 @@ export interface Cyber {
   bloom: number;
   /** 直線と四角の語彙（段の四角い枠・床の区画・四角い点・選択の四角い照準） */
   frames?: boolean;
+  /** 空間に浮かぶ立方体と板（外周に置く。組織の上には重ねない） */
+  cubes?: boolean;
 }
 
 export interface Palette {

@@ -2,7 +2,7 @@
 // - a: 静かな深層（不透明の暗い外装・溝の細い光・氷の白と鋼の青）
 // - b: ホログラム（半透明の外装・輪郭の光・点の行列の円盤・塵・光の柱）
 // - c: b に薄いにじみ（ブルーム。暗いテーマだけ）
-// - d: c に直線と四角（段の四角い枠・床の区画・四角い点・選択の四角い照準）
+// - d: c に直線と四角（段の四角い枠・床の区画・四角い点・選択の四角い照準）// - e: d の空を青く明るくし、外周に立方体のかたまりと薄い板を浮かべる（暗いテーマだけ。明るいテーマは従来の見た目のまま）
 import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useMemo } from "react";
 import * as THREE from "three";
@@ -13,10 +13,10 @@ import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPa
 import { PALETTE, type Cyber, type Palette } from "./common3d";
 import { heightOf, type Scene3D } from "./layout3d";
 
-export type Look = "a" | "b" | "c" | "d";
+export type Look = "a" | "b" | "c" | "d" | "e";
 
 export function readLook(): Look | null {
-  const m = /[?&]look=([abcd])\b/.exec(window.location.hash);
+  const m = /[?&]look=([abcde])\b/.exec(window.location.hash);
   return m ? (m[1] as Look) : null;
 }
 
@@ -77,6 +77,16 @@ const LIGHT_B: Palette = {
 
 export function cyberPalette(look: Look | null, theme: "light" | "dark"): Palette | null {
   if (!look) return null;
+  if (look === "e") {
+    if (theme === "light") return null;
+    return {
+      ...DARK_B,
+      bg: "#06111f",
+      grid: "#1c4a68",
+      wire: "#58b4d0",
+      cyber: { ...DARK_B.cyber!, sky: "#030916", horizon: "#1c6aa0", plateGlow: 0.35, bloom: 0.32, frames: true, cubes: true, dust: 0.5 },
+    };
+  }
   if (theme === "light") return look === "a" ? LIGHT_A : look === "d" ? { ...LIGHT_B, cyber: { ...LIGHT_B.cyber!, frames: true } } : LIGHT_B;
   if (look === "a") return DARK_A;
   if (look === "b") return DARK_B;
@@ -427,4 +437,100 @@ export function Reticle({ x, y, z, reach, palette }: { x: number; y: number; z: 
       <lineBasicMaterial color={palette.lamp ?? palette.signal} fog={false} toneMapped={false} />
     </lineSegments>
   );
+}
+
+const CUBE_VERTEX = /* glsl */ `
+varying vec2 vUv;
+varying vec3 vTint;
+void main() {
+  vUv = uv;
+  vTint = instanceColor;
+  gl_Position = projectionMatrix * viewMatrix * modelMatrix * instanceMatrix * vec4( position, 1.0 );
+}
+`;
+
+const CUBE_FRAGMENT = /* glsl */ `
+varying vec2 vUv;
+varying vec3 vTint;
+void main() {
+  // 面はごく薄く、辺だけ細く明るく（画面上の太さをそろえる）
+  vec2 d = min( vUv, 1.0 - vUv ) / max( fwidth( vUv ), vec2( 1e-5 ) );
+  float e = 1.0 - smoothstep( 0.7, 1.7, min( d.x, d.y ) );
+  float a = max( e * 0.85, 0.06 );
+  gl_FragColor = vec4( vTint * a, 1.0 );
+  #include <colorspace_fragment>
+}
+`;
+
+/**
+ * 空間に浮かぶ立方体のかたまりと薄い板（辺だけが細く光る。面はほぼ透明）。軸にそろえて置き、回さない。
+ * 組織の図に重ならないよう、外周の輪の帯に置く。描画呼び出しは 1 回（InstancedMesh）。
+ */
+export function FloatingCubes({ scene, palette }: { scene: Scene3D; palette: Palette }) {
+  const cyber = palette.cyber!;
+  const geometry = useMemo(() => new THREE.BoxGeometry(1, 1, 1), []);
+  const material = useMemo(
+    () =>
+      new THREE.ShaderMaterial({
+        vertexShader: CUBE_VERTEX,
+        fragmentShader: CUBE_FRAGMENT,
+        blending: THREE.AdditiveBlending,
+        transparent: true,
+        depthWrite: false,
+        side: THREE.DoubleSide,
+      }),
+    [],
+  );
+  const mesh = useMemo(() => {
+    const rand = lcg(7141);
+    const items: Array<{ x: number; y: number; z: number; sx: number; sy: number; sz: number; b: number; white: boolean }> = [];
+    const top = Math.max(...scene.nodes.map((p) => p.y)) + 18;
+    const place = (): [number, number, number] => {
+      const r = scene.extent * (0.5 + rand() * 0.9);
+      const a = rand() * Math.PI * 2;
+      return [scene.center[0] + r * Math.cos(a), scene.floorY + 2 + rand() * (top - scene.floorY) * 0.8, scene.center[2] + r * Math.sin(a)];
+    };
+    // 立方体のかたまり（格子にそろえた数個）
+    for (let c = 0; c < 30; c++) {
+      const [cx, cy, cz] = place();
+      const s = 0.7 + rand() * 1.9;
+      const n = 3 + Math.floor(rand() * 6);
+      const b = 0.2 + rand() * 0.35;
+      for (let i = 0; i < n; i++) {
+        const k = () => Math.round((rand() - 0.5) * 4) * s;
+        const big = rand() < 0.2 ? 2 : 1;
+        items.push({ x: cx + k(), y: cy + k(), z: cz + k(), sx: s * 0.86 * big, sy: s * 0.86 * big, sz: s * 0.86 * big, b, white: rand() < 0.08 });
+      }
+    }
+    // 薄い板（縦が多く、少し横）
+    for (let i = 0; i < 36; i++) {
+      const [x, y, z] = place();
+      const w = 3 + rand() * 9;
+      const h = 2 + rand() * 6;
+      const t = rand();
+      const size: [number, number, number] = t < 0.4 ? [w, h, 0.05] : t < 0.8 ? [0.05, h, w] : [w, 0.05, h];
+      items.push({ x, y, z, sx: size[0], sy: size[1], sz: size[2], b: 0.18 + rand() * 0.3, white: false });
+    }
+    const m = new THREE.InstancedMesh(geometry, material, items.length);
+    const mat = new THREE.Matrix4();
+    const tint = new THREE.Color();
+    items.forEach((it, i) => {
+      mat.makeScale(it.sx, it.sy, it.sz).setPosition(it.x, it.y, it.z);
+      m.setMatrixAt(i, mat);
+      tint.set(it.white ? "#ffffff" : cyber.rim).multiplyScalar(it.b);
+      m.setColorAt(i, tint);
+    });
+    m.raycast = () => undefined;
+    m.frustumCulled = false;
+    return m;
+  }, [scene, cyber, geometry, material]);
+  useEffect(
+    () => () => {
+      geometry.dispose();
+      material.dispose();
+    },
+    [geometry, material],
+  );
+  useEffect(() => () => void mesh.dispose(), [mesh]);
+  return <primitive object={mesh} />;
 }

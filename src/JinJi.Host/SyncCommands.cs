@@ -191,8 +191,12 @@ internal static partial class SyncCommands
                 ? CertificateAssertionSource.FromOptions(options, time)
                 : FederatedTokenFileAssertionSource.FromOptions(options);
             using var http = new HttpClient { Timeout = options.Timeout + options.Timeout };
-            var client = new GraphRestDirectoryClient(http, new ClientCredentialTokenSource(http, options, assertions, time), options);
-            var result = await new DirectApplier(service, client, time).ApplyAsync(viewer, planId, whatIf, CancellationToken.None);
+            var tokens = new ClientCredentialTokenSource(http, options, assertions, time);
+            // 計画の種類で適用の実装を分ける（グループの計画は ADR-0015）
+            var plan = (await service.GetAsync(viewer, planId, CancellationToken.None)).Plan;
+            var result = plan.TargetSystem == SyncPlanService.TargetSystemEntraGroups
+                ? await new GroupDirectApplier(service, new GraphRestGroupClient(http, tokens, options), time).ApplyAsync(viewer, planId, whatIf, CancellationToken.None)
+                : await new DirectApplier(service, new GraphRestDirectoryClient(http, tokens, options), time).ApplyAsync(viewer, planId, whatIf, CancellationToken.None);
             await WriteResultAsync(output, result);
         });
     }

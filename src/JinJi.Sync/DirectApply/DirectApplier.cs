@@ -35,6 +35,11 @@ public sealed class DirectApplier
     {
         ArgumentNullException.ThrowIfNull(viewer);
         var target = await _service.PrepareApplyAsync(viewer, planId, cancellationToken);
+        if (target.Plan.TargetSystem != SyncPlanService.TargetSystemEntra)
+        {
+            throw new InvalidOperationException($"計画 {planId} はユーザーの計画ではありません（グループの計画は GroupDirectApplier で適用します）。");
+        }
+
         var startedAt = _timeProvider.GetUtcNow();
         var results = new List<SyncLogEntry>();
         foreach (var item in target.Items.Where(i => i.Action != SyncAction.CreateUser).OrderBy(i => i.Sequence))

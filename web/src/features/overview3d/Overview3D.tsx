@@ -1812,7 +1812,8 @@ function OrgOverview3D() {
   const stats = useOrgStats(asOf);
   const theme = useResolvedTheme();
   const [look] = useState(readLook);
-  const palette = cyberPalette(look, theme) ?? PALETTE[theme];
+  // 描くたびに作り直さない（マテリアルが作り直され、指すたびにモジュールが消える）
+  const palette = useMemo(() => cyberPalette(look, theme) ?? PALETTE[theme], [look, theme]);
   const forest = useMemo(() => (tree.data ? buildForest(tree.data, stats.data ?? null) : null), [tree.data, stats.data]);
   const [splitMode, setSplitMode] = useSiteSplitMode();
   const split = useMemo(() => (forest && splitMode ? splitBySite(forest) : null), [forest, splitMode]);

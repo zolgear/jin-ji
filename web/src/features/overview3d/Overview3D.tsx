@@ -65,7 +65,7 @@ import { FloorMode } from "../floor/FloorMode";
 import { ModeSwitch } from "../floor/FloorParts";
 import { GridFloor, PALETTE, setEnvironment, useOrbitControls, type Cyber, type Palette } from "./common3d";
 import { Backdrop, Bloom, DataDust, DotDisc, FloatingCubes, Frames, Pillars, Reticle, cyberPalette, cyberPlateShader, cyberShellShader, readLook } from "./cyber3d";
-import { boundingSphere, heightOf, layout3d, layout3dSplit, personDots, type Island3D, type Layer3D, type Placed3D, type Scene3D } from "./layout3d";
+import { boundingSphere, heightOf, layout3d, layout3dSplit, layoutFlat, personDots, type Island3D, type Layer3D, type Placed3D, type Scene3D } from "./layout3d";
 import { buildModules, hazardRing } from "./modules3d";
 import { TIER_COUNT, TIER_NAMES, TIER_SHAPES } from "./shapes3d";
 import beadUrl from "./textures/bead.webp";
@@ -81,7 +81,9 @@ const VIEW_DIR = new THREE.Vector3(0, 0.58, 1).normalize();
  * 奥の法人が画面の上、手前の法人が下に並び、横幅に縛られて小さくなるのを避けられる。
  */
 const VIEW_DIR_PORTRAIT = new THREE.Vector3(0.9, 0.85, 0.45).normalize();
-const viewDir = (aspect: number) => (aspect < 0.85 ? VIEW_DIR_PORTRAIT : VIEW_DIR);
+/** 平面の配置での向き（ほぼ真上から。視点の操作の下限の少し内側）。 */
+const VIEW_DIR_FLAT = new THREE.Vector3(0, 1, 0.3).normalize();
+const viewDir = (aspect: number, flat = false) => (flat ? VIEW_DIR_FLAT : aspect < 0.85 ? VIEW_DIR_PORTRAIT : VIEW_DIR);
 
 /** WebGL が使えない環境（古い端末・ヘッドレス）での代替表示。 */
 class WebGlBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
@@ -1327,13 +1329,14 @@ function CameraRig({ scene, byId, focus, fitRequest, controls, reduced, layoutKe
     const first = !initialized.current;
     initialized.current = true;
     if (first && focus) return; // 最初から組織が選ばれているときは下の effect に任せる
-    moveTo(wholeScene(scene), viewDir(size.width / Math.max(1, size.height)), first || reduced);
+    moveTo(wholeScene(scene), viewDir(size.width / Math.max(1, size.height), layoutKey === "flat"), first || reduced);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [controls, fitRequest, size.width > 0]);
 
   // 組織を選んだら寄せる。選択を外してもカメラは動かさない（全体へ戻すのは「全体を表示」）。配置の種類が変わったら（拠点で分ける）、全体か選んだ組織に合わせ直す
   const focusId = focus?.id ?? null;
   const lastLayout = useRef(layoutKey);
+  const focusedOnce = useRef(false);
   useEffect(() => {
     if (!controls || size.width === 0) return;
     const relayout = lastLayout.current !== layoutKey;
@@ -1341,7 +1344,7 @@ function CameraRig({ scene, byId, focus, fitRequest, controls, reduced, layoutKe
     if (!focus) {
       if (relayout) {
         // 切り替えでは今の見下ろす向きを保つ（急に回り込まない）。縦長の画面の向きは最初の表示と同じ
-        moveTo(wholeScene(scene), viewDir(size.width / Math.max(1, size.height)), reduced);
+        moveTo(wholeScene(scene), viewDir(size.width / Math.max(1, size.height), layoutKey === "flat"), reduced);
       }
       return;
     }
@@ -1368,7 +1371,10 @@ function CameraRig({ scene, byId, focus, fitRequest, controls, reduced, layoutKe
       }
     });
     // 今の向きを保ちつつ、見下ろす角度は 25° 以上にする
-    const dir = camera.position.clone().sub(controls.target).normalize();
+    // 平面に切り替えた直後（と、平面で最初から選ばれているとき）は真上からに向け直す
+    const fromAbove = layoutKey === "flat" && (relayout || !focusedOnce.current);
+    focusedOnce.current = true;
+    const dir = fromAbove ? VIEW_DIR_FLAT.clone() : camera.position.clone().sub(controls.target).normalize();
     if (dir.y < 0.42) {
       dir.y = 0.42;
       dir.normalize();
@@ -1810,7 +1816,10 @@ function OrgOverview3D() {
   const forest = useMemo(() => (tree.data ? buildForest(tree.data, stats.data ?? null) : null), [tree.data, stats.data]);
   const [splitMode, setSplitMode] = useSiteSplitMode();
   const split = useMemo(() => (forest && splitMode ? splitBySite(forest) : null), [forest, splitMode]);
-  const scene = useMemo(() => (split ? layout3dSplit(split) : forest ? layout3d(forest) : null), [forest, split]);
+  // 平面（上から見る同心の輪の配置）。拠点で分けているときは島の配置を優先する
+  const [flat, setFlat] = useState(() => /[?&]flat=1\b/.test(window.location.hash));
+  const flatOn = flat && !splitMode;
+  const scene = useMemo(() => (split ? layout3dSplit(split) : forest ? (flatOn ? layoutFlat(forest) : layout3d(forest)) : null), [forest, split, flatOn]);
   const byId = useMemo(() => new Map((scene?.nodes ?? []).map((p) => [p.node.id, p])), [scene]);
   // 検索で探す組織（候補には上位組織の名前を添える）
   const searchUnits = useMemo<SearchUnit[]>(() => {
@@ -1905,6 +1914,15 @@ function OrgOverview3D() {
       {/* 操作の帯（2D の組織図と共通の部品・同じ順序）。図に重なる箱は置かず、読み方の説明は「図の見方」（?）の中に入れる */}
       <ChartToolbar>
         <ModeSwitch floor={false} onChange={setMode} />
+        <ToolbarButton
+          pressed={flatOn}
+          onClick={() => {
+            if (splitMode) setSplitMode(false);
+            setFlat(!flatOn);
+          }}
+        >
+          平面
+        </ToolbarButton>
         <SiteModeControls split={splitMode} onSplit={setSplitMode} color={siteMode} onColor={setSiteMode} coloring={coloring} />
         <CrossKindFilter
           concurrent={showConcurrent}
@@ -1964,7 +1982,7 @@ function OrgOverview3D() {
             hoveredId={hoveredId}
             coloring={coloring}
             fitRequest={fitRequest}
-            layoutKey={splitMode ? "split" : "entity"}
+            layoutKey={flatOn ? "flat" : splitMode ? "split" : "entity"}
             labels={labels}
             overlay={overlay}
             onSelect={(p) => {

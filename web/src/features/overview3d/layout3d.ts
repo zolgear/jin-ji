@@ -202,6 +202,99 @@ export function layout3d(forest: OrgForest): Scene3D {
   return finish(nodes, layers, []);
 }
 
+/** 平面の配置の、段の輪の縁とモジュールの間。 */
+const RING_PAD = 1.1;
+
+/**
+ * 平面の配置（上から見る図）。法人を中心に置き、組織を深さごとの同心の輪に並べる（放射状の木）。高さはすべて 0。
+ * - 角度は配下の幅の合計に比例して割り振る（配下は親の扇の中に収まる）
+ * - 輪の半径は、その深さの組織が割り振られた角度に収まるだけ広げる（組織が多い深さほど輪が大きくなる）
+ * 段の円盤（Layer3D）は、その深さの組織を囲む同心円になる。
+ */
+export function layoutFlat(forest: OrgForest): Scene3D {
+  const nodes: Placed3D[] = [];
+  const layers: Layer3D[] = [];
+  let offsetX = 0;
+  forest.roots.forEach((root, entityIndex) => {
+    const width = (n: OrgNode) => 2 * (reachFor(n) + MARGIN);
+    const weight = new Map<string, number>();
+    const measure = (n: OrgNode): number => {
+      const w = Math.max(width(n), n.children.reduce((sum, c) => sum + measure(c), 0));
+      weight.set(n.id, w);
+      return w;
+    };
+    const total = root.children.reduce((sum, c) => sum + measure(c), 0) || 1;
+    // 角度の割り振り（深さは法人からの段数）
+    const spans: Array<{ node: OrgNode; depth: number; mid: number; size: number }> = [];
+    const assign = (n: OrgNode, depth: number, start: number, size: number) => {
+      spans.push({ node: n, depth, mid: start + size / 2, size });
+      const own = weight.get(n.id)!;
+      const used = n.children.reduce((sum, c) => sum + weight.get(c.id)!, 0);
+      // 配下の幅が自分より狭いときは、扇の中央に寄せる
+      let a = start + (size * (1 - used / own)) / 2;
+      for (const c of n.children) {
+        const part = (size * weight.get(c.id)!) / own;
+        assign(c, depth + 1, a, part);
+        a += part;
+      }
+    };
+    // 最初の組織を画面の上（奥）に置き、時計回りに並べる
+    let a0 = -Math.PI / 2;
+    for (const c of root.children) {
+      const part = (Math.PI * 2 * weight.get(c.id)!) / total;
+      assign(c, 1, a0, part);
+      a0 += part;
+    }
+    // 輪の半径（内側から）
+    const maxDepth = Math.max(0, ...spans.map((sp) => sp.depth));
+    const ringR: number[] = [0];
+    const enclose: number[] = [reachFor(root) + 1.5];
+    for (let d = 1; d <= maxDepth; d++) {
+      const at = spans.filter((sp) => sp.depth === d);
+      const reach = Math.max(...at.map((sp) => reachFor(sp.node)));
+      const need = Math.max(...at.map((sp) => width(sp.node) / Math.min(sp.size, Math.PI)));
+      ringR[d] = Math.max(need, enclose[d - 1]! + reach + RING_PAD * 2);
+      enclose[d] = ringR[d]! + reach + RING_PAD;
+    }
+    const outer = enclose[maxDepth]! + 1;
+    const cx = offsetX + outer;
+    nodes.push({ node: root, x: cx, y: 0, z: 0, radius: radiusFor(root), reach: reachFor(root), tier: tierOf(root), entityIndex });
+    const byDepth = new Map<number, { names: Map<string, number>; orgCount: number }>();
+    for (const sp of spans) {
+      const r = ringR[sp.depth]!;
+      nodes.push({
+        node: sp.node,
+        x: cx + r * Math.cos(sp.mid),
+        y: 0,
+        z: r * Math.sin(sp.mid),
+        radius: radiusFor(sp.node),
+        reach: reachFor(sp.node),
+        tier: tierOf(sp.node),
+        entityIndex,
+      });
+      const entry = byDepth.get(sp.depth) ?? { names: new Map(), orgCount: 0 };
+      entry.orgCount++;
+      if (sp.node.levelName) entry.names.set(sp.node.levelName, (entry.names.get(sp.node.levelName) ?? 0) + 1);
+      byDepth.set(sp.depth, entry);
+    }
+    for (const [depth, { names, orgCount }] of [...byDepth.entries()].sort((x, y) => x[0] - y[0])) {
+      layers.push({
+        entityIndex,
+        depth,
+        x: cx,
+        z: 0,
+        y: 0,
+        radius: enclose[depth]!,
+        label: [...names.entries()].sort((x, y) => y[1] - x[1])[0]?.[0] ?? "",
+        uniform: names.size <= 1,
+        orgCount,
+      });
+    }
+    offsetX = cx + outer + 12;
+  });
+  return finish(nodes, layers, [], 1.5);
+}
+
 /** 島どうしの間（床の上の円の縁どうし）。 */
 const ISLAND_GAP = 14;
 

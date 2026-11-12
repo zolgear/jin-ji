@@ -133,6 +133,9 @@ public sealed partial record SyncSettings
     /// <summary>計画の有効期限（日。過ぎたら古い計画として扱う）。</summary>
     public int PlanMaxAgeDays { get; init; } = 7;
 
+    /// <summary>組織に対応するグループの設定（ADR-0015。無ければグループの計画は作れない。ユーザーの同期には影響しない）。</summary>
+    public OrgGroupSettings? OrgGroups { get; init; }
+
     /// <summary>既定の設定。</summary>
     public static SyncSettings Default { get; } = new();
 
@@ -162,6 +165,7 @@ public sealed partial record SyncSettings
             LegalEntities = [.. LegalEntities.Order(StringComparer.Ordinal)],
             DepartmentLevelByLegalEntity = new SortedDictionary<string, string?>(DepartmentLevelByLegalEntity.ToDictionary(), StringComparer.Ordinal),
             Fields = [.. EntraFields.Syncable.Where(Fields.Contains)],
+            OrgGroups = OrgGroups is null ? null : OrgGroups with { Levels = [.. OrgGroups.Levels.Order(StringComparer.Ordinal)] },
         };
         return JsonSerializer.Serialize(copy, WriteOptions);
     }
@@ -232,6 +236,8 @@ public sealed partial record SyncSettings
         {
             throw new FormatException("planMaxAgeDays は 1〜90 で指定してください。");
         }
+
+        OrgGroups?.Validate();
     }
 
     /// <summary>表示名の形式に値を差し込む（値の無い差し込みは空。前後と連続する空白は詰める）。</summary>

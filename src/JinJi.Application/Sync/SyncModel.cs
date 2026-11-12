@@ -47,6 +47,48 @@ public static class EntraFields
 }
 
 /// <summary>
+/// グループの計画（ADR-0015）の項目。値はすべて文字列（メンバー・オーナー・チームは true / false）。DB の <c>jinji_sync_field_keys()</c> に含める。
+/// </summary>
+public static class GroupFields
+{
+    public const string DisplayName = "group.displayName";
+    public const string Description = "group.description";
+    public const string MailNickname = "group.mailNickname";
+
+    /// <summary>グループの種類（security / microsoft365）。</summary>
+    public const string Type = "group.type";
+
+    /// <summary>メンバーか（true / false）。</summary>
+    public const string Member = "group.member";
+
+    /// <summary>オーナーか（true / false）。</summary>
+    public const string Owner = "group.owner";
+
+    /// <summary>Teams のチームがあるか（true / false）。</summary>
+    public const string Team = "group.team";
+
+    public static readonly IReadOnlyList<string> All = [DisplayName, Description, MailNickname, Type, Member, Owner, Team];
+}
+
+/// <summary>外部のディレクトリ（Entra ID）のグループ 1 つ。</summary>
+/// <param name="ObjectId">オブジェクト ID（UUID の小文字）。</param>
+/// <param name="Unified">Microsoft 365 グループか（groupTypes に Unified がある）。</param>
+/// <param name="HasTeam">Teams のチームがあるか（入力に無ければ null）。</param>
+/// <param name="MemberIds">メンバーのオブジェクト ID（入力に無ければ null = 分からない）。</param>
+/// <param name="OwnerIds">オーナーのオブジェクト ID（入力に無ければ null = 分からない）。</param>
+/// <param name="SourceIndex">入力の value 配列の位置（0 始まり）。</param>
+public sealed record DirectoryGroup(
+    string ObjectId,
+    string? DisplayName,
+    string? Description,
+    string? MailNickname,
+    bool Unified,
+    bool? HasTeam,
+    IReadOnlyList<string>? MemberIds,
+    IReadOnlyList<string>? OwnerIds,
+    int SourceIndex);
+
+/// <summary>
 /// 外部のディレクトリ（Entra ID）のユーザー 1 人。値は Graph のプロパティ名 → 文字列（真偽値は true / false、上長はオブジェクト ID）。
 /// </summary>
 /// <param name="ObjectId">オブジェクト ID（UUID の小文字）。</param>
@@ -128,6 +170,33 @@ public enum SyncAction
 
     /// <summary>人ではない・設定で除外したアカウント（参考）。</summary>
     ExcludedAccount,
+
+    /// <summary>組織のグループを作る（ADR-0015）。</summary>
+    CreateGroup,
+
+    /// <summary>グループの表示名・説明を組織に合わせる（改称など）。</summary>
+    UpdateGroup,
+
+    /// <summary>廃止された組織のグループに廃止の印を付ける（削除はしない）。</summary>
+    RetireGroup,
+
+    /// <summary>グループにメンバーを加える。</summary>
+    AddGroupMember,
+
+    /// <summary>グループからメンバーを外す（異動・退職）。</summary>
+    RemoveGroupMember,
+
+    /// <summary>組織長をグループのオーナーにする。</summary>
+    AddGroupOwner,
+
+    /// <summary>Microsoft 365 グループに Teams のチームを作る。</summary>
+    CreateTeam,
+
+    /// <summary>グループを作れない・合わせられない（同じ名前の既存のグループ・種類の違い・印の重複）。変更しない。</summary>
+    GroupConflict,
+
+    /// <summary>グループについての参考（アカウントの対応の無い人・jin-ji の人に対応付かないメンバー・対象外のグループ）。</summary>
+    GroupNote,
 }
 
 /// <summary>項目ごとの実行結果（sync_item_result.outcome）。</summary>
@@ -209,6 +278,15 @@ public sealed record SyncPlanItem
     /// <summary>表示用の UPN（作成の推奨では作るときの UPN）。</summary>
     public string? UserPrincipalName { get; init; }
 
+    /// <summary>グループの計画: 対象の組織。</summary>
+    public Guid? OrgUnitId { get; init; }
+
+    /// <summary>グループの計画: グループのオブジェクト ID（同じ計画で作るグループでは null）。</summary>
+    public string? GroupObjectId { get; init; }
+
+    /// <summary>グループの計画: 表示用のグループの名前（あるべき表示名）。</summary>
+    public string? GroupDisplayName { get; init; }
+
     /// <summary>スクリプト・直接反映で実行するか（推奨・参考の項目は false）。</summary>
     public required bool InScript { get; init; }
 
@@ -272,6 +350,15 @@ public sealed record SyncPlanInput(
     Domain.Organization.OrgSnapshot Snapshot,
     IReadOnlyList<ExternalIdentityLink> Identities,
     IReadOnlyList<DirectoryUser> Users,
+    SyncSettings Settings,
+    DateOnly Today);
+
+/// <summary>グループの計画の差分計算の入力（ADR-0015）。</summary>
+/// <param name="Groups">Entra のグループの一覧（jin-ji の印の無いものも含む。名前の衝突を見るため）。</param>
+public sealed record GroupSyncPlanInput(
+    Domain.Organization.OrgSnapshot Snapshot,
+    IReadOnlyList<ExternalIdentityLink> Identities,
+    IReadOnlyList<DirectoryGroup> Groups,
     SyncSettings Settings,
     DateOnly Today);
 

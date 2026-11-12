@@ -46,6 +46,16 @@ public interface ISyncPlanner
     string Fingerprint(Domain.Organization.OrgSnapshot snapshot, IReadOnlyList<ExternalIdentityLink> identities, SyncSettings settings, DateOnly today);
 }
 
+/// <summary>グループの計画の差分計算（JinJi.Sync が実装する。ADR-0015）。</summary>
+public interface IGroupSyncPlanner
+{
+    /// <summary>jin-ji の組織・所属と Entra のグループの一覧から計画の項目を作る。</summary>
+    SyncPlanDraft Plan(GroupSyncPlanInput input);
+
+    /// <summary>jin-ji 側のあるべき状態（グループとメンバー）の SHA-256。Entra のグループの一覧は使わない。</summary>
+    string Fingerprint(Domain.Organization.OrgSnapshot snapshot, IReadOnlyList<ExternalIdentityLink> identities, SyncSettings settings, DateOnly today);
+}
+
 /// <summary>スクリプト一式の生成（JinJi.Sync が実装する）。</summary>
 public interface ISyncScriptRenderer
 {

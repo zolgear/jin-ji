@@ -1849,7 +1849,7 @@ function OrgOverview3D() {
     const names = new Map(units.map((u) => [u.id, u.name]));
     return units.map((u) => ({ id: u.id, name: u.name, code: u.code, sub: (u.parent_id && names.get(u.parent_id)) || "" }));
   }, [tree.data]);
-  const [hover, setHover] = useState<{ p: Placed3D; x: number; y: number; width: number } | null>(null);
+  const [hover, setHover] = useState<{ p: Placed3D; x: number; y: number; width: number; height: number } | null>(null);
   const [fitRequest, setFitRequest] = useState(0);
   const container = useRef<HTMLDivElement>(null);
   const overlay = useRef<HTMLDivElement>(null);
@@ -2019,7 +2019,7 @@ function OrgOverview3D() {
                 return;
               }
               const rect = container.current?.getBoundingClientRect();
-              setHover({ p, x: e.nativeEvent.clientX - (rect?.left ?? 0), y: e.nativeEvent.clientY - (rect?.top ?? 0), width: rect?.width ?? 9999 });
+              setHover({ p, x: e.nativeEvent.clientX - (rect?.left ?? 0), y: e.nativeEvent.clientY - (rect?.top ?? 0), width: rect?.width ?? 9999, height: rect?.height ?? 9999 });
             }}
           />
         </Canvas>
@@ -2063,7 +2063,8 @@ function OrgOverview3D() {
       {hover && (
         <div
           className="pointer-events-none absolute z-10 min-w-[10em] rounded-sm border border-t-2 border-border border-t-signal bg-surface px-2 py-1.5 text-xs shadow"
-          style={{ left: Math.min(hover.x + 14, hover.width - 200), top: hover.y + 14 }}
+          // 画面の下の方では指した位置の上に出す（下へはみ出すと入れ物が伸びて図の大きさが変わり、指す・外れるを繰り返して画面が揺れる）
+          style={{ left: Math.min(hover.x + 14, hover.width - 200), ...(hover.y > hover.height - 170 ? { bottom: hover.height - hover.y + 14 } : { top: hover.y + 14 }) }}
           aria-hidden="true"
         >
           <div className="text-muted">{hover.p.node.kind === "legal_entity" ? "法人" : (hover.p.node.levelName ?? "組織")}</div>

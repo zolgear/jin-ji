@@ -6,7 +6,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 
-/** 「電脳空間」の見た目の案（cyber3d.tsx）で足す色と効果。無ければ従来の見た目。 */
+/** スキン「電脳空間」（cyber3d.tsx）で足す色と効果。無ければ標準の見た目。 */
 export interface Cyber {
   /** 背景の上の方の色・地平の光の帯の色 */
   sky: string;
@@ -19,15 +19,9 @@ export interface Cyber {
   glass: number;
   /** 上面の板が自ら光る強さ */
   plateGlow: number;
-  /** 段の円盤を点の行列にする・塵の濃さ（0 = 無し）・法人の光の柱・にじみの強さ（0 = 無し） */
-  dots: boolean;
+  /** 塵の濃さ・にじみの強さ */
   dust: number;
-  pillars: boolean;
   bloom: number;
-  /** 直線と四角の語彙（段の四角い枠・床の区画・四角い点・選択の四角い照準） */
-  frames?: boolean;
-  /** 空間に浮かぶ立方体と板（外周に置く。組織の上には重ねない） */
-  cubes?: boolean;
 }
 
 export interface Palette {

@@ -3,7 +3,7 @@ import type { OrgTree, OrgUnit } from "../data/types";
 import { DemoDirectory } from "../demo/directory";
 import { generateLargeDataset } from "../demo/largeDataset";
 import { NODE_HEIGHT, NODE_WIDTH, STACK_INDENT, labelPlacement, layoutChart, layoutSplitChart, type PlacedNode } from "../features/orgchart/layout";
-import { layout3d, layout3dSplit, personDots } from "../features/overview3d/layout3d";
+import { layout3d, layout3dSplit, layoutFlat, personDots } from "../features/overview3d/layout3d";
 import { buildModule } from "../features/overview3d/modules3d";
 import { TIER_COUNT, TIER_SHAPES, plateInnerOf, polygonArea, radiusAt, reachOf } from "../features/overview3d/shapes3d";
 import { buildForest, crossSummary, entityNodeId } from "../lib/orgTree";
@@ -194,6 +194,42 @@ describe("layoutChart（上から下）", () => {
     expect(labelPlacement(at("D"), "concurrent", "兼務先 1名", layout.nodes).side).toBe("above");
     // 縦に積んだ 2 つめの札の上には 1 つめの札がある
     expect(labelPlacement(at("G"), "concurrent", "兼務先 1名", layout.nodes).side).not.toBe("above");
+  });
+});
+
+describe("layoutFlat（平面の同心の輪）", () => {
+  it("1 万人・組織 1,000 超でも、すべて高さ 0 で、モジュールが重ならず、同じ深さは法人を中心にした同じ輪に並ぶ", () => {
+    const big = new DemoDirectory(generateLargeDataset());
+    const forest = buildForest(big.orgTree(big.businessDate), big.stats(big.businessDate));
+    const started = performance.now();
+    const scene = layoutFlat(forest);
+    expect(performance.now() - started).toBeLessThan(2000);
+    expect(scene.nodes.length).toBe(forest.byId.size);
+    expect(scene.nodes.every((p) => p.y === 0)).toBe(true);
+    let slack = Infinity;
+    for (let i = 0; i < scene.nodes.length; i++) {
+      for (let j = i + 1; j < scene.nodes.length; j++) {
+        const a = scene.nodes[i]!;
+        const b = scene.nodes[j]!;
+        slack = Math.min(slack, Math.hypot(a.x - b.x, a.z - b.z) - a.reach - b.reach);
+      }
+    }
+    expect(slack).toBeGreaterThanOrEqual(0);
+    // 法人ごとに、同じ深さの組織は中心から同じ距離
+    const entities = scene.nodes.filter((p) => p.node.kind === "legal_entity");
+    for (const e of entities) {
+      const radii = new Map<number, number[]>();
+      for (const p of scene.nodes) {
+        if (p.entityIndex !== e.entityIndex || p === e) continue;
+        radii.set(p.node.depth, [...(radii.get(p.node.depth) ?? []), Math.hypot(p.x - e.x, p.z - e.z)]);
+      }
+      for (const list of radii.values()) expect(Math.max(...list) - Math.min(...list)).toBeLessThan(1e-6);
+    }
+    // 段の円盤は内から外へ広がる
+    for (const e of entities) {
+      const rings = scene.layers.filter((l) => l.entityIndex === e.entityIndex).sort((x, y) => x.depth - y.depth);
+      for (let i = 1; i < rings.length; i++) expect(rings[i]!.radius).toBeGreaterThan(rings[i - 1]!.radius);
+    }
   });
 });
 

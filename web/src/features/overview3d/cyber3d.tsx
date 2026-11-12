@@ -1,8 +1,10 @@
-// 3D 俯瞰の「電脳空間」の見た目の案（比べるための仮の実装）。URL の look=a|b|c で切り替える。
-// - a: 静かな深層（不透明の暗い外装・溝の細い光・氷の白と鋼の青）
-// - b: ホログラム（半透明の外装・輪郭の光・点の行列の円盤・塵・光の柱）
-// - c: b に薄いにじみ（ブルーム。暗いテーマだけ）
-// - d: c に直線と四角（段の四角い枠・床の区画・四角い点・選択の四角い照準）// - e: d の空を青く明るくし、外周に立方体のかたまりと薄い板を浮かべる（暗いテーマだけ。明るいテーマは従来の見た目のまま）
+// 3D 表示（組織モード）のスキン「電脳空間」。設定の「3D 表示のスキン」で選ぶ（URL の skin=cyber でも）。ダークの配色のときだけ使い、
+// ライトでは標準の見た目のまま。標準の見た目に足すもの:
+// - 外装: 半透明の暗い外装。溝を細い光の線にし、輪郭をうっすら光らせる。上面の板は自ら光る
+// - 空間: 深い青の空と地平の光の帯、細かい塵、法人の上へ伸びる光の柱、外周に浮かぶ薄い立方体と板
+// - 直線と四角: 段を収める四角い枠（四隅の鉤と柱）、床の四角い区画、段の円盤の四角い点の行列、選んだ組織の四角い照準
+// - 明るい線と板だけの薄いにじみ（ブルーム）
+// 黄（signal）は選択の印だけに使い、表示灯は白にする。
 import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useMemo } from "react";
 import * as THREE from "three";
@@ -10,104 +12,32 @@ import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer
 import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass.js";
 import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
+import type { Skin3dSetting } from "../../lib/settings";
 import { PALETTE, type Cyber, type Palette } from "./common3d";
 import { heightOf, type Scene3D } from "./layout3d";
 
-export type Look = "a" | "b" | "c" | "d" | "e";
-
-const LOOK_KEY = "jinji.overview3d.look";
-
-/**
- * 見た目の案。URL の look=a〜e で選び、端末に覚える（組織を選ぶなどで URL が書き換わると look が落ちるため）。
- * look=0 で従来の見た目に戻す。
- */
-export function readLook(): Look | null {
-  const m = /[?&]look=([abcde0])\b/.exec(window.location.hash);
-  try {
-    if (m) {
-      if (m[1] === "0") window.localStorage.removeItem(LOOK_KEY);
-      else window.localStorage.setItem(LOOK_KEY, m[1]!);
-    } else {
-      const saved = window.localStorage.getItem(LOOK_KEY);
-      return saved && /^[abcde]$/.test(saved) ? (saved as Look) : null;
-    }
-  } catch {
-    // 保存できない環境では URL だけで決める
-  }
-  return m && m[1] !== "0" ? (m[1] as Look) : null;
-}
-
-const DARK_A: Palette = {
+const CYBER_DARK: Palette = {
   ...PALETTE.dark,
-  bg: "#070b12",
-  primary: "#4d9bf0",
+  bg: "#06111f",
+  primary: "#3fc6ee",
   deemph: "#253142",
-  entity: "#8fa3ba",
-  edge: "#5d7da0",
-  dot: "#dff1ff",
-  wire: "#5f7fa3",
-  grid: "#22395a",
-  shell: "#1b2531",
+  entity: "#9fd6e4",
+  edge: "#4b97ab",
+  dot: "#e4fbff",
+  wire: "#58b4d0",
+  grid: "#1c4a68",
+  shell: "#14222b",
   shellDeemph: "#0f151d",
-  shellEntity: "#2c3948",
-  lamp: "#dff1ff",
+  shellEntity: "#24404c",
+  lamp: "#e4fbff",
   lampOff: "#253142",
   light: { ambient: 0.5, key: 1.5, env: 0.6 },
-  cyber: { sky: "#03060a", horizon: "#14294a", seam: "#a8d4ff", rim: "#5c95d0", rimPower: 0.55, glass: 1, plateGlow: 0.45, dots: false, dust: 0, pillars: false, bloom: 0 },
+  cyber: { sky: "#030916", horizon: "#1c6aa0", seam: "#9af1ff", rim: "#43cfe8", rimPower: 0.9, glass: 0.5, plateGlow: 0.35, dust: 0.5, bloom: 0.32 },
 };
 
-const DARK_B: Palette = {
-  ...DARK_A,
-  bg: "#050a10",
-  primary: "#3fc6ee",
-  edge: "#4b97ab",
-  wire: "#4fa3b8",
-  grid: "#16404f",
-  shell: "#14222b",
-  shellEntity: "#24404c",
-  entity: "#9fd6e4",
-  lamp: "#e4fbff",
-  dot: "#e4fbff",
-  cyber: { sky: "#020508", horizon: "#0d3442", seam: "#9af1ff", rim: "#43cfe8", rimPower: 0.9, glass: 0.5, plateGlow: 0.6, dots: true, dust: 0.4, pillars: true, bloom: 0 },
-};
-
-const LIGHT_A: Palette = {
-  ...PALETTE.light,
-  bg: "#edf1f5",
-  wire: "#8fa2b8",
-  grid: "#bcc8d6",
-  edge: "#7f93aa",
-  shell: "#f6f8fb",
-  lamp: "#2a78d6",
-  cyber: { sky: "#d6dfe9", horizon: "#ffffff", seam: "#2a78d6", rim: "#8db8ea", rimPower: 0.5, glass: 1, plateGlow: 0.15, dots: false, dust: 0, pillars: false, bloom: 0 },
-};
-
-const LIGHT_B: Palette = {
-  ...LIGHT_A,
-  primary: "#1596c4",
-  wire: "#7fa9b8",
-  grid: "#b3cbd3",
-  edge: "#6f9aaa",
-  lamp: "#1596c4",
-  cyber: { sky: "#d2e0e6", horizon: "#ffffff", seam: "#1596c4", rim: "#6cc3de", rimPower: 0.8, glass: 0.6, plateGlow: 0.15, dots: true, dust: 0.35, pillars: true, bloom: 0 },
-};
-
-export function cyberPalette(look: Look | null, theme: "light" | "dark"): Palette | null {
-  if (!look) return null;
-  if (look === "e") {
-    if (theme === "light") return null;
-    return {
-      ...DARK_B,
-      bg: "#06111f",
-      grid: "#1c4a68",
-      wire: "#58b4d0",
-      cyber: { ...DARK_B.cyber!, sky: "#030916", horizon: "#1c6aa0", plateGlow: 0.35, bloom: 0.32, frames: true, cubes: true, dust: 0.5 },
-    };
-  }
-  if (theme === "light") return look === "a" ? LIGHT_A : look === "d" ? { ...LIGHT_B, cyber: { ...LIGHT_B.cyber!, frames: true } } : LIGHT_B;
-  if (look === "a") return DARK_A;
-  if (look === "b") return DARK_B;
-  return { ...DARK_B, cyber: { ...DARK_B.cyber!, plateGlow: 0.35, bloom: 0.3, frames: look === "d" } };
+/** スキンとテーマから 3D の色。電脳空間はダークだけ（ライトは標準のまま）。 */
+export function skinPalette(skin: Skin3dSetting, theme: "light" | "dark"): Palette {
+  return skin === "cyber" && theme === "dark" ? CYBER_DARK : PALETTE[theme];
 }
 
 /** 外装: 溝を細い光の線にし、輪郭（視線に対して寝た面）をうっすら光らせる。glass < 1 では輪郭と溝だけ濃い半透明。 */
@@ -279,15 +209,14 @@ void main() {
 const DISC_FRAGMENT = /* glsl */ `
 uniform vec3 uColor;
 uniform float uOpacity;
-uniform float uSquare;
 varying vec2 vUv;
 varying vec3 vWorld;
 void main() {
   float r = length( vUv - 0.5 ) * 2.0;
-  // 点の行列（世界座標に固定）。縁へ近いほど濃く、中心は空ける
+  // 四角い点の行列（世界座標に固定）。縁へ近いほど濃く、中心は空ける
   vec2 c = vWorld.xz / 2.2;
   vec2 f = abs( fract( c ) - 0.5 );
-  float d = mix( length( f ), max( f.x, f.y ) * 1.25, uSquare ) / max( length( fwidth( c ) ), 1e-4 );
+  float d = max( f.x, f.y ) * 1.25 / max( length( fwidth( c ) ), 1e-4 );
   float dotA = 1.0 - smoothstep( 0.5, 1.3, d );
   float rim = smoothstep( 0.45, 1.0, r );
   float a = ( 0.03 + dotA * ( 0.03 + 0.22 * rim * rim ) ) * uOpacity;
@@ -297,7 +226,7 @@ void main() {
 `;
 
 /** 段の円盤の面: 薄い塗りの代わりに、細かい点の行列。 */
-export function DotDisc({ x, y, z, radius, color, opacity, square }: { x: number; y: number; z: number; radius: number; color: string; opacity: number; square: boolean }) {
+export function DotDisc({ x, y, z, radius, color, opacity }: { x: number; y: number; z: number; radius: number; color: string; opacity: number }) {
   const material = useMemo(
     () =>
       new THREE.ShaderMaterial({
@@ -306,12 +235,12 @@ export function DotDisc({ x, y, z, radius, color, opacity, square }: { x: number
         transparent: true,
         depthWrite: false,
         side: THREE.DoubleSide,
-        uniforms: { uColor: { value: new THREE.Color() }, uOpacity: { value: 1 }, uSquare: { value: 0 } },
+        uniforms: { uColor: { value: new THREE.Color() }, uOpacity: { value: 1 } },
       }),
     [],
   );
   useEffect(() => () => material.dispose(), [material]);
-  useEffect(() => setDiscUniforms(material, color, opacity, square), [material, color, opacity, square]);
+  useEffect(() => setDiscUniforms(material, color, opacity), [material, color, opacity]);
   return (
     <mesh position={[x, y, z]} rotation={[-Math.PI / 2, 0, 0]} material={material} raycast={() => null}>
       <circleGeometry args={[radius, 96]} />
@@ -320,8 +249,7 @@ export function DotDisc({ x, y, z, radius, color, opacity, square }: { x: number
 }
 
 // three のオブジェクトの変更（フックの外の関数で行う）
-function setDiscUniforms(material: THREE.ShaderMaterial, color: string, opacity: number, square: boolean) {
-  material.uniforms.uSquare!.value = square ? 1 : 0;
+function setDiscUniforms(material: THREE.ShaderMaterial, color: string, opacity: number) {
   (material.uniforms.uColor!.value as THREE.Color).set(color);
   material.uniforms.uOpacity!.value = opacity;
 }
@@ -339,7 +267,8 @@ export function Bloom({ strength }: { strength: number }) {
   }, [gl, scene, camera, strength]);
   useEffect(() => () => composer.dispose(), [composer]);
   useEffect(() => {
-    composer.setPixelRatio(gl.getPixelRatio());
+    // 高精細の画面でも 1.5 倍まで（にじみの処理は画素の数に比例して重い。名前の札は HTML なので鮮明なまま）
+    composer.setPixelRatio(Math.min(gl.getPixelRatio(), 1.5));
     composer.setSize(size.width, size.height);
   }, [composer, gl, size]);
   useFrame(() => composer.render(), 1);
@@ -366,6 +295,30 @@ function squareLine(v: number[], x: number, y: number, z: number, half: number) 
   });
 }
 
+/** 同じ中心に重なる段のまとまり（法人・島ごと）。half は段を囲む四角の、中心から辺まで。 */
+export interface Stack {
+  x: number;
+  z: number;
+  half: number;
+  top: number;
+}
+
+const stackKey = (x: number, z: number) => `${Math.round(x * 10)}:${Math.round(z * 10)}`;
+
+export function stacksOf(scene: Scene3D): Map<string, Stack> {
+  const stacks = new Map<string, Stack>();
+  for (const l of scene.layers) {
+    const half = l.radius * 1.05 + 1;
+    const p = stacks.get(stackKey(l.x, l.z));
+    if (!p) stacks.set(stackKey(l.x, l.z), { x: l.x, z: l.z, half, top: l.y });
+    else {
+      p.half = Math.max(p.half, half);
+      p.top = Math.max(p.top, l.y);
+    }
+  }
+  return stacks;
+}
+
 /**
  * 直線と四角の語彙（回る輪・円盤の曲線に対して、動かない角を置く）。法人（島）ごとに、いちばん広い段に合わせた同じ大きさの四角を
  * 各段の高さに重ね、四隅を床からの細い柱でつなぐ（円盤を収める棚）。床には一回り大きい四角い区画。
@@ -377,19 +330,9 @@ export function Frames({ scene, palette, activeLayers }: { scene: Scene3D; palet
     const on: number[] = [];
     const off: number[] = [];
     const floor: number[] = [];
-    // 同じ中心の段をまとめる
-    const stacks = new Map<string, { x: number; z: number; r: number; top: number }>();
-    const keyOf = (x: number, z: number) => `${Math.round(x * 10)}:${Math.round(z * 10)}`;
+    const stacks = stacksOf(scene);
     for (const l of scene.layers) {
-      const p = stacks.get(keyOf(l.x, l.z));
-      if (!p) stacks.set(keyOf(l.x, l.z), { x: l.x, z: l.z, r: l.radius, top: l.y });
-      else {
-        p.r = Math.max(p.r, l.radius);
-        p.top = Math.max(p.top, l.y);
-      }
-    }
-    for (const l of scene.layers) {
-      const half = stacks.get(keyOf(l.x, l.z))!.r * 1.05 + 1;
+      const half = stacks.get(stackKey(l.x, l.z))!.half;
       const v = !activeLayers || activeLayers.has(`${l.entityIndex}:${l.depth}`) ? on : off;
       brackets(v, l.x, l.y, l.z, half, Math.max(1.4, half * 0.12));
       const t = Math.max(0.6, half * 0.04);
@@ -399,7 +342,7 @@ export function Frames({ scene, palette, activeLayers }: { scene: Scene3D; palet
     }
     const y = scene.floorY + 0.03;
     for (const p of stacks.values()) {
-      const half = p.r * 1.05 + 1;
+      const half = p.half;
       // 四隅の柱（床からいちばん上の段まで）
       for (const sx of [-1, 1]) for (const sz of [-1, 1]) off.push(p.x + sx * half, y, p.z + sz * half, p.x + sx * half, p.top, p.z + sz * half);
       squareLine(floor, p.x, y, p.z, half);
@@ -502,10 +445,21 @@ export function FloatingCubes({ scene, palette }: { scene: Scene3D; palette: Pal
     const rand = lcg(7141);
     const items: Array<{ x: number; y: number; z: number; sx: number; sy: number; sz: number; b: number; white: boolean }> = [];
     const top = Math.max(...scene.nodes.map((p) => p.y)) + 18;
+    const stacks = [...stacksOf(scene).values()];
+    // 組織の図に重ねない（段を囲む四角の枠と、その少し外には置かない）
     const place = (): [number, number, number] => {
-      const r = scene.extent * (0.5 + rand() * 0.9);
-      const a = rand() * Math.PI * 2;
-      return [scene.center[0] + r * Math.cos(a), scene.floorY + 2 + rand() * (top - scene.floorY) * 0.8, scene.center[2] + r * Math.sin(a)];
+      let x = 0;
+      let z = 0;
+      for (let attempt = 0; attempt < 24; attempt++) {
+        const r = scene.extent * (0.5 + rand() * 0.9);
+        const a = rand() * Math.PI * 2;
+        x = scene.center[0] + r * Math.cos(a);
+        z = scene.center[2] + r * Math.sin(a);
+        const px = x;
+        const pz = z;
+        if (!stacks.some((st) => Math.abs(px - st.x) < st.half + 9 && Math.abs(pz - st.z) < st.half + 9)) break;
+      }
+      return [x, scene.floorY + 2 + rand() * (top - scene.floorY) * 0.8, z];
     };
     // 立方体のかたまり（格子にそろえた数個）
     for (let c = 0; c < 30; c++) {

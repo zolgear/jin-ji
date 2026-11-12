@@ -367,7 +367,7 @@ function useModuleMaterials(textures: ModuleTextures, cyber: Cyber | undefined) 
     () =>
       cyber
         ? {
-            // スキン「電脳空間」: 暗い外装（溝と輪郭が光る。glass < 1 では半透明）と、自ら光る板
+            // スキン「サイバー」: 暗い外装（溝と輪郭が光る。glass < 1 では半透明）と、自ら光る板
             shell: addFade(
               new THREE.MeshStandardMaterial({ color: "#ffffff", vertexColors: true, roughness: 0.3, metalness: 0.35, transparent: cyber.glass < 1, opacity: cyber.glass }),
               `fade-shell-cyber:${JSON.stringify(cyber)}`,
@@ -1266,7 +1266,7 @@ function fitView(
  */
 function wholeScene(scene: Scene3D, frames = false): Placed3D[] {
   if (frames && scene.nodes.length > 0) {
-    // スキン「電脳空間」では、段を囲む四角い枠も収める（枠ごとに、枠の大きさの仮の点を足す）
+    // スキン「サイバー」では、段を囲む四角い枠も収める（枠ごとに、枠の大きさの仮の点を足す）
     const extra = [...stacksOf(scene).values()].flatMap((st) =>
       [st.top, scene.floorY].map((y): Placed3D => ({ node: scene.nodes[0]!.node, x: st.x, y, z: st.z, radius: st.half, reach: st.half * 1.2, tier: 0, entityIndex: 0 })),
     );

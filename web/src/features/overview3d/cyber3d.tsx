@@ -1,4 +1,4 @@
-// 3D 表示（組織モード）のスキン「電脳空間」。設定の「3D 表示のスキン」で選ぶ（URL の skin=cyber でも）。ダークの配色のときだけ使い、
+// 3D 表示（組織モード）のスキン「サイバー」。設定の「3D 表示のスキン」で選ぶ（URL の skin=cyber でも）。ダークの配色のときだけ使い、
 // ライトでは標準の見た目のまま。標準の見た目に足すもの:
 // - 外装: 半透明の暗い外装。溝を細い光の線にし、輪郭をうっすら光らせる。上面の板は自ら光る
 // - 空間: 深い青の空と地平の光の帯、細かい塵、法人の上へ伸びる光の柱、外周に浮かぶ薄い立方体と板
@@ -35,7 +35,7 @@ const CYBER_DARK: Palette = {
   cyber: { sky: "#030916", horizon: "#1c6aa0", seam: "#9af1ff", rim: "#43cfe8", rimPower: 0.9, glass: 0.5, plateGlow: 0.35, dust: 0.5, bloom: 0.32 },
 };
 
-/** スキンとテーマから 3D の色。電脳空間はダークだけ（ライトは標準のまま）。 */
+/** スキンとテーマから 3D の色。サイバーはダークだけ（ライトは標準のまま）。 */
 export function skinPalette(skin: Skin3dSetting, theme: "light" | "dark"): Palette {
   return skin === "cyber" && theme === "dark" ? CYBER_DARK : PALETTE[theme];
 }

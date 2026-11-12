@@ -3,26 +3,33 @@
 //
 // - 組織で色分け（建物・フロアモード）: 既定はオン。URL は color=org（オン）・color=none（オフ）。書かなければ設定に従う
 // - 組織図の向き: 既定は上から下（tb）。URL は dir=tb・dir=lr。書かなければ設定に従う
+// - 3D 表示のスキン: 既定は標準（standard）。URL は skin=standard・skin=cyber・skin=industry。書かなければ設定に従う
 import { useSyncExternalStore } from "react";
 
 export type ChartDirectionSetting = "tb" | "lr";
+/** 3D 表示のスキン（見た目）。cyber・industry はダークの配色のときだけ効く。 */
+export type Skin3dSetting = "standard" | "cyber" | "industry";
+const isSkin = (v: string | null): v is Skin3dSetting => v === "standard" || v === "cyber" || v === "industry";
 
 export interface DisplaySettings {
   /** 建物・フロアモードの「組織で色分け」の既定。 */
   floorOrgColor: boolean;
   /** 組織図の向きの既定。 */
   chartDirection: ChartDirectionSetting;
+  /** 3D 表示のスキン。 */
+  skin3d: Skin3dSetting;
 }
 
-export const DEFAULT_SETTINGS: DisplaySettings = { floorOrgColor: true, chartDirection: "tb" };
+export const DEFAULT_SETTINGS: DisplaySettings = { floorOrgColor: true, chartDirection: "tb", skin3d: "standard" };
 
-export const SETTING_KEYS = { floorOrgColor: "jinji.floorOrgColor", chartDirection: "jinji.chartDirection" } as const;
+export const SETTING_KEYS = { floorOrgColor: "jinji.floorOrgColor", chartDirection: "jinji.chartDirection", skin3d: "jinji.skin3d" } as const;
 
 /** 保存した文字列から設定の値（知らない値は既定値）。 */
 export function parseSettings(get: (key: string) => string | null): DisplaySettings {
   return {
     floorOrgColor: get(SETTING_KEYS.floorOrgColor) !== "off",
     chartDirection: get(SETTING_KEYS.chartDirection) === "lr" ? "lr" : "tb",
+    skin3d: ((v) => (isSkin(v) ? v : "standard"))(get(SETTING_KEYS.skin3d)),
   };
 }
 
@@ -54,6 +61,11 @@ export function resolveChartDirection(param: string | null, setting: ChartDirect
 /** 向きを切り替えたときの URL の dir（設定と同じなら書かない）。 */
 export function chartDirectionParam(next: ChartDirectionSetting, setting: ChartDirectionSetting): string | null {
   return next === setting ? null : next;
+}
+
+/** 3D 表示のスキン（URL の skin が設定より優先）。 */
+export function resolveSkin3d(param: string | null, setting: Skin3dSetting): Skin3dSetting {
+  return isSkin(param) ? param : setting;
 }
 
 // ---- 保存と購読（画面の各所から同じ値を見る） ----

@@ -13,7 +13,7 @@ import { DEMO_AVAILABLE, useAdapter, type AdapterChoice } from "../../data/adapt
 import type { DateStyle } from "../../lib/date";
 import { setDateStyle, useDateStyle } from "../../lib/dateStyle";
 import { formatHash, parseHash, useRoute } from "../../lib/router";
-import { setSetting, useSettings, type ChartDirectionSetting } from "../../lib/settings";
+import { setSetting, useSettings, type ChartDirectionSetting, type Skin3dSetting } from "../../lib/settings";
 import { useThemeChoice, type ThemeChoice } from "../../lib/theme";
 
 const REPOSITORY_URL = "https://github.com/zolgear/jin-ji";
@@ -179,6 +179,18 @@ function DisplaySection() {
             options={[
               ["tb", "上から下"],
               ["lr", "左から右"],
+            ]}
+          />
+        </Row>
+        <Row label="3D 表示のスキン" help={<p className="m-0">3D 表示の組織モードの見た目です。「サイバー」「インダストリー」はダークの配色のときだけ使い、ライトでは標準の見た目で表示します。</p>}>
+          <Segmented<Skin3dSetting>
+            label="3D 表示のスキン"
+            value={settings.skin3d}
+            onChange={(v) => setSetting("skin3d", v)}
+            options={[
+              ["standard", "標準"],
+              ["cyber", "サイバー"],
+              ["industry", "インダストリー"],
             ]}
           />
         </Row>

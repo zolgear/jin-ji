@@ -7,20 +7,21 @@ import {
   parseSettings,
   resolveChartDirection,
   resolveFloorOrgColor,
+  resolveSkin3d,
   serializeSetting,
   SETTING_KEYS,
 } from "./settings";
 
 describe("表示の設定の保存", () => {
   it("何も保存していなければ既定値（組織で色分けはオン・組織図は上から下）", () => {
-    expect(parseSettings(() => null)).toEqual({ floorOrgColor: true, chartDirection: "tb" });
+    expect(parseSettings(() => null)).toEqual({ floorOrgColor: true, chartDirection: "tb", skin3d: "standard" });
     expect(DEFAULT_SETTINGS.floorOrgColor).toBe(true);
   });
 
   it("保存した値を読み、知らない値は既定値にする", () => {
     const stored: Record<string, string> = { [SETTING_KEYS.floorOrgColor]: "off", [SETTING_KEYS.chartDirection]: "lr" };
-    expect(parseSettings((k) => stored[k] ?? null)).toEqual({ floorOrgColor: false, chartDirection: "lr" });
-    expect(parseSettings(() => "壊れた値")).toEqual({ floorOrgColor: true, chartDirection: "tb" });
+    expect(parseSettings((k) => stored[k] ?? null)).toEqual({ floorOrgColor: false, chartDirection: "lr", skin3d: "standard" });
+    expect(parseSettings(() => "壊れた値")).toEqual({ floorOrgColor: true, chartDirection: "tb", skin3d: "standard" });
   });
 
   it("既定値は保存しない（null）、それ以外は文字列にする", () => {
@@ -30,7 +31,25 @@ describe("表示の設定の保存", () => {
     expect(serializeSetting("chartDirection", "lr")).toBe("lr");
     // 書いた値を読み直すと同じ設定に戻る
     const stored: Record<string, string | null> = { [SETTING_KEYS.floorOrgColor]: serializeSetting("floorOrgColor", false), [SETTING_KEYS.chartDirection]: serializeSetting("chartDirection", "lr") };
-    expect(parseSettings((k) => stored[k] ?? null)).toEqual({ floorOrgColor: false, chartDirection: "lr" });
+    expect(parseSettings((k) => stored[k] ?? null)).toEqual({ floorOrgColor: false, chartDirection: "lr", skin3d: "standard" });
+  });
+});
+
+describe("3D 表示のスキン", () => {
+  it("既定は標準で、保存した cyber を読み、既定値は保存しない", () => {
+    expect(parseSettings((k) => (k === SETTING_KEYS.skin3d ? "cyber" : null)).skin3d).toBe("cyber");
+    expect(parseSettings((k) => (k === SETTING_KEYS.skin3d ? "壊れた値" : null)).skin3d).toBe("standard");
+    expect(serializeSetting("skin3d", "standard")).toBeNull();
+    expect(serializeSetting("skin3d", "cyber")).toBe("cyber");
+    expect(parseSettings((k) => (k === SETTING_KEYS.skin3d ? "industry" : null)).skin3d).toBe("industry");
+  });
+
+  it("URL の skin は設定より優先し、書かなければ設定に従う", () => {
+    expect(resolveSkin3d(null, "cyber")).toBe("cyber");
+    expect(resolveSkin3d("standard", "cyber")).toBe("standard");
+    expect(resolveSkin3d("cyber", "standard")).toBe("cyber");
+    expect(resolveSkin3d("industry", "cyber")).toBe("industry");
+    expect(resolveSkin3d("知らない値", "standard")).toBe("standard");
   });
 });
 

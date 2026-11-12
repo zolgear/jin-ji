@@ -45,6 +45,7 @@ import { LineMaterial } from "three/examples/jsm/lines/LineMaterial.js";
 import { useOrgStats, useOrgTree } from "../../app/hooks";
 import { useNav } from "../../app/nav";
 import { useRoute } from "../../lib/router";
+import { resolveSkin3d, useSettings } from "../../lib/settings";
 import { FloatingCard } from "../../components/FloatingCard";
 import { HelpTip } from "../../components/popover";
 import { OrgPanel } from "../org/OrgPanel";
@@ -63,8 +64,9 @@ import { useResolvedTheme } from "../../lib/theme";
 import { useFloorRoute } from "../floor/floorHooks";
 import { FloorMode } from "../floor/FloorMode";
 import { ModeSwitch } from "../floor/FloorParts";
-import { GridFloor, PALETTE, setEnvironment, useOrbitControls, type Palette } from "./common3d";
-import { boundingSphere, heightOf, layout3d, layout3dSplit, personDots, type Island3D, type Layer3D, type Placed3D, type Scene3D } from "./layout3d";
+import { GridFloor, setEnvironment, useOrbitControls, type Cyber, type Palette } from "./common3d";
+import { Backdrop, Bloom, DataDust, DotDisc, FloatingCubes, Frames, IndustryDeck, OrgRings, Pillars, Reticle, cyberPlateShader, cyberShellShader, skinPalette, stacksOf } from "./cyber3d";
+import { boundingSphere, heightOf, layout3d, layout3dSplit, layoutFlat, personDots, type Island3D, type Layer3D, type Placed3D, type Scene3D } from "./layout3d";
 import { buildModules, hazardRing } from "./modules3d";
 import { TIER_COUNT, TIER_NAMES, TIER_SHAPES } from "./shapes3d";
 import beadUrl from "./textures/bead.webp";
@@ -80,7 +82,9 @@ const VIEW_DIR = new THREE.Vector3(0, 0.58, 1).normalize();
  * 奥の法人が画面の上、手前の法人が下に並び、横幅に縛られて小さくなるのを避けられる。
  */
 const VIEW_DIR_PORTRAIT = new THREE.Vector3(0.9, 0.85, 0.45).normalize();
-const viewDir = (aspect: number) => (aspect < 0.85 ? VIEW_DIR_PORTRAIT : VIEW_DIR);
+/** 平面の配置での向き（ほぼ真上から。視点の操作の下限の少し内側）。 */
+const VIEW_DIR_FLAT = new THREE.Vector3(0, 1, 0.3).normalize();
+const viewDir = (aspect: number, flat = false) => (flat ? VIEW_DIR_FLAT : aspect < 0.85 ? VIEW_DIR_PORTRAIT : VIEW_DIR);
 
 /** WebGL が使えない環境（古い端末・ヘッドレス）での代替表示。 */
 class WebGlBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
@@ -358,9 +362,22 @@ function applyTextures(materials: { shell: THREE.MeshStandardMaterial; plate: TH
   plate.needsUpdate = true;
 }
 
-function useModuleMaterials(textures: ModuleTextures) {
+function useModuleMaterials(textures: ModuleTextures, cyber: Cyber | undefined) {
   const materials = useMemo(
-    () => ({
+    () =>
+      cyber
+        ? {
+            // スキン「サイバー」: 暗い外装（溝と輪郭が光る。glass < 1 では半透明）と、自ら光る板
+            shell: addFade(
+              new THREE.MeshStandardMaterial({ color: "#ffffff", vertexColors: true, roughness: 0.3, metalness: 0.35, transparent: cyber.glass < 1, opacity: cyber.glass }),
+              `fade-shell-cyber:${JSON.stringify(cyber)}`,
+              cyberShellShader(cyber),
+            ),
+            plate: addFade(new THREE.MeshStandardMaterial({ color: "#ffffff", roughness: 0.55, metalness: 0.05 }), `fade-plate-cyber:${cyber.plateGlow}`, cyberPlateShader(cyber)),
+            lamp: addFade(new THREE.MeshBasicMaterial({ color: "#ffffff", toneMapped: false }), "fade-lamp"),
+            pick: new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false }),
+          }
+        : {
       // 白い外装（粉体塗装の金属）。台座・溝は頂点色で黒鉛色、組織ごとの色（退かせる・法人）はインスタンスの色
       // 外装・板・表示灯は、選んだ組織に関係しないものを地の色へ寄せる（aFade。インスタンスごと）
       shell: addFade(new THREE.MeshStandardMaterial({ color: "#ffffff", vertexColors: true, roughness: 0.42, metalness: 0.18 }), "fade-shell"),
@@ -370,8 +387,8 @@ function useModuleMaterials(textures: ModuleTextures) {
       lamp: addFade(new THREE.MeshBasicMaterial({ color: "#ffffff", toneMapped: false }), "fade-lamp"),
       // 指す・選ぶの判定だけに使う（色も深度も書かない）
       pick: new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false }),
-    }),
-    [],
+    },
+    [cyber],
   );
   useEffect(() => applyTextures(materials, textures), [materials, textures]);
   useEffect(() => () => Object.values(materials).forEach((m) => m.dispose()), [materials]);
@@ -389,7 +406,7 @@ function Orgs({ scene, palette, focus, hoveredId, coloring, morph, onSelect, onH
   onHover: (p: Placed3D | null, e?: ThreeEvent<PointerEvent>) => void;
 }) {
   const textures = useModuleTextures();
-  const materials = useModuleMaterials(textures);
+  const materials = useModuleMaterials(textures, palette.cyber);
   const modules = useMemo(() => buildModules(), []);
   // 指す・選ぶの判定用の円柱（底を原点に置く）
   const pickGeometry = useMemo(() => new THREE.CylinderGeometry(1, 1, 1, 12).translate(0, 0.5, 0), []);
@@ -534,7 +551,7 @@ function Orgs({ scene, palette, focus, hoveredId, coloring, morph, onSelect, onH
         shell.set(entity ? palette.shellEntity : away ? palette.shellDeemph : palette.shell);
         meshes.shell?.setColorAt(k, shell);
         // 表示灯: 黄。退かせた組織は消し、選択・ホバーは明るく
-        lamp.set(away ? palette.lampOff : palette.signal);
+        lamp.set(away ? palette.lampOff : (palette.lamp ?? palette.signal));
         if (selected || hovered) lamp.lerp(white, 0.45);
         meshes.lamp?.setColorAt(k, lamp);
       });
@@ -908,7 +925,10 @@ function Layers({ scene, palette, active }: { scene: Scene3D; palette: Palette; 
   useLineFade(rings, keys, isActive);
   return (
     <group>
-      {scene.layers.map((l) => (
+      {!palette.cyber?.deck && scene.layers.map((l) =>
+        palette.cyber ? (
+          <DotDisc key={`${l.entityIndex}:${l.depth}`} x={l.x} y={l.y - 0.02} z={l.z} radius={l.radius} color={palette.wire} opacity={!active || active.layers.has(`${l.entityIndex}:${l.depth}`) ? 1 : 0.3} />
+        ) : (
         // ごく薄い面（段の重なりを読みやすくする）。関係する組織の無い段はさらに薄く
         <mesh key={`${l.entityIndex}:${l.depth}`} position={[l.x, l.y - 0.02, l.z]} rotation={[-Math.PI / 2, 0, 0]} raycast={() => null}>
           <circleGeometry args={[l.radius, 96]} />
@@ -920,8 +940,9 @@ function Layers({ scene, palette, active }: { scene: Scene3D; palette: Palette; 
             depthWrite={false}
           />
         </mesh>
-      ))}
-      <lineSegments geometry={rings} material={ringMaterial} raycast={() => null} />
+        ),
+      )}
+      {!palette.cyber?.deck && <lineSegments geometry={rings} material={ringMaterial} raycast={() => null} />}
       <lineSegments geometry={lines} raycast={() => null}>
         <lineBasicMaterial color={palette.wire} transparent opacity={0.75} />
       </lineSegments>
@@ -1243,7 +1264,14 @@ function fitView(
  * 全体を表示するときに収める点。拠点で分けたときは、島の段の輪（モジュールより外へ広がる）も収めるように、
  * 島ごとに島の大きさの仮の点を足す。
  */
-function wholeScene(scene: Scene3D): Placed3D[] {
+function wholeScene(scene: Scene3D, frames = false): Placed3D[] {
+  if (frames && scene.nodes.length > 0) {
+    // スキン「サイバー」では、段を囲む四角い枠も収める（枠ごとに、枠の大きさの仮の点を足す）
+    const extra = [...stacksOf(scene).values()].flatMap((st) =>
+      [st.top, scene.floorY].map((y): Placed3D => ({ node: scene.nodes[0]!.node, x: st.x, y, z: st.z, radius: st.half, reach: st.half * 1.2, tier: 0, entityIndex: 0 })),
+    );
+    return [...wholeScene(scene), ...extra];
+  }
   if (scene.islands.length === 0) return scene.nodes;
   const top = new Map<number, number>();
   for (const l of scene.layers) top.set(l.entityIndex, Math.max(top.get(l.entityIndex) ?? -Infinity, l.y));
@@ -1263,7 +1291,9 @@ function wholeScene(scene: Scene3D): Placed3D[] {
 }
 
 /** カメラの移動: 最初は全体、組織を選んだら「その組織・上位 1 段・配下・相手先」が収まるように寄せる。 */
-function CameraRig({ scene, byId, focus, fitRequest, controls, reduced, layoutKey }: {
+function CameraRig({ scene, byId, focus, fitRequest, controls, reduced, layoutKey, frames }: {
+  /** 段を囲む四角い枠を出しているか（全体を表示するときに枠まで収める）。 */
+  frames: boolean;
   /** 配置の種類（拠点で分けるか）。変わったら、全体か選んだ組織に合わせ直す。 */
   layoutKey: string;
   scene: Scene3D;
@@ -1309,13 +1339,14 @@ function CameraRig({ scene, byId, focus, fitRequest, controls, reduced, layoutKe
     const first = !initialized.current;
     initialized.current = true;
     if (first && focus) return; // 最初から組織が選ばれているときは下の effect に任せる
-    moveTo(wholeScene(scene), viewDir(size.width / Math.max(1, size.height)), first || reduced);
+    moveTo(wholeScene(scene, frames), viewDir(size.width / Math.max(1, size.height), layoutKey === "flat"), first || reduced);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [controls, fitRequest, size.width > 0]);
 
   // 組織を選んだら寄せる。選択を外してもカメラは動かさない（全体へ戻すのは「全体を表示」）。配置の種類が変わったら（拠点で分ける）、全体か選んだ組織に合わせ直す
   const focusId = focus?.id ?? null;
   const lastLayout = useRef(layoutKey);
+  const focusedOnce = useRef(false);
   useEffect(() => {
     if (!controls || size.width === 0) return;
     const relayout = lastLayout.current !== layoutKey;
@@ -1323,7 +1354,7 @@ function CameraRig({ scene, byId, focus, fitRequest, controls, reduced, layoutKe
     if (!focus) {
       if (relayout) {
         // 切り替えでは今の見下ろす向きを保つ（急に回り込まない）。縦長の画面の向きは最初の表示と同じ
-        moveTo(wholeScene(scene), viewDir(size.width / Math.max(1, size.height)), reduced);
+        moveTo(wholeScene(scene, frames), viewDir(size.width / Math.max(1, size.height), layoutKey === "flat"), reduced);
       }
       return;
     }
@@ -1350,7 +1381,10 @@ function CameraRig({ scene, byId, focus, fitRequest, controls, reduced, layoutKe
       }
     });
     // 今の向きを保ちつつ、見下ろす角度は 25° 以上にする
-    const dir = camera.position.clone().sub(controls.target).normalize();
+    // 平面に切り替えた直後（と、平面で最初から選ばれているとき）は真上からに向け直す
+    const fromAbove = layoutKey === "flat" && (relayout || !focusedOnce.current);
+    focusedOnce.current = true;
+    const dir = fromAbove ? VIEW_DIR_FLAT.clone() : camera.position.clone().sub(controls.target).normalize();
     if (dir.y < 0.42) {
       dir.y = 0.42;
       dir.normalize();
@@ -1504,9 +1538,9 @@ function LabelProjector({ specs, overlay, morph }: {
   return null;
 }
 
-function LabelOverlay({ specs, overlay }: { specs: LabelSpec[]; overlay: RefObject<HTMLDivElement | null> }) {
+function LabelOverlay({ specs, overlay, skin }: { specs: LabelSpec[]; overlay: RefObject<HTMLDivElement | null>; /** 札の見た目（index.css の [data-skin]）。 */ skin: string }) {
   return (
-    <div ref={overlay} className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+    <div ref={overlay} data-skin={skin} className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
       {/* 段の札の引き出し線（輪の縁の付け根の点から札まで。細い中間の灰色） */}
       <svg className="absolute inset-0 size-full overflow-visible">
         {specs
@@ -1656,6 +1690,24 @@ function SceneContent({ scene, byId, palette, focus, hoveredId, coloring, fitReq
   return (
     <>
       <color attach="background" args={[palette.bg]} />
+      {palette.cyber && (
+        <>
+          <Backdrop palette={palette} />
+          <DataDust scene={scene} palette={palette} />
+          <Pillars scene={scene} palette={palette} />
+          <FloatingCubes scene={scene} palette={palette} />
+          {palette.cyber.deck ? (
+            <>
+              <IndustryDeck scene={scene} palette={palette} activeLayers={active?.layers ?? null} />
+              <OrgRings scene={scene} palette={palette} related={focus?.related ?? null} morph={morph} />
+            </>
+          ) : (
+            <Frames scene={scene} palette={palette} activeLayers={active?.layers ?? null} />
+          )}
+          {selected && <Reticle x={selected.x} y={selected.y + heightOf(selected) + 0.05} z={selected.z} reach={selected.reach} palette={palette} />}
+          <Bloom strength={palette.cyber.bloom} />
+        </>
+      )}
       <Atmosphere palette={palette} controls={controls} />
       <SpinClock reduced={reduced} />
       <hemisphereLight args={["#ffffff", palette.grid, palette.light.ambient]} />
@@ -1671,7 +1723,7 @@ function SceneContent({ scene, byId, palette, focus, hoveredId, coloring, fitReq
       {!coloring && <CrossArcs focus={focus} byId={byId} palette={palette} />}
       <PersonDots scene={scene} palette={palette} controls={controls} morph={morph} />
       <LabelProjector specs={labels} overlay={overlay} morph={morph} />
-      <CameraRig scene={scene} byId={byId} focus={focus} fitRequest={fitRequest} controls={controls} reduced={reduced} layoutKey={layoutKey} />
+      <CameraRig scene={scene} byId={byId} focus={focus} fitRequest={fitRequest} controls={controls} reduced={reduced} layoutKey={layoutKey} frames={!!palette.cyber} />
     </>
   );
 }
@@ -1774,17 +1826,22 @@ function OrgOverview3D() {
   const { adapter } = useAdapter();
   const { setMode } = useFloorRoute();
   const { asOf, orgId, personId, selectOrg, openPerson } = useNav();
-  const { navigate } = useRoute();
+  const { route, navigate } = useRoute();
   // 押した位置（何もないところのクリックと、回転・移動のドラッグを見分ける）
   const downAt = useRef<{ x: number; y: number } | null>(null);
   const tree = useOrgTree(asOf);
   const stats = useOrgStats(asOf);
   const theme = useResolvedTheme();
-  const palette = PALETTE[theme];
+  const settings = useSettings();
+  const skin = resolveSkin3d(route.params.get("skin"), settings.skin3d);
+  const palette = useMemo(() => skinPalette(skin, theme), [skin, theme]);
   const forest = useMemo(() => (tree.data ? buildForest(tree.data, stats.data ?? null) : null), [tree.data, stats.data]);
   const [splitMode, setSplitMode] = useSiteSplitMode();
   const split = useMemo(() => (forest && splitMode ? splitBySite(forest) : null), [forest, splitMode]);
-  const scene = useMemo(() => (split ? layout3dSplit(split) : forest ? layout3d(forest) : null), [forest, split]);
+  // 平面（上から見る同心の輪の配置）。拠点で分けているときは島の配置を優先する
+  // URL の layout=flat（共有・戻る操作）
+  const flatOn = route.params.get("layout") === "flat" && !splitMode;
+  const scene = useMemo(() => (split ? layout3dSplit(split) : forest ? (flatOn ? layoutFlat(forest) : layout3d(forest)) : null), [forest, split, flatOn]);
   const byId = useMemo(() => new Map((scene?.nodes ?? []).map((p) => [p.node.id, p])), [scene]);
   // 検索で探す組織（候補には上位組織の名前を添える）
   const searchUnits = useMemo<SearchUnit[]>(() => {
@@ -1792,7 +1849,7 @@ function OrgOverview3D() {
     const names = new Map(units.map((u) => [u.id, u.name]));
     return units.map((u) => ({ id: u.id, name: u.name, code: u.code, sub: (u.parent_id && names.get(u.parent_id)) || "" }));
   }, [tree.data]);
-  const [hover, setHover] = useState<{ p: Placed3D; x: number; y: number; width: number } | null>(null);
+  const [hover, setHover] = useState<{ p: Placed3D; x: number; y: number; width: number; height: number } | null>(null);
   const [fitRequest, setFitRequest] = useState(0);
   const container = useRef<HTMLDivElement>(null);
   const overlay = useRef<HTMLDivElement>(null);
@@ -1879,6 +1936,12 @@ function OrgOverview3D() {
       {/* 操作の帯（2D の組織図と共通の部品・同じ順序）。図に重なる箱は置かず、読み方の説明は「図の見方」（?）の中に入れる */}
       <ChartToolbar>
         <ModeSwitch floor={false} onChange={setMode} />
+        <ToolbarButton
+          pressed={flatOn}
+          onClick={() => navigate({ params: flatOn ? { layout: null } : { layout: "flat", split: null } }, true)}
+        >
+          平面
+        </ToolbarButton>
         <SiteModeControls split={splitMode} onSplit={setSplitMode} color={siteMode} onColor={setSiteMode} coloring={coloring} />
         <CrossKindFilter
           concurrent={showConcurrent}
@@ -1938,7 +2001,7 @@ function OrgOverview3D() {
             hoveredId={hoveredId}
             coloring={coloring}
             fitRequest={fitRequest}
-            layoutKey={splitMode ? "split" : "entity"}
+            layoutKey={flatOn ? "flat" : splitMode ? "split" : "entity"}
             labels={labels}
             overlay={overlay}
             onSelect={(p) => {
@@ -1956,14 +2019,14 @@ function OrgOverview3D() {
                 return;
               }
               const rect = container.current?.getBoundingClientRect();
-              setHover({ p, x: e.nativeEvent.clientX - (rect?.left ?? 0), y: e.nativeEvent.clientY - (rect?.top ?? 0), width: rect?.width ?? 9999 });
+              setHover({ p, x: e.nativeEvent.clientX - (rect?.left ?? 0), y: e.nativeEvent.clientY - (rect?.top ?? 0), width: rect?.width ?? 9999, height: rect?.height ?? 9999 });
             }}
           />
         </Canvas>
       </WebGlBoundary>
       {/* 走査線（CSS。WebGL の描き直しを起こさない。動きを減らす設定では止まる） */}
       <div className="scan3d pointer-events-none absolute inset-0" aria-hidden="true" />
-      <LabelOverlay specs={labels} overlay={overlay} />
+      <LabelOverlay specs={labels} overlay={overlay} skin={theme === "dark" ? skin : "standard"} />
       {treeOpen && (
         <FloatingCard label="組織のツリー" title="ツリー" onClose={() => setTreeOpen(false)} side="left" top="sm:top-3 sm:max-h-[calc(100%-1.5rem)]">
           <OrgTreeList
@@ -2000,7 +2063,8 @@ function OrgOverview3D() {
       {hover && (
         <div
           className="pointer-events-none absolute z-10 min-w-[10em] rounded-sm border border-t-2 border-border border-t-signal bg-surface px-2 py-1.5 text-xs shadow"
-          style={{ left: Math.min(hover.x + 14, hover.width - 200), top: hover.y + 14 }}
+          // 画面の下の方では指した位置の上に出す（下へはみ出すと入れ物が伸びて図の大きさが変わり、指す・外れるを繰り返して画面が揺れる）
+          style={{ left: Math.min(hover.x + 14, hover.width - 200), ...(hover.y > hover.height - 170 ? { bottom: hover.height - hover.y + 14 } : { top: hover.y + 14 }) }}
           aria-hidden="true"
         >
           <div className="text-muted">{hover.p.node.kind === "legal_entity" ? "法人" : (hover.p.node.levelName ?? "組織")}</div>

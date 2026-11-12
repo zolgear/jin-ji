@@ -473,7 +473,7 @@ void main() {
   // 面はごく薄く、辺だけ細く明るく（画面上の太さをそろえる）
   vec2 d = min( vUv, 1.0 - vUv ) / max( fwidth( vUv ), vec2( 1e-5 ) );
   float e = 1.0 - smoothstep( 0.7, 1.7, min( d.x, d.y ) );
-  float a = max( e * 0.85, 0.06 );
+  float a = max( e * 0.85, 0.04 );
   gl_FragColor = vec4( vTint * a, 1.0 );
   #include <colorspace_fragment>
 }
@@ -512,11 +512,11 @@ export function FloatingCubes({ scene, palette }: { scene: Scene3D; palette: Pal
       const [cx, cy, cz] = place();
       const s = 0.7 + rand() * 1.9;
       const n = 3 + Math.floor(rand() * 6);
-      const b = 0.2 + rand() * 0.35;
+      const b = 0.08 + rand() * 0.14;
       for (let i = 0; i < n; i++) {
         const k = () => Math.round((rand() - 0.5) * 4) * s;
         const big = rand() < 0.2 ? 2 : 1;
-        items.push({ x: cx + k(), y: cy + k(), z: cz + k(), sx: s * 0.86 * big, sy: s * 0.86 * big, sz: s * 0.86 * big, b, white: rand() < 0.08 });
+        items.push({ x: cx + k(), y: cy + k(), z: cz + k(), sx: s * 0.86 * big, sy: s * 0.86 * big, sz: s * 0.86 * big, b, white: false });
       }
     }
     // 薄い板（縦が多く、少し横）
@@ -526,7 +526,7 @@ export function FloatingCubes({ scene, palette }: { scene: Scene3D; palette: Pal
       const h = 2 + rand() * 6;
       const t = rand();
       const size: [number, number, number] = t < 0.4 ? [w, h, 0.05] : t < 0.8 ? [0.05, h, w] : [w, 0.05, h];
-      items.push({ x, y, z, sx: size[0], sy: size[1], sz: size[2], b: 0.18 + rand() * 0.3, white: false });
+      items.push({ x, y, z, sx: size[0], sy: size[1], sz: size[2], b: 0.07 + rand() * 0.11, white: false });
     }
     const m = new THREE.InstancedMesh(geometry, material, items.length);
     const mat = new THREE.Matrix4();

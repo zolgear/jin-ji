@@ -15,9 +15,26 @@ import { heightOf, type Scene3D } from "./layout3d";
 
 export type Look = "a" | "b" | "c" | "d" | "e";
 
+const LOOK_KEY = "jinji.overview3d.look";
+
+/**
+ * 見た目の案。URL の look=a〜e で選び、端末に覚える（組織を選ぶなどで URL が書き換わると look が落ちるため）。
+ * look=0 で従来の見た目に戻す。
+ */
 export function readLook(): Look | null {
-  const m = /[?&]look=([abcde])\b/.exec(window.location.hash);
-  return m ? (m[1] as Look) : null;
+  const m = /[?&]look=([abcde0])\b/.exec(window.location.hash);
+  try {
+    if (m) {
+      if (m[1] === "0") window.localStorage.removeItem(LOOK_KEY);
+      else window.localStorage.setItem(LOOK_KEY, m[1]!);
+    } else {
+      const saved = window.localStorage.getItem(LOOK_KEY);
+      return saved && /^[abcde]$/.test(saved) ? (saved as Look) : null;
+    }
+  } catch {
+    // 保存できない環境では URL だけで決める
+  }
+  return m && m[1] !== "0" ? (m[1] as Look) : null;
 }
 
 const DARK_A: Palette = {

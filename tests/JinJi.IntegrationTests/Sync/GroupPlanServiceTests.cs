@@ -42,8 +42,8 @@ public sealed class GroupPlanServiceTests : IAsyncLifetime
         Assert.Equal("JJ-", plan.Settings.OrgGroups!.Prefix);
         var items = await _sync.Store.ListItemsAsync(_sync.Hr("hr2"), plan.Id, Ct);
         Assert.Equal(
-            created.Items.Select(i => (i.Id, i.Sequence, i.Action, i.ObjectId, i.OrgUnitId, i.GroupObjectId, i.GroupDisplayName, i.PersonId, i.InScript)),
-            items.Select(i => (i.Id, i.Sequence, i.Action, i.ObjectId, i.OrgUnitId, i.GroupObjectId, i.GroupDisplayName, i.PersonId, i.InScript)));
+            created.Items.Select(i => (i.Id, i.Sequence, i.Action, i.ObjectId, i.OrgUnitId, i.GroupObjectId, i.GroupMarkerOrgUnitId, i.GroupDisplayName, i.PersonId, i.InScript)),
+            items.Select(i => (i.Id, i.Sequence, i.Action, i.ObjectId, i.OrgUnitId, i.GroupObjectId, i.GroupMarkerOrgUnitId, i.GroupDisplayName, i.PersonId, i.InScript)));
         var create = items.First(i => i.Action == SyncAction.CreateGroup);
         Assert.StartsWith("JJ-", create.GroupDisplayName, StringComparison.Ordinal);
         Assert.NotNull(create.OrgUnitId);

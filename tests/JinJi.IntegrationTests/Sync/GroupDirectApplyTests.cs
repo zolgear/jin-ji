@@ -32,9 +32,15 @@ public sealed class GroupDirectApplyTests : IAsyncLifetime
     private static SyncSettings Settings(string groups = """ "prefix": "JJ-" """) =>
         SyncSettings.Parse(Encoding.UTF8.GetBytes(SyncDatabase.Settings.ToCanonicalJson().TrimEnd('}') + $$""", "orgGroups": { {{groups}} } }"""));
 
-    private async Task<SyncPlanCreated> PlanAsync(MemoryGroups directory, SyncSettings settings, bool approve = true)
+    private async Task<SyncPlanCreated> PlanAsync(
+        MemoryGroups directory, SyncSettings settings, bool approve = true, Func<DirectoryGroup, DirectoryGroup>? tamper = null)
     {
         var groups = await directory.ReadGroupsAsync(Ct);
+        if (tamper is not null)
+        {
+            groups = [.. groups.Select(tamper)];
+        }
+
         var created = await _sync.Service.CreateGroupPlanAsync(_sync.Hr("hr1"), new GroupSyncPlanRequest(groups, settings, "graph", new string('0', 64)), Ct);
         if (approve)
         {
@@ -128,6 +134,85 @@ public sealed class GroupDirectApplyTests : IAsyncLifetime
         Assert.Contains(applied.Items, r => r.Outcome == SyncOutcome.Failed && plan.Items.Single(i => i.Id == r.ItemId).OrgUnitId == clashed.OrgUnitId);
     }
 
+    [Fact(DisplayName = "直接反映: 計画の後に印を外した・別の組織の印に書き換えたグループには、更新・メンバー・オーナー・チームのどれも書き込まない")]
+    public async Task Apply_MarkerRemovedOrRewritten_WritesNothing()
+    {
+        var directory = new MemoryGroups();
+        var settings = Settings(""" "prefix": "JJ-", "groupType": "microsoft365", "createTeam": true """);
+        await ApplyAsync(directory, (await PlanAsync(directory, settings)).Plan.Id);
+        var department = directory.Groups.Values.Single(g => g.DisplayName == "JJ-第一営業部");
+        var section = directory.Groups.Values.Single(g => g.DisplayName == "JJ-営業一課");
+        Assert.True(department.HasTeam && department.Owners.Count == 1);
+
+        // Entra 側でずれを作り、すべての種類の操作が計画に出るようにする
+        department.DisplayName = "JJ-旧営業部";
+        department.Members.Remove(_sync.Object("takahashi"));
+        department.Members.Add(_sync.Object("retiree"));
+        department.Owners.Clear();
+        department.HasTeam = false;
+        section.Members.Remove(_sync.Object("takahashi"));
+        // 廃止された組織のグループ 2 つ（印の組織が jin-ji に無い）
+        var kept = directory.AddOwned("JJ-企画課", "jinji-kikaku", Guid.CreateVersion7());
+        var cut = directory.AddOwned("JJ-広報課", "jinji-koho", Guid.CreateVersion7());
+
+        var plan = await PlanAsync(directory, settings);
+        var onDepartment = plan.Items.Where(i => i.InScript && i.GroupObjectId == department.Id).ToList();
+        Assert.Equal(
+            [SyncAction.UpdateGroup, SyncAction.AddGroupMember, SyncAction.RemoveGroupMember, SyncAction.AddGroupOwner, SyncAction.CreateTeam],
+            onDepartment.Select(i => i.Action).Distinct().Order());
+        var onSection = plan.Items.Where(i => i.InScript && i.GroupObjectId == section.Id).ToList();
+        Assert.Contains(onSection, i => i.Action == SyncAction.AddGroupMember);
+        var retireKept = plan.Items.Single(i => i.Action == SyncAction.RetireGroup && i.GroupObjectId == kept.Id);
+        var retireCut = plan.Items.Single(i => i.Action == SyncAction.RetireGroup && i.GroupObjectId == cut.Id);
+
+        // 計画の後に: 部のグループの印を外す。課のグループの印を別の組織に書き換える。廃止のグループの片方の印を外す
+        department.Description = "管理者が jin-ji の管理から外した";
+        section.Description = $"営業一課 {OrgGroupSettings.Marker(Guid.CreateVersion7())}";
+        cut.Description = "印を外した";
+        var before = (department.Snapshot(), section.Snapshot(), cut.Snapshot());
+
+        var applied = await ApplyAsync(directory, plan.Plan.Id);
+
+        var skipped = onDepartment.Concat(onSection).Append(retireCut).Select(i => i.Id).ToHashSet();
+        Assert.All(applied.Items.Where(r => skipped.Contains(r.ItemId)), r => Assert.Equal(SyncOutcome.SkippedPrecondition, r.Outcome));
+        Assert.Equal(skipped.Count, applied.Items.Count(r => skipped.Contains(r.ItemId)));
+        Assert.Equal(before, (department.Snapshot(), section.Snapshot(), cut.Snapshot()));
+        // 印がそのままの廃止のグループには、廃止の印が付く（廃止された組織でも照合できている）
+        Assert.Equal(SyncOutcome.Succeeded, applied.Items.Single(r => r.ItemId == retireKept.Id).Outcome);
+        Assert.StartsWith("【廃止】", kept.DisplayName, StringComparison.Ordinal);
+
+        // ドライランでも同じ判定になる（書き込む予定に数えない）
+        var replan = await PlanAsync(directory, settings, tamper: g => g.ObjectId == department.Id ? g with { Description = $"x {OrgGroupSettings.Marker(onDepartment[0].OrgUnitId!.Value)}" } : g);
+        var dry = await ApplyAsync(directory, replan.Plan.Id, whatIf: true);
+        var dryTargets = replan.Items.Where(i => i.InScript && i.GroupObjectId == department.Id).Select(i => i.Id).ToHashSet();
+        Assert.NotEmpty(dryTargets);
+        Assert.All(dry.Items.Where(r => dryTargets.Contains(r.ItemId)), r => Assert.Equal(SyncOutcome.SkippedPrecondition, r.Outcome));
+    }
+
+    [Fact(DisplayName = "直接反映: 入力のファイルに印を書き足しても、Entra 側のグループに印が無ければ書き込まない")]
+    public async Task Apply_ForgedMarkerInInput_WritesNothing()
+    {
+        var directory = new MemoryGroups();
+        var target = (await PlanAsync(directory, Settings(), approve: false)).Items
+            .First(i => i.Action == SyncAction.CreateGroup && i.GroupDisplayName == "JJ-営業一課").OrgUnitId!.Value;
+        var foreign = directory.AddForeign("アプリの権限を与えるグループ", "app-admins");
+
+        // 計画の入力だけ、印の無いグループに印を書き足す（グループの一覧をファイルで渡す場合に起こりうる）
+        var plan = await PlanAsync(directory, Settings(), tamper: g => g.ObjectId == foreign.Id ? g with { Description = OrgGroupSettings.Marker(target) } : g);
+        var forged = plan.Items.Where(i => i.InScript && i.GroupObjectId == foreign.Id).ToList();
+        Assert.Contains(forged, i => i.Action == SyncAction.AddGroupMember);
+        var before = foreign.Snapshot();
+        var writes = directory.Writes;
+
+        var applied = await ApplyAsync(directory, plan.Plan.Id);
+
+        Assert.All(applied.Items.Where(r => forged.Any(i => i.Id == r.ItemId)), r => Assert.Equal(SyncOutcome.SkippedPrecondition, r.Outcome));
+        Assert.Equal(before, foreign.Snapshot());
+        Assert.Empty(foreign.Members);
+        // 印の無いグループ以外への書き込み（他の組織のグループの作成など）は続ける
+        Assert.True(directory.Writes > writes);
+    }
+
     [Fact(DisplayName = "Graph: グループの作成・更新・メンバー・オーナー・チームの要求の形。一覧は次のページをたどり、印の付いたグループだけメンバーを読む")]
     public async Task GraphRequests()
     {
@@ -217,10 +302,17 @@ public sealed class GroupDirectApplyTests : IAsyncLifetime
 
         public bool FailRemove { get; set; }
 
-        public void AddForeign(string name, string nickname)
+        public Entry AddForeign(string name, string nickname)
         {
             var id = Guid.NewGuid().ToString("D");
-            Groups[id] = new Entry { Id = id, DisplayName = name, MailNickname = nickname, Description = "手で作ったグループ" };
+            return Groups[id] = new Entry { Id = id, DisplayName = name, MailNickname = nickname, Description = "手で作ったグループ" };
+        }
+
+        /// <summary>jin-ji の印の付いたグループを直接置く。</summary>
+        public Entry AddOwned(string name, string nickname, Guid orgUnitId)
+        {
+            var id = Guid.NewGuid().ToString("D");
+            return Groups[id] = new Entry { Id = id, DisplayName = name, MailNickname = nickname, Description = $"{name} {OrgGroupSettings.Marker(orgUnitId)}", Unified = true };
         }
 
         public Task<DirectoryGroup?> GetGroupAsync(string groupId, CancellationToken cancellationToken) =>
@@ -315,6 +407,10 @@ public sealed class GroupDirectApplyTests : IAsyncLifetime
             public HashSet<string> Members { get; } = new(StringComparer.Ordinal);
 
             public HashSet<string> Owners { get; } = new(StringComparer.Ordinal);
+
+            /// <summary>書き込みで変わりうる状態（比較用）。</summary>
+            public string Snapshot() =>
+                $"{DisplayName}|{Description}|{HasTeam}|{string.Join(",", Members.Order(StringComparer.Ordinal))}|{string.Join(",", Owners.Order(StringComparer.Ordinal))}";
 
             public DirectoryGroup ToGroup(int index, bool withMembers) =>
                 new(Id, DisplayName, Description, MailNickname, Unified, HasTeam, withMembers ? [.. Members] : null, withMembers ? [.. Owners] : null, index);

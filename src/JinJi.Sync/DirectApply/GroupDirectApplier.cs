@@ -10,6 +10,9 @@ namespace JinJi.Sync.DirectApply;
 /// <list type="bullet">
 /// <item>順序: グループの作成 → 更新・廃止の印 → オーナー → メンバーの追加 → メンバーの削除 → チーム（チームにはオーナーが要る）</item>
 /// <item>どの項目も、変更の前に今の状態を読む。既にあるべき状態なら何もしない（冪等）。計画の後に Entra 側が変わっていればスキップして記録する</item>
+/// <item>既にあるグループに書き込む前に、そのグループの説明の印が計画時の組織 ID のままかを確かめる（ADR-0015 決定 3）。
+/// 印が外された・別の組織に書き換えられたグループには、更新・メンバー・オーナー・チームのどれも書き込まない。
+/// 同じ計画で作った（または印で作成済みと確かめた）グループは確かめ直さない</item>
 /// <item>グループの作成は、同じ mailNickname のグループが既にあれば作らない: jin-ji の印があれば作成済みとして続け、印が無ければ失敗にする</item>
 /// <item>同じ計画で作るグループのメンバー・オーナー・チームは、作ったグループの ID を使う。ドライランでは作らないので「反映する予定」になる</item>
 /// <item>エラーでも続行し、項目ごとに記録する。削除はしない</item>
@@ -47,17 +50,19 @@ public sealed class GroupDirectApplier
 
         var startedAt = _timeProvider.GetUtcNow();
         var created = new Dictionary<Guid, string>();
+        var markers = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
         var results = new List<SyncLogEntry>();
         foreach (var item in target.Items.Where(i => Order.Contains(i.Action)).OrderBy(i => Array.IndexOf(Order, i.Action)).ThenBy(i => i.Sequence))
         {
             cancellationToken.ThrowIfCancellationRequested();
-            results.Add(await ApplyItemAsync(item, whatIf, created, cancellationToken));
+            results.Add(await ApplyItemAsync(item, whatIf, created, markers, cancellationToken));
         }
 
         return await _service.RecordDirectRunAsync(viewer, target, whatIf, results, startedAt, cancellationToken);
     }
 
-    private async Task<SyncLogEntry> ApplyItemAsync(SyncPlanItem item, bool whatIf, Dictionary<Guid, string> created, CancellationToken cancellationToken)
+    private async Task<SyncLogEntry> ApplyItemAsync(SyncPlanItem item, bool whatIf, Dictionary<Guid, string> created, Dictionary<string, string?> markers,
+        CancellationToken cancellationToken)
     {
         var observed = new Dictionary<string, string?>(StringComparer.Ordinal);
         try
@@ -74,6 +79,11 @@ public sealed class GroupDirectApplier
                 return whatIf
                     ? Entry(SyncOutcome.WouldApply, null)
                     : Entry(SyncOutcome.Failed, "対象のグループが作られていないので、反映できません。");
+            }
+
+            if (item.GroupObjectId is not null && await MarkerProblemAsync(item, groupId, markers, cancellationToken) is { } problem)
+            {
+                return Entry(SyncOutcome.SkippedPrecondition, problem);
             }
 
             switch (item.Action)
@@ -161,6 +171,34 @@ public sealed class GroupDirectApplier
 
         SyncLogEntry Entry(SyncOutcome outcome, string? message) =>
             new(item.Id, outcome, new Dictionary<string, string?>(observed, StringComparer.Ordinal), message is null ? null : message[..Math.Min(message.Length, 1000)], _timeProvider.GetUtcNow());
+    }
+
+    /// <summary>
+    /// 既にあるグループの印が、計画時の組織 ID のままかを確かめる。問題があればその説明を、無ければ null を返す。
+    /// グループごとに一度だけ読む（同じ実行の中の更新は印を変えない）。
+    /// </summary>
+    private async Task<string?> MarkerProblemAsync(SyncPlanItem item, string groupId, Dictionary<string, string?> markers, CancellationToken cancellationToken)
+    {
+        if (item.GroupMarkerOrgUnitId is not { } expected)
+        {
+            return "計画の項目に、グループの印の組織 ID がありません。jin-ji のグループと確かめられないので、書き込みません。";
+        }
+
+        // 印の組織 ID ごとに覚える（同じグループを指す項目でも、計画時の印が違えば別に確かめる）
+        var key = $"{groupId}|{expected:D}";
+        if (!markers.TryGetValue(key, out var problem))
+        {
+            var group = await _client.GetGroupAsync(groupId, cancellationToken) ?? throw new InvalidOperationException("グループが見つかりません。");
+            var now = OrgGroupSettings.ReadMarker(group.Description);
+            problem = now == expected
+                ? null
+                : now is null
+                    ? "グループの説明に jin-ji の印がありません（計画の後に外されたか、jin-ji のグループではありません）。書き込みません。"
+                    : "グループの説明の印が、計画のときと別の組織を指しています。書き込みません。";
+            markers[key] = problem;
+        }
+
+        return problem;
     }
 
     private async Task<SyncLogEntry> CreateAsync(SyncPlanItem item, bool whatIf, Dictionary<Guid, string> created, Dictionary<string, string?> observed, CancellationToken cancellationToken)

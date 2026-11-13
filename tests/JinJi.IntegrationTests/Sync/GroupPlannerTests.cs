@@ -167,6 +167,9 @@ public sealed class GroupPlannerTests
         Assert.Contains(new SyncChange(GroupFields.DisplayName, "JJ-旧営業二課", "JJ-営業二課"), update.Changes);
         var retire = Assert.Single(plan.Items, i => i.Action == SyncAction.RetireGroup);
         Assert.Equal((gone, true, "org_abolished"), (retire.ObjectId, retire.InScript, retire.Basis.Code));
+        // 既にあるグループの項目は、計画時の印の組織 ID を持つ（廃止された組織では org_unit への参照が無いので、これで照合する）
+        Assert.Equal((null, goneOrg, _f.Id("S2")), (retire.OrgUnitId, retire.GroupMarkerOrgUnitId, update.GroupMarkerOrgUnitId));
+        Assert.All(plan.Items, i => Assert.Equal(i.InScript && i.GroupObjectId is not null, i.GroupMarkerOrgUnitId is not null));
         Assert.Contains(new SyncChange(GroupFields.DisplayName, "JJ-企画課", "【廃止】JJ-企画課"), retire.Changes);
         // 在籍している人（member）と、jin-ji の人に対応付かないメンバーは残す（引き継ぎ待ち）
         Assert.DoesNotContain(plan.Items, i => i.Action == SyncAction.RemoveGroupMember && i.GroupObjectId == gone);
@@ -174,7 +177,7 @@ public sealed class GroupPlannerTests
         // 退職した人だけは外す
         _f.Person("member", "E0003", "鈴木", "次郎", "S1", null, terminated: SyncFixture.Today.AddDays(-1));
         var removed = Assert.Single(Plan().Items, i => i.Action == SyncAction.RemoveGroupMember && i.GroupObjectId == gone);
-        Assert.Equal((_f.Object("member"), "member_retired"), (removed.ObjectId, removed.Basis.Code));
+        Assert.Equal((_f.Object("member"), "member_retired", goneOrg), (removed.ObjectId, removed.Basis.Code, removed.GroupMarkerOrgUnitId));
 
         // 既に廃止の印が付いていれば、もう更新しない
         _groups[^1]["displayName"] = "【廃止】JJ-企画課";

@@ -107,8 +107,9 @@ public sealed class NpgsqlSyncPlanStore : ISyncPlanStore
                 var command = new NpgsqlBatchCommand(
                     """
                     INSERT INTO sync_plan_item (id, sync_plan_id, sequence, priority, action, person_id, employee_number, directory_object_id,
-                                                user_principal_name, in_script, changes, basis, note, org_unit_id, group_object_id, group_display_name)
-                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+                                                user_principal_name, in_script, changes, basis, note, org_unit_id, group_object_id, group_display_name,
+                                                group_marker_org_unit_id)
+                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
                     """);
                 AddAll(command.Parameters, 
                 [
@@ -128,6 +129,7 @@ public sealed class NpgsqlSyncPlanStore : ISyncPlanStore
                     P(item.OrgUnitId, NpgsqlDbType.Uuid),
                     P(item.GroupObjectId, NpgsqlDbType.Text),
                     P(item.GroupDisplayName, NpgsqlDbType.Text),
+                    P(item.GroupMarkerOrgUnitId, NpgsqlDbType.Uuid),
                 ]);
                 batch.BatchCommands.Add(command);
             }
@@ -161,7 +163,8 @@ public sealed class NpgsqlSyncPlanStore : ISyncPlanStore
         await using var command = tx.CreateCommand(
             """
             SELECT id, sequence, priority, action, person_id, employee_number, directory_object_id, user_principal_name, in_script,
-                   changes::text, basis::text, note, org_unit_id, group_object_id, group_display_name
+                   changes::text, basis::text, note, org_unit_id, group_object_id, group_display_name,
+                   group_marker_org_unit_id
             FROM sync_plan_item WHERE sync_plan_id = $1 ORDER BY sequence
             """);
         command.Parameters.Add(P(planId));
@@ -187,6 +190,7 @@ public sealed class NpgsqlSyncPlanStore : ISyncPlanStore
                 OrgUnitId = reader.IsDBNull(12) ? null : reader.GetGuid(12),
                 GroupObjectId = reader.IsDBNull(13) ? null : reader.GetString(13),
                 GroupDisplayName = reader.IsDBNull(14) ? null : reader.GetString(14),
+                GroupMarkerOrgUnitId = reader.IsDBNull(15) ? null : reader.GetGuid(15),
             });
         }
 

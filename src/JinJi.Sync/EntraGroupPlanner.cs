@@ -325,6 +325,16 @@ public sealed class EntraGroupPlanner : IGroupSyncPlanner
             warnings.Add($"同じ表示名になる組織があります: {string.Join("、", sameName.Take(5))}（displayNameFormat に {{code}} や {{company}} を入れると区別できます）。");
         }
 
+        // 既にあるグループを対象にする項目には、計画時の印の組織 ID を持たせる（反映の直前に照合する）
+        var markerByGroup = new Dictionary<string, Guid>(StringComparer.OrdinalIgnoreCase);
+        foreach (var group in input.Groups)
+        {
+            if (OrgGroupSettings.ReadMarker(group.Description) is { } marked)
+            {
+                markerByGroup.TryAdd(group.ObjectId, marked);
+            }
+        }
+
         var items = drafts
             .OrderBy(d => d.Priority)
             .ThenBy(d => d.Action)
@@ -342,6 +352,7 @@ public sealed class EntraGroupPlanner : IGroupSyncPlanner
                 ObjectId = d.ObjectId,
                 OrgUnitId = d.OrgUnitId,
                 GroupObjectId = d.GroupObjectId,
+                GroupMarkerOrgUnitId = d.GroupObjectId is { } target && markerByGroup.TryGetValue(target, out var marker) ? marker : null,
                 GroupDisplayName = d.GroupDisplayName,
                 InScript = d.InScript,
                 Changes = d.Changes,

@@ -284,6 +284,12 @@ public sealed record SyncPlanItem
     /// <summary>グループの計画: グループのオブジェクト ID（同じ計画で作るグループでは null）。</summary>
     public string? GroupObjectId { get; init; }
 
+    /// <summary>
+    /// グループの計画: 計画を作ったときにグループの説明にあった印の組織 ID（既にあるグループを対象にする項目だけ）。
+    /// 反映の直前に今の印と照合し、違えば書き込まない（ADR-0015 決定 3）。廃止された組織では <see cref="OrgUnitId"/> が null なので、これだけが手がかりになる。
+    /// </summary>
+    public Guid? GroupMarkerOrgUnitId { get; init; }
+
     /// <summary>グループの計画: 表示用のグループの名前（あるべき表示名）。</summary>
     public string? GroupDisplayName { get; init; }
 

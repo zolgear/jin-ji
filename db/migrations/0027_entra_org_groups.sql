@@ -7,6 +7,8 @@
 --   新しい計画が置き換えるのは同じ種類の計画だけなので、ユーザーの計画とグループの計画は別々に起案・承認できる
 -- - グループと組織の対応付けは、グループの説明に書いた印で行う（jin-ji は Entra のオブジェクト ID を公開側に持たない）。
 --   項目には、対象の組織・グループのオブジェクト ID（同じ計画で作るグループでは NULL）・表示用のグループの名前を持つ
+-- - 印の無いグループは変更しない。計画の後に印が外される・書き換えられることがあるので、項目に計画時の印の組織 ID を持ち、
+--   反映の直前に今の印と照合する
 --
 -- 項目の対象（directory_object_id）
 -- - グループそのものの項目（作成・更新・廃止の印・チーム・衝突）: グループのオブジェクト ID（作成では NULL。これから作るグループのチームも NULL）
@@ -42,8 +44,11 @@ COMMENT ON COLUMN sync_plan.directory_user_count IS '入力の件数（ユーザ
 ALTER TABLE sync_plan_item ADD COLUMN org_unit_id uuid REFERENCES org_unit (id);
 ALTER TABLE sync_plan_item ADD COLUMN group_object_id text;
 ALTER TABLE sync_plan_item ADD COLUMN group_display_name text;
+-- 印の組織 ID は Entra 側の説明から読んだ値なので、org_unit への参照にはしない（廃止された組織・手で書き換えられた印がありうる）
+ALTER TABLE sync_plan_item ADD COLUMN group_marker_org_unit_id uuid;
 COMMENT ON COLUMN sync_plan_item.org_unit_id IS 'グループの計画: 対象の組織（廃止された組織のグループでは NULL）';
 COMMENT ON COLUMN sync_plan_item.group_object_id IS 'グループの計画: グループのオブジェクト ID（同じ計画で作るグループでは NULL）';
+COMMENT ON COLUMN sync_plan_item.group_marker_org_unit_id IS 'グループの計画: 計画を作ったときにグループの説明にあった印の組織 ID（既にあるグループを対象にする項目）。反映の直前に今の印と照合する';
 COMMENT ON COLUMN sync_plan_item.group_display_name IS 'グループの計画: 表示用のグループの名前';
 
 ALTER TABLE sync_plan_item DROP CONSTRAINT sync_plan_item_action_check;
@@ -68,6 +73,9 @@ ALTER TABLE sync_plan_item ADD CONSTRAINT sync_plan_item_object_id_check CHECK (
 ALTER TABLE sync_plan_item ADD CONSTRAINT sync_plan_item_group_columns_check CHECK (
     (action IN ('create_group', 'update_group', 'retire_group', 'add_group_member', 'remove_group_member', 'add_group_owner', 'create_team',
                 'group_conflict', 'group_note')
-     OR (org_unit_id IS NULL AND group_object_id IS NULL AND group_display_name IS NULL))
+     OR (org_unit_id IS NULL AND group_object_id IS NULL AND group_display_name IS NULL AND group_marker_org_unit_id IS NULL))
+    -- 印は、既にあるグループを対象にする項目だけが持つ。実行する項目（作成を除く）が既にあるグループを対象にするなら、印が要る
+    AND (group_marker_org_unit_id IS NULL OR group_object_id IS NOT NULL)
+    AND (NOT in_script OR group_object_id IS NULL OR group_marker_org_unit_id IS NOT NULL)
     AND (group_object_id IS NULL OR group_object_id ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$')
     AND (group_display_name IS NULL OR char_length(group_display_name) <= 300));

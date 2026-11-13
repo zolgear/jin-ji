@@ -1572,6 +1572,10 @@
           "category": "識別",
           "description": "グループの計画: Entra のグループのオブジェクト ID"
         },
+        "group_marker_org_unit_id": {
+          "category": "同期作業領域",
+          "description": "グループの計画: 計画時にグループの説明にあった印の組織 ID（反映の直前に照合する）"
+        },
         "group_display_name": {
           "category": "同期作業領域",
           "description": "グループの計画: 表示用のグループの名前"

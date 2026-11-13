@@ -66,7 +66,8 @@ import { FloorMode } from "../floor/FloorMode";
 import { ModeSwitch } from "../floor/FloorParts";
 import { GridFloor, setEnvironment, useOrbitControls, type Cyber, type Palette } from "./common3d";
 import { Backdrop, Bloom, DataDust, DotDisc, FloatingCubes, Frames, IndustryDeck, OrgRings, Pillars, Reticle, cyberPlateShader, cyberShellShader, skinPalette, stacksOf } from "./cyber3d";
-import { boundingSphere, heightOf, layout3d, layout3dSplit, layoutFlat, personDots, type Island3D, type Layer3D, type Placed3D, type Scene3D } from "./layout3d";
+import { fitFocus, fitView } from "./camera3d";
+import { heightOf, layout3d, layout3dSplit, layoutFlat, personDots, type Island3D, type Layer3D, type Placed3D, type Scene3D } from "./layout3d";
 import { buildModules, hazardRing } from "./modules3d";
 import { TIER_COUNT, TIER_NAMES, TIER_SHAPES } from "./shapes3d";
 import beadUrl from "./textures/bead.webp";
@@ -1210,57 +1211,6 @@ function PersonDots({ scene, palette, controls, morph }: { scene: Scene3D; palet
 }
 
 /**
- * カメラを点の集まりに合わせる位置。球で囲むと平たい木では余白が大きすぎるため、
- * 視線の向き dir から見た各点の横・縦のずれを画角と比べ、すべてが収まる最小の距離を求める。
- * モジュールは外接円の縁の 4 点と上下で近似する。margin は画面の端に残す割合。
- */
-function fitView(
-  camera: THREE.PerspectiveCamera,
-  points: Placed3D[],
-  dir: THREE.Vector3,
-  /** 画面の上から何割までに収めるか（スマホで下に詳細のシートが重なるとき 1 未満）。 */
-  visible = 1,
-  margin = 1.1,
-  /** 画面の上の何割を空けるか（図の上に重なる要素で図の上端を隠さないため。今は使っていない）。 */
-  topInset = 0,
-): { target: THREE.Vector3; position: THREE.Vector3 } {
-  const sphere = boundingSphere(points, 1);
-  const center = new THREE.Vector3(...sphere.center);
-  const back = dir.clone().normalize();
-  const right = new THREE.Vector3(0, 1, 0).cross(back).normalize();
-  const up = back.clone().cross(right).normalize();
-  const tanFull = Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2);
-  const tanH = tanFull * camera.aspect;
-  const tanV = tanFull * Math.max(0.2, visible - topInset);
-  // 中心を画面の中心に置いたとき、各点が収まる距離。横・縦の偏りを見て中心も少し動かす
-  let minR = Infinity, maxR = -Infinity, minU = Infinity, maxU = -Infinity;
-  const corners: THREE.Vector3[] = [];
-  for (const p of points) {
-    const h = heightOf(p);
-    for (const [dx, dz] of [[p.reach, 0], [-p.reach, 0], [0, p.reach], [0, -p.reach]] as const) {
-      for (const y of [p.y, p.y + h + 1.2]) {
-        const c = new THREE.Vector3(p.x + dx, y, p.z + dz);
-        corners.push(c);
-        const d = c.clone().sub(center);
-        minR = Math.min(minR, d.dot(right)); maxR = Math.max(maxR, d.dot(right));
-        minU = Math.min(minU, d.dot(up)); maxU = Math.max(maxU, d.dot(up));
-      }
-    }
-  }
-  const target = center.clone().add(right.clone().multiplyScalar((minR + maxR) / 2)).add(up.clone().multiplyScalar((minU + maxU) / 2));
-  let distance = 4;
-  for (const c of corners) {
-    const d = c.clone().sub(target);
-    const toward = d.dot(back);
-    distance = Math.max(distance, Math.abs(d.dot(right)) / tanH + toward, Math.abs(d.dot(up)) / tanV + toward);
-  }
-  distance *= margin;
-  // 見えている範囲（上に重なる要素と下のシートの間）の中心が target に来るように、注視点を上下にずらす
-  const aim = target.clone().sub(up.clone().multiplyScalar((1 - topInset - visible) * distance * tanFull));
-  return { target: aim, position: aim.clone().add(back.multiplyScalar(distance)) };
-}
-
-/**
  * 全体を表示するときに収める点。拠点で分けたときは、島の段の輪（モジュールより外へ広がる）も収めるように、
  * 島ごとに島の大きさの仮の点を足す。
  */
@@ -1317,11 +1267,9 @@ function CameraRig({ scene, byId, focus, fitRequest, controls, reduced, layoutKe
     return () => controls.removeEventListener("start", cancel);
   }, [controls]);
 
-  const moveTo = (points: Placed3D[], dir: THREE.Vector3, instant: boolean) => {
+  const sheetOf = () => (focus && window.innerWidth < 1024 ? 0.42 : 1);
+  const goTo = ({ target, position }: { target: THREE.Vector3; position: THREE.Vector3 }, instant: boolean) => {
     if (!controls) return;
-    // lg（1024px）未満では詳細のパネルが画面の下 55% に重なる（App.tsx の SidePanel）
-    const sheet = focus && window.innerWidth < 1024 ? 0.42 : 1;
-    const { target, position } = fitView(camera as THREE.PerspectiveCamera, points, dir, sheet, 1.1);
     if (instant) {
       controls.target.copy(target);
       camera.position.copy(position);
@@ -1332,6 +1280,8 @@ function CameraRig({ scene, byId, focus, fitRequest, controls, reduced, layoutKe
       invalidate();
     }
   };
+  // lg（1024px）未満では詳細のパネルが画面の下 55% に重なる（App.tsx の SidePanel）
+  const moveTo = (points: Placed3D[], dir: THREE.Vector3, instant: boolean) => goTo(fitView(camera as THREE.PerspectiveCamera, points, dir, sheetOf(), 1.1), instant);
 
   // 最初の表示と「全体を表示」
   useEffect(() => {
@@ -1358,28 +1308,6 @@ function CameraRig({ scene, byId, focus, fitRequest, controls, reduced, layoutKe
       }
       return;
     }
-    const self = byId.get(focus.id)!;
-    const parent = self.node.parentId ? byId.get(self.node.parentId) : undefined;
-    const points = [self, ...(parent ? [parent] : [])];
-    // 配下はすべて含める（強調している線が画面の外へ伸びないように）
-    const walk = (n: Placed3D["node"]) =>
-      n.children.forEach((c) => {
-        const pc = byId.get(c.id);
-        if (pc) points.push(pc);
-        walk(c);
-      });
-    walk(self.node);
-    focus.links.forEach((l) => {
-      const other = byId.get(l.from === focus.id ? l.to : l.from);
-      if (other) points.push(other);
-    });
-    // 拠点をまたぐ上位・配下（別の島）も収める
-    focus.upperPairs.forEach(([upper, root]) => {
-      for (const id of [upper, root]) {
-        const other = byId.get(id);
-        if (other) points.push(other);
-      }
-    });
     // 今の向きを保ちつつ、見下ろす角度は 25° 以上にする
     // 平面に切り替えた直後（と、平面で最初から選ばれているとき）は真上からに向け直す
     const fromAbove = layoutKey === "flat" && (relayout || !focusedOnce.current);
@@ -1389,7 +1317,7 @@ function CameraRig({ scene, byId, focus, fitRequest, controls, reduced, layoutKe
       dir.y = 0.42;
       dir.normalize();
     }
-    moveTo(points, dir, reduced);
+    goTo(fitFocus(camera as THREE.PerspectiveCamera, scene, byId, focus, dir, sheetOf()), reduced);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focusId, controls, size.width > 0, layoutKey]);
 

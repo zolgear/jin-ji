@@ -1042,12 +1042,15 @@ export interface components {
       id: string; // uuid
       sequence: number; // int32
       priority: "critical" | "high" | "normal" | "info";
-      action: "disable_account" | "block_sign_in" | "enable_account" | "update_attributes" | "set_manager" | "create_user" | "unmatched_account" | "excluded_account";
+      action: "disable_account" | "block_sign_in" | "enable_account" | "update_attributes" | "set_manager" | "create_user" | "unmatched_account" | "excluded_account" | "create_group" | "update_group" | "retire_group" | "add_group_member" | "remove_group_member" | "add_group_owner" | "create_team" | "group_conflict" | "group_note";
       in_script: boolean;
       person_id: string | null; // uuid
       employee_number: string | null;
       object_id: string | null;
       user_principal_name: string | null;
+      org_unit_id: string | null; // uuid
+      group_object_id: string | null;
+      group_display_name: string | null;
       changes: components["schemas"]["SyncChangeResponse"][];
       code: string | null;
       basis: components["schemas"]["SyncEvidenceResponse"][];

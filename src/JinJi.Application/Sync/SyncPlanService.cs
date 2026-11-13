@@ -18,6 +18,16 @@ public sealed record SyncPlanRequest(
     Guid? ProposedByPersonId = null);
 
 /// <summary>計画の作成の結果。</summary>
+/// <summary>グループの計画の作成の入力（ADR-0015）。</summary>
+/// <param name="Groups">Entra のグループの一覧（メンバー・オーナーつき）。</param>
+/// <param name="SourceFileName">入力の名前（ファイル名。Graph から読んだときは graph）。</param>
+public sealed record GroupSyncPlanRequest(
+    IReadOnlyList<DirectoryGroup> Groups,
+    SyncSettings Settings,
+    string SourceFileName,
+    string SourceSha256,
+    Guid? ProposedByPersonId = null);
+
 public sealed record SyncPlanCreated(SyncPlanRecord Plan, IReadOnlyList<SyncPlanItem> Items, IReadOnlyList<Guid> Superseded, IReadOnlyList<string> Warnings);
 
 /// <summary>直接反映の準備（承認済みで新しい計画と、実行する項目）。</summary>
@@ -39,6 +49,9 @@ public sealed record SyncApplyTarget(SyncPlanRecord Plan, IReadOnlyList<SyncPlan
 public sealed class SyncPlanService
 {
     public const string TargetSystemEntra = "entra_id";
+
+    /// <summary>組織に対応するグループの計画（ADR-0015）。ユーザーの計画とは別に起案・承認する。</summary>
+    public const string TargetSystemEntraGroups = "entra_id_groups";
     public const string CreateAction = "sync.plan.create";
     public const string ReadAction = "sync.plan.read";
     public const string ApproveAction = "sync.plan.approve";
@@ -51,6 +64,7 @@ public sealed class SyncPlanService
     private readonly ISyncPlanStore _store;
     private readonly IOrgSnapshotProvider _snapshots;
     private readonly ISyncPlanner _planner;
+    private readonly IGroupSyncPlanner _groupPlanner;
     private readonly ISyncScriptRenderer _renderer;
     private readonly ISyncLogParser _logParser;
     private readonly AuditWriter _audit;
@@ -60,6 +74,7 @@ public sealed class SyncPlanService
         ISyncPlanStore store,
         IOrgSnapshotProvider snapshots,
         ISyncPlanner planner,
+        IGroupSyncPlanner groupPlanner,
         ISyncScriptRenderer renderer,
         ISyncLogParser logParser,
         AuditWriter audit,
@@ -68,6 +83,7 @@ public sealed class SyncPlanService
         ArgumentNullException.ThrowIfNull(store);
         ArgumentNullException.ThrowIfNull(snapshots);
         ArgumentNullException.ThrowIfNull(planner);
+        ArgumentNullException.ThrowIfNull(groupPlanner);
         ArgumentNullException.ThrowIfNull(renderer);
         ArgumentNullException.ThrowIfNull(logParser);
         ArgumentNullException.ThrowIfNull(audit);
@@ -75,6 +91,7 @@ public sealed class SyncPlanService
         _store = store;
         _snapshots = snapshots;
         _planner = planner;
+        _groupPlanner = groupPlanner;
         _renderer = renderer;
         _logParser = logParser;
         _audit = audit;
@@ -82,39 +99,71 @@ public sealed class SyncPlanService
     }
 
     /// <summary>計画を作り、作業領域に保存する（同じ同期先の起案中・承認済みの計画は置き換え済みになる）。</summary>
-    public async Task<SyncPlanCreated> CreateAsync(ViewerContext viewer, SyncPlanRequest request, CancellationToken cancellationToken)
+    public Task<SyncPlanCreated> CreateAsync(ViewerContext viewer, SyncPlanRequest request, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        return CreateCoreAsync(viewer, TargetSystemEntra, request.Settings, request.SourceFileName, request.SourceSha256, request.Users.Count, request.ProposedByPersonId,
+            (snapshot, identities, today) => _planner.Plan(new SyncPlanInput(snapshot, identities, request.Users, request.Settings, today)), cancellationToken);
+    }
+
+    /// <summary>
+    /// 組織に対応するグループの計画を作る（ADR-0015）。権限・起案者・置き換えの扱いはユーザーの計画と同じ（置き換えるのはグループの計画だけ）。
+    /// 設定に <c>orgGroups</c> が無ければ <see cref="FormatException"/>。
+    /// </summary>
+    public Task<SyncPlanCreated> CreateGroupPlanAsync(ViewerContext viewer, GroupSyncPlanRequest request, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        if (request.Settings.OrgGroups is null)
+        {
+            throw new FormatException("同期の設定に orgGroups がありません（組織のグループの計画には接頭辞などの設定が要ります）。");
+        }
+
+        return CreateCoreAsync(viewer, TargetSystemEntraGroups, request.Settings, request.SourceFileName, request.SourceSha256, request.Groups.Count, request.ProposedByPersonId,
+            (snapshot, identities, today) => _groupPlanner.Plan(new GroupSyncPlanInput(snapshot, identities, request.Groups, request.Settings, today)), cancellationToken);
+    }
+
+    private async Task<SyncPlanCreated> CreateCoreAsync(
+        ViewerContext viewer,
+        string targetSystem,
+        SyncSettings settings,
+        string sourceFileName,
+        string sourceSha256,
+        int directoryCount,
+        Guid? proposedByPersonId,
+        Func<Domain.Organization.OrgSnapshot, IReadOnlyList<ExternalIdentityLink>, DateOnly, SyncPlanDraft> plan,
+        CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(viewer);
-        ArgumentNullException.ThrowIfNull(request);
         if (!viewer.IsHrAdmin || viewer.Actor == ActorType.Service)
         {
             await _audit.RecordAsync(viewer, CreateAction, AuditOutcome.Denied, [], cancellationToken, TargetType);
             throw new AccessDeniedException("同期計画の作成は人事管理者だけが行えます。");
         }
 
-        var proposer = viewer.Actor == ActorType.System ? request.ProposedByPersonId : viewer.EffectivePersonId;
-        if (proposer is null || (viewer.Actor != ActorType.System && request.ProposedByPersonId is { } given && given != proposer))
+        var proposer = viewer.Actor == ActorType.System ? proposedByPersonId : viewer.EffectivePersonId;
+        if (proposer is null || (viewer.Actor != ActorType.System && proposedByPersonId is { } given && given != proposer))
         {
-            throw new ArgumentException("起案者（人）を指定してください（jin-ji 自身の閲覧者では必須。人・エージェントでは閲覧者本人・委任元）。", nameof(request));
+            throw new ArgumentException("起案者（人）を指定してください（jin-ji 自身の閲覧者では必須。人・エージェントでは閲覧者本人・委任元）。", nameof(proposedByPersonId));
         }
 
-        request.Settings.Validate();
+        settings.Validate();
         var now = _timeProvider.GetUtcNow();
         var today = BusinessDate.Today(_timeProvider);
         try
         {
             var snapshot = await _snapshots.LoadAsync(viewer, today, today, cancellationToken);
-            var identities = await _store.LoadIdentitiesAsync(viewer, request.Settings.SourceSystem, cancellationToken);
-            var draft = _planner.Plan(new SyncPlanInput(snapshot, identities, request.Users, request.Settings, today));
-            var plan = new SyncPlanRecord
+            var identities = await _store.LoadIdentitiesAsync(viewer, settings.SourceSystem, cancellationToken);
+            var draft = plan(snapshot, identities, today);
+            var record = new SyncPlanRecord
             {
                 Id = EntityId.New(),
+                TargetSystem = targetSystem,
                 Status = SyncPlanStatus.Proposed,
-                Settings = request.Settings,
-                SettingsSha256 = request.Settings.Sha256(),
-                SourceFileName = request.SourceFileName,
-                SourceSha256 = request.SourceSha256,
-                DirectoryUserCount = request.Users.Count,
+                Settings = settings,
+                SettingsSha256 = settings.Sha256(),
+                SourceFileName = sourceFileName,
+                SourceSha256 = sourceSha256,
+                DirectoryUserCount = directoryCount,
                 JinjiFingerprint = draft.JinjiFingerprint,
                 BusinessDate = today,
                 Summary = Summarize(draft.Items),
@@ -122,11 +171,11 @@ public sealed class SyncPlanService
                 ProposedViaActor = viewer.Actor,
                 ProposedViaClientId = viewer.ClientId,
                 ProposedAt = now,
-                ExpiresAt = now.AddDays(request.Settings.PlanMaxAgeDays),
+                ExpiresAt = now.AddDays(settings.PlanMaxAgeDays),
             };
-            var superseded = await _store.InsertPlanAsync(viewer, plan, draft.Items, cancellationToken);
-            await _audit.RecordAsync(viewer, CreateAction, AuditOutcome.Success, Subjects(draft.Items), cancellationToken, TargetType, plan.Id);
-            return new SyncPlanCreated(plan, draft.Items, superseded, draft.Warnings);
+            var superseded = await _store.InsertPlanAsync(viewer, record, draft.Items, cancellationToken);
+            await _audit.RecordAsync(viewer, CreateAction, AuditOutcome.Success, Subjects(draft.Items), cancellationToken, TargetType, record.Id);
+            return new SyncPlanCreated(record, draft.Items, superseded, draft.Warnings);
         }
         catch (Exception ex) when (ex is not OperationCanceledException and not OutOfMemoryException)
         {
@@ -196,6 +245,13 @@ public sealed class SyncPlanService
     {
         ArgumentNullException.ThrowIfNull(viewer);
         var target = await PrepareExecutionAsync(viewer, ExportAction, planId, cancellationToken);
+        if (target.Plan.TargetSystem == TargetSystemEntraGroups)
+        {
+            // グループの計画のスクリプト出力はまだ無い（ADR-0015）。ユーザー用のスクリプトにグループの項目を流さない
+            await _audit.RecordAsync(viewer, ExportAction, AuditOutcome.Failed, Subjects(target.Items), cancellationToken, TargetType, planId);
+            throw new InvalidOperationException($"計画 {planId} はグループの計画です。スクリプト出力はまだ無いので、直接反映（sync-apply）を使ってください。");
+        }
+
         var bundle = _renderer.Render(target.Plan, target.Items);
         await _audit.RecordAsync(viewer, ExportAction, AuditOutcome.Success, Subjects(target.Items), cancellationToken, TargetType, planId);
         return bundle;
@@ -416,7 +472,10 @@ public sealed class SyncPlanService
             var today = BusinessDate.Today(_timeProvider);
             var snapshot = await _snapshots.LoadAsync(viewer, today, today, cancellationToken);
             var identities = await _store.LoadIdentitiesAsync(viewer, plan.Settings.SourceSystem, cancellationToken);
-            if (!string.Equals(_planner.Fingerprint(snapshot, identities, plan.Settings, today), plan.JinjiFingerprint, StringComparison.Ordinal))
+            var fingerprint = plan.TargetSystem == TargetSystemEntraGroups
+                ? _groupPlanner.Fingerprint(snapshot, identities, plan.Settings, today)
+                : _planner.Fingerprint(snapshot, identities, plan.Settings, today);
+            if (!string.Equals(fingerprint, plan.JinjiFingerprint, StringComparison.Ordinal))
             {
                 reason = "計画の作成後に jin-ji のデータ（人・所属・組織・一時停止・退職・外部 ID の対応）が変わりました";
             }

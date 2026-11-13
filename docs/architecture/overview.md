@@ -1213,7 +1213,7 @@ Entra ID への書き込みには Microsoft Graph の強い権限（`User.ReadWr
 
 ### 同期の実装上の規則
 
-コードでは `JinJi.Sync`（差分計算 `EntraSyncPlanner`・スクリプト一式 `EntraScriptRenderer` / `PowerShellScript` / `SyncReport`・実行ログ `SyncLogParser`・直接反映 `DirectApply/`）、`JinJi.Application.Sync`（設定 `SyncSettings`・`SyncPlanService`）、`JinJi.Infrastructure.Database.NpgsqlSyncPlanStore`、`JinJi.Api.SyncEndpoints`、`JinJi.Host.SyncCommands`、`db/migrations/0009_entra_sync_plan.sql` に対応する。サンプルでの評価は [同期計画の評価](../reports/sync-plan.md)（`JinJi.Host evaluate-sync` の出力）。
+コードでは `JinJi.Sync`（差分計算 `EntraSyncPlanner`・組織に対応するグループの差分計算 `EntraGroupPlanner` と読み取り `GraphDirectoryGroups`・グループの直接反映 `DirectApply/GroupDirectApplier` / `GraphRestGroupClient`〔[ADR-0015](../adr/0015-entra-org-groups.md)。`db/migrations/0027_entra_org_groups.sql`〕・スクリプト一式 `EntraScriptRenderer` / `PowerShellScript` / `SyncReport`・実行ログ `SyncLogParser`・直接反映 `DirectApply/`）、`JinJi.Application.Sync`（設定 `SyncSettings`・`SyncPlanService`）、`JinJi.Infrastructure.Database.NpgsqlSyncPlanStore`、`JinJi.Api.SyncEndpoints`、`JinJi.Host.SyncCommands`、`db/migrations/0009_entra_sync_plan.sql` に対応する。サンプルでの評価は [同期計画の評価](../reports/sync-plan.md)（`JinJi.Host evaluate-sync` の出力）。
 
 **入力と対応付け**
 
@@ -1480,7 +1480,7 @@ jin-ji/
 | 3 | 取込コネクタ（CSV / xlsx、Entra ID のユーザー一覧）と名寄せ・変更提案・修正依頼。架空の「整っていない」サンプルデータ（`samples/messy-corp`）で精度を評価する | 実装済み（[取込の精度](../reports/ingest-accuracy.md)） |
 | 4 | 認証（Entra ID・汎用 OIDC・ローカルアカウント、トークン発行）、REST API（時点指定の参照・変更フィード・承認ルート）、レート制限、メトリクス、不正検知、Webhook | 実装済み |
 | 5 | MCP サーバー（参照ツール → 提案ツール） | 実装済み |
-| 6 | Entra ID 同期の計画・スクリプト出力・直接反映（既定は無効） | 実装済み（[同期計画の評価](../reports/sync-plan.md)）。実テナントでの検証は未実施 |
+| 6 | Entra ID 同期の計画・スクリプト出力・直接反映（既定は無効） | 実装済み（[同期計画の評価](../reports/sync-plan.md)）。実テナントでの検証は未実施。組織に対応するグループの作成と同期（[ADR-0015](../adr/0015-entra-org-groups.md)）は計画・承認・Graph API での直接反映まで（スクリプト出力は未実装） |
 | 7 | Web UI（組織図・3D 俯瞰・人の詳細・検索・修正依頼・認証の画面） | 一部。発令のタイムライン・ポリシーのプレビューは未実装 |
 | 8 | 現場・IT 部門の直接登録（管理元・範囲・`org_admin`）、素案・申請版・提案資料、チーム・プロジェクトのグループ（[ADR-0013](../adr/0013-field-managed-changes.md)・[ADR-0014](../adr/0014-informal-groups.md)） | 実装済み（Entra ID のグループへの同期を除く）。管理元・担当の指名・範囲の判定・直接登録（登録・同意・取り消し・AI エージェントの下書き・取込の振り分け。[§5.7](#57-直接登録の範囲adr-0013)）。グループ（[§5.8](#58-グループadr-0014)。Entra ID への同期を除く）。素案・申請版・提案資料のデータ（[§5.9](#59-素案申請版提案資料adr-0013)）。画面（組織の変更 `#/changes`。[Web UI](../web-ui.md)） |
 

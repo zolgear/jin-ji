@@ -93,7 +93,7 @@ jin-ji を動かし続けるための設定と保守。ポート・待ち受け�
 | `JinJi:Llm:MaxConcurrency` / `MaxCallsPerBatch` / `MaxCandidates` | `4` / `50` / `8` | 同時実行数・1 回の取込で LLM に回す上限・1 つの問いの人の候補の上限 |
 | `JinJi:Llm:MaxOutputTokens` / `Temperature` | `800` / `0` | 応答の最大トークン数・温度（null なら送らない） |
 | `JinJi:Llm:InputPricePerMillionTokens` / `OutputPricePerMillionTokens` | 未設定 | 料金の目安の単価（米ドル / 100 万トークン。ログと `llm_request_log` に出す） |
-| `JinJi:Sync:DirectApply:Enabled` | `false` | Graph への直接反映を使えるようにするか（`sync-apply` だけが使う） |
+| `JinJi:Sync:DirectApply:Enabled` | `false` | Graph への直接反映を使えるようにするか（`sync-apply` と、グループの一覧を Graph から読む `sync-group-plan graph` が使う） |
 | `JinJi:Sync:DirectApply:TenantId` / `ClientId` | 未設定 | 書き込み用のアプリ（読み取り用とは別のアプリ）。有効なら必須 |
 | `JinJi:Sync:DirectApply:Credential` | `Certificate` | `Certificate`（PFX で署名したクライアント アサーション）か `WorkloadIdentity`（フェデレーションのトークンのファイル）。クライアントシークレットは扱わない |
 | `JinJi:Sync:DirectApply:CertificatePath` / `CertificatePasswordEnvironmentVariable` / `FederatedTokenFile` | 未設定 | 証明書のパスとパスワードの環境変数の名前（値は設定に書かない）、フェデレーションのトークンのファイル（無ければ `AZURE_FEDERATED_TOKEN_FILE`） |

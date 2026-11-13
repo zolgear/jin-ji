@@ -53,6 +53,7 @@ internal static class DatabaseRegistration
         // 同期計画（差分計算・スクリプト生成は JinJi.Sync。直接反映は既定で無効なので、ここでは登録しない。CLI sync-apply が設定を見て作る）
         services.TryAddSingleton<ISyncPlanStore, NpgsqlSyncPlanStore>();
         services.TryAddSingleton<ISyncPlanner, EntraSyncPlanner>();
+        services.TryAddSingleton<IGroupSyncPlanner, EntraGroupPlanner>();
         services.TryAddSingleton<ISyncScriptRenderer, EntraScriptRenderer>();
         services.TryAddSingleton<ISyncLogParser, SyncLogParser>();
         services.TryAddSingleton<SyncPlanService>();

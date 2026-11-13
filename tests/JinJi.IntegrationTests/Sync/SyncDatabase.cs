@@ -36,7 +36,7 @@ internal sealed class SyncDatabase : IAsyncDisposable
         Db = db;
         Time = new MutableTimeProvider(TimeProvider.System.GetUtcNow());
         Store = new NpgsqlSyncPlanStore(db.DataSource, Time);
-        Service = new SyncPlanService(Store, db.Snapshots, new EntraSyncPlanner(), new EntraScriptRenderer(), new SyncLogParser(), db.Audit, Time);
+        Service = new SyncPlanService(Store, db.Snapshots, new EntraSyncPlanner(), new EntraGroupPlanner(), new EntraScriptRenderer(), new SyncLogParser(), db.Audit, Time);
     }
 
     public IngestDatabase Db { get; }

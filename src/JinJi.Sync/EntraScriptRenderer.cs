@@ -28,6 +28,9 @@ namespace JinJi.Sync;
 public sealed class EntraScriptRenderer : ISyncScriptRenderer
 {
     public const string DataFormat = "jinji-entra-sync-data/1";
+
+    /// <summary>グループの計画（ADR-0015）のデータの形。</summary>
+    public const string GroupDataFormat = "jinji-entra-group-sync-data/1";
     public const string LogFormat = "jinji-entra-sync-log/1";
 
     private static readonly UTF8Encoding Utf8Bom = new(encoderShouldEmitUTF8Identifier: true);
@@ -43,6 +46,12 @@ public sealed class EntraScriptRenderer : ISyncScriptRenderer
     {
         ArgumentNullException.ThrowIfNull(plan);
         ArgumentNullException.ThrowIfNull(items);
+        if (plan.TargetSystem == SyncPlanService.TargetSystemEntraGroups)
+        {
+            // ユーザー用のスクリプトにグループの項目を流さない
+            throw new NotSupportedException("グループの計画のスクリプト出力はまだありません。直接反映（sync-apply）を使ってください。");
+        }
+
         var data = Data(plan, items);
         var sha = Convert.ToHexStringLower(SHA256.HashData(data));
         var name = BaseName(plan.Id);
@@ -68,7 +77,28 @@ public sealed class EntraScriptRenderer : ISyncScriptRenderer
     {
         ArgumentNullException.ThrowIfNull(plan);
         ArgumentNullException.ThrowIfNull(items);
-        var document = new
+        // グループの計画は別の形（項目に対象の組織・グループを持つ）。ユーザーの計画のデータの形とハッシュは変えない
+        object document = plan.TargetSystem == SyncPlanService.TargetSystemEntraGroups
+            ? new
+            {
+                format = GroupDataFormat,
+                planId = plan.Id.ToString("D"),
+                businessDate = plan.BusinessDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+                items = items.Where(i => i.InScript).OrderBy(i => i.Sequence).Select(i => new
+                {
+                    itemId = i.Id.ToString("D"),
+                    sequence = i.Sequence,
+                    priority = SyncPlanService.Code(i.Priority),
+                    action = SyncPlanService.Code(i.Action),
+                    objectId = i.ObjectId,
+                    employeeNumber = i.EmployeeNumber,
+                    orgUnitId = i.OrgUnitId?.ToString("D"),
+                    groupObjectId = i.GroupObjectId,
+                    groupDisplayName = i.GroupDisplayName,
+                    changes = i.Changes.Select(c => new { field = c.Field, current = c.Current, desired = c.Desired, currentKnown = c.CurrentKnown }),
+                }),
+            }
+            : new
         {
             format = DataFormat,
             planId = plan.Id.ToString("D"),

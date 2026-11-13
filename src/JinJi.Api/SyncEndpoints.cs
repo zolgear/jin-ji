@@ -238,6 +238,15 @@ public sealed record SyncPlanItemResponse
 
     public string? UserPrincipalName { get; init; }
 
+    /// <summary>グループの計画: 対象の組織。</summary>
+    public Guid? OrgUnitId { get; init; }
+
+    /// <summary>グループの計画: グループのオブジェクト ID（同じ計画で作るグループでは null）。</summary>
+    public string? GroupObjectId { get; init; }
+
+    /// <summary>グループの計画: グループの名前。</summary>
+    public string? GroupDisplayName { get; init; }
+
     public required IReadOnlyList<SyncChangeResponse> Changes { get; init; }
 
     public string? Code { get; init; }
@@ -264,6 +273,9 @@ public sealed record SyncPlanItemResponse
             EmployeeNumber = item.EmployeeNumber,
             ObjectId = item.ObjectId,
             UserPrincipalName = item.UserPrincipalName,
+            OrgUnitId = item.OrgUnitId,
+            GroupObjectId = item.GroupObjectId,
+            GroupDisplayName = item.GroupDisplayName,
             Changes = [.. item.Changes.Select(c => new SyncChangeResponse(c.Field, c.Current, c.Desired, c.CurrentKnown))],
             Code = item.Basis.Code,
             Basis = [.. item.Basis.Jinji.Select(e => new SyncEvidenceResponse(e.Field, e.Source, e.Reference, e.Value))],

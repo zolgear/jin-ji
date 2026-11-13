@@ -14117,6 +14117,9 @@
           "employee_number",
           "object_id",
           "user_principal_name",
+          "org_unit_id",
+          "group_object_id",
+          "group_display_name",
           "changes",
           "code",
           "basis",
@@ -14151,7 +14154,16 @@
               "set_manager",
               "create_user",
               "unmatched_account",
-              "excluded_account"
+              "excluded_account",
+              "create_group",
+              "update_group",
+              "retire_group",
+              "add_group_member",
+              "remove_group_member",
+              "add_group_owner",
+              "create_team",
+              "group_conflict",
+              "group_note"
             ],
             "type": "string"
           },
@@ -14178,6 +14190,25 @@
             ]
           },
           "user_principal_name": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "org_unit_id": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "group_object_id": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "group_display_name": {
             "type": [
               "null",
               "string"

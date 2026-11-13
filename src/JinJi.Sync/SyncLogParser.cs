@@ -10,7 +10,7 @@ namespace JinJi.Sync;
 /// <remarks>
 /// <list type="bullet">
 /// <item>形式・計画 ID・データの SHA-256 の形が合わなければ拒否する（計画・データとの照合は <see cref="SyncPlanService"/> が行う）</item>
-/// <item>結果は既知の種別だけ。observed は同期の項目（<see cref="EntraFields.All"/>）の文字列だけを残し、他は捨てる</item>
+/// <item>結果は既知の種別だけ。observed は同期の項目（<see cref="EntraFields.All"/>・<see cref="GroupFields.All"/>）の文字列だけを残し、他は捨てる</item>
 /// <item>メッセージは制御文字を除いて 1,000 文字までにする（DB の制約と同じ）</item>
 /// <item>UTF-8 の BOM（Windows PowerShell 5.1 が書く）を受け付ける</item>
 /// </list>
@@ -110,7 +110,7 @@ public sealed class SyncLogParser : ISyncLogParser
         var observed = new Dictionary<string, string?>(StringComparer.Ordinal);
         if (entry.TryGetProperty("observed", out var values) && values.ValueKind == JsonValueKind.Object)
         {
-            foreach (var property in values.EnumerateObject().Where(p => EntraFields.All.Contains(p.Name)))
+            foreach (var property in values.EnumerateObject().Where(p => EntraFields.All.Contains(p.Name) || GroupFields.All.Contains(p.Name)))
             {
                 observed[property.Name] = property.Value.ValueKind switch
                 {
